@@ -1,0 +1,44 @@
+{
+  "name": "fastest-csr-app",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "webpack serve --mode development",
+    "prebuild": "node scripts/fetch-static.mjs",
+    "build": "webpack --mode production",
+    "postbuild": "node scripts/create-404.mjs",
+    "serve": "serve build"
+  },
+  "dependencies": {
+    "@emotion/css": "^11.9.0",
+    "@emotion/react": "^11.9.0",
+    "@emotion/styled": "^11.8.1",
+    "@mui/material": "^5.6.2",
+    "date-fns": "^2.28.0",
+    "frontend-essentials": "^2.0.0",
+    "lodash": "^4.17.20",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
+    "react-router-dom": "^6.3.0",
+    "zustand": "^4.0.0-rc.1"
+  },
+  "devDependencies": {
+    "@svgr/webpack": "^6.2.1",
+    "@types/react": "^18.0.8",
+    "@types/react-dom": "^18.0.3",
+    "@typescript-eslint/eslint-plugin": "^5.20.0",
+    "@typescript-eslint/parser": "^5.20.0",
+    "copy-webpack-plugin": "^10.2.4",
+    "css-loader": "^6.7.1",
+    "eslint": "^8.13.0",
+    "eslint-webpack-plugin": "^3.1.1",
+    "fork-ts-checker-webpack-plugin": "^7.2.6",
+    "html-webpack-plugin": "^5.5.0",
+    "serve": "^13.0.2",
+    "style-loader": "^3.3.1",
+    "ts-loader": "^9.2.8",
+    "typescript": "^4.6.3",
+    "webpack": "^5.72.0",
+    "webpack-cli": "^4.9.2",
+    "webpack-dev-server": "^4.9.0"
+  }
+}
