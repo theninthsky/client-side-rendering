@@ -8,6 +8,8 @@ const Info = () => {
 
   return (
     <div>
+      <h1>Info</h1>
+
       {data.map((paragraph, ind) => (
         <p
           key={ind}

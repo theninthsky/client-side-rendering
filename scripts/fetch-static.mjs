@@ -6,7 +6,7 @@ const path = 'public/json'
 const fetchAssets = async () => {
   mkdir(path, { recursive: true })
 
-  const { data } = await axios.get('https://baconipsum.com/api/?type=meat-and-filler&paras=50', {
+  const { data } = await axios.get('https://baconipsum.com/api/?type=meat-and-filler&paras=100', {
     transformResponse: res => res
   })
 

@@ -82,13 +82,4 @@ injectGlobal`
 	.grayscale {
 		filter: grayscale(100%);
 	}
-
-	@keyframes fade-in {
-		from {
-			opacity: 0;
-		}
-		to {
-			opacity: 1;
-		}
-	}
 `

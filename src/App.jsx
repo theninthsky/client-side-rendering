@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { lazyPrefetch } from 'frontend-essentials'
 
+import Navigation from 'components/Navigation'
 import Layout from 'components/Layout'
 
 const Home = lazyPrefetch(() => import(/* webpackChunkName: "index" */ 'pages/Home'))
@@ -20,13 +21,17 @@ const App = () => {
   )
 
   return (
-    <Layout>
-      <Routes>
-        {routes}
+    <>
+      <Navigation />
 
-        <Route path="/*" element={<Navigate replace to="/" />} />
-      </Routes>
-    </Layout>
+      <Layout>
+        <Routes>
+          {routes}
+
+          <Route path="/*" element={<Navigate replace to="/" />} />
+        </Routes>
+      </Layout>
+    </>
   )
 }
 
