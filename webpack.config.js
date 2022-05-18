@@ -5,8 +5,7 @@ const HtmlPlugin = require('html-webpack-plugin')
 const CopyPlugin = require('copy-webpack-plugin')
 
 const htmlTemplate = require('./public/index')
-
-const routes = ['/index', '/info']
+const routes = require('./src/routes.json')
 
 module.exports = (_, { mode }) => {
   const production = mode === 'production'
