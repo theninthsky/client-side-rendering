@@ -1,25 +1,27 @@
-import { useAxios } from 'frontend-essentials'
+import { If, useAxios } from 'frontend-essentials'
 import { css } from '@emotion/css'
 
-const Info = () => {
-  const { data } = useAxios({ method: 'get', baseURL: '', url: 'json/lorem-ipsum.json' })
+import Title from 'components/common/Title'
 
-  if (!data) return null
+const Info = () => {
+  const { data } = useAxios({ method: 'get', url: 'json/info.json' })
 
   return (
     <div>
-      <h1>Info</h1>
+      <Title>Info</Title>
 
-      {data.map((paragraph, ind) => (
-        <p
-          key={ind}
-          className={css`
-            margin-top: 14px;
-          `}
-        >
-          {paragraph}
-        </p>
-      ))}
+      <If condition={data}>
+        {data?.map((paragraph, ind) => (
+          <p
+            key={ind}
+            className={css`
+              margin-top: 20px;
+            `}
+          >
+            {paragraph}
+          </p>
+        ))}
+      </If>
     </div>
   )
 }

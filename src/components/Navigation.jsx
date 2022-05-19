@@ -3,11 +3,10 @@ import { NavLink } from 'react-router-dom'
 import { useDelayedNavigate } from 'frontend-essentials'
 import { css, cx } from '@emotion/css'
 
-import { MOBILE_VIEWPORT } from 'styles/constants'
-
 const linkManifest = [
   { to: '/', title: 'Home' },
-  { to: 'info', title: 'Info' }
+  { to: 'info', title: 'Info' },
+  { to: 'quotes', title: 'Quotes' }
 ]
 
 const Navigation = () => {

@@ -7,10 +7,12 @@ import Layout from 'components/Layout'
 
 const Home = lazyPrefetch(() => import(/* webpackChunkName: "index" */ 'pages/Home'))
 const Info = lazyPrefetch(() => import(/* webpackChunkName: "info" */ 'pages/Info'))
+const Quotes = lazyPrefetch(() => import(/* webpackChunkName: "quotes" */ 'pages/Quotes'))
 
 const routeManifest = {
   '/': Home,
-  '/info': Info
+  '/info': Info,
+  '/quotes': Quotes
 }
 
 const App = () => {

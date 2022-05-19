@@ -1,10 +1,12 @@
 import { css, cx } from '@emotion/css'
 import { Button, Switch, TextField, Select, MenuItem, Slider } from '@mui/material'
 
+import Title from 'components/common/Title'
+
 const Home = () => {
   return (
     <div>
-      <h1>Home</h1>
+      <Title>Home</Title>
 
       <div className={style.inputs}>
         <Button className={style.input} variant="outlined">
@@ -32,7 +34,7 @@ const style = {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    margin-top: 40px;
+    margin-top: 20px;
   `,
   input: css`
     margin-top: 20px;
