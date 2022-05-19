@@ -15,14 +15,13 @@ const fetchInfo = async () => {
 }
 
 const fetchQuotes = async () => {
-  const [{ data: data1 }, { data: data2 }, { data: data3 }, { data: data4 }] = await Promise.all([
-    axios.get('https://zenquotes.io/api/quotes'),
+  const [{ data: data1 }, { data: data2 }, { data: data3 }] = await Promise.all([
     axios.get('https://zenquotes.io/api/quotes'),
     axios.get('https://zenquotes.io/api/quotes'),
     axios.get('https://zenquotes.io/api/quotes')
   ])
 
-  writeFile(`${path}/quotes.json`, [...data1, ...data2, ...data3, ...data4])
+  writeFile(`${path}/quotes.json`, [...data1, ...data2, ...data3])
 }
 
 fetchInfo()
