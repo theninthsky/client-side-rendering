@@ -17,7 +17,7 @@ const fetchInfo = async () => {
 const fetchQuotes = async () => {
   const { data } = await axios.get('https://zenquotes.io/api/quotes')
 
-  writeFile(`${path}/quotes.json`, [...data, ...data, ...data, ...data, ...data])
+  writeFile(`${path}/quotes.json`, data)
 }
 
 fetchInfo()
