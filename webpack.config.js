@@ -85,8 +85,15 @@ module.exports = (_, { mode }) => {
             templateContent: ({ compilation }) => {
               const assets = compilation.getAssets().map(({ name }) => name)
               const pageScript = assets.find(name => name.includes(route) && name.endsWith('js'))
+              let pageData
 
-              return htmlTemplate(pageScript)
+              try {
+                require(`./public/json${route}.json`)
+
+                pageData = `json${route}.json`
+              } catch {}
+
+              return htmlTemplate(pageScript, pageData)
             }
           })
       ),

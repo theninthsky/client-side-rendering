@@ -1,10 +1,11 @@
-import { If, useAxios } from 'frontend-essentials'
+import { If } from 'frontend-essentials'
 import { css } from '@emotion/css'
 
+import useFetch from 'hooks/useFetch'
 import Title from 'components/common/Title'
 
 const Info = () => {
-  const { data } = useAxios({ method: 'get', url: 'json/info.json' })
+  const { data } = useFetch('json/info.json', { credentials: 'include', mode: 'no-cors' })
 
   return (
     <div>

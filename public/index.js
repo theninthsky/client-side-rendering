@@ -1,4 +1,4 @@
-module.exports = pageScript => `
+module.exports = (pageScript, pageData) => `
   <!DOCTYPE html>
   <html lang="en">
     <head>
@@ -12,6 +12,7 @@ module.exports = pageScript => `
     </head>
     <body>
       <link rel="preload" href="${pageScript}" as="script">
+      ${pageData ? `<link rel="preload" href="${pageData}" as="fetch">` : ''}
 
       <noscript>You need to enable JavaScript to run this app.</noscript>
 
