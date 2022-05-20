@@ -1,5 +1,5 @@
 {
-  "name": "fastest-csr-app",
+  "name": "client-side-rendering",
   "version": "1.0.0",
   "scripts": {
     "start": "webpack serve --mode development",

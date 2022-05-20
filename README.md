@@ -1,4 +1,4 @@
-# Fastest CSR App
+# Client-side Rendering
 
 This project aims to build an incredibly fast client-side rendered app.
 

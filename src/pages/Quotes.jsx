@@ -1,7 +1,6 @@
-import { If } from 'frontend-essentials'
+import { If, useFetch } from 'frontend-essentials'
 import { css } from '@emotion/css'
 
-import useFetch from 'hooks/useFetch'
 import Title from 'components/common/Title'
 
 const Quotes = () => {

@@ -8,7 +8,7 @@ module.exports = (pageScript, pageData) => `
 
       <link rel="preload" href="https://fonts.gstatic.com/s/montserrat/v21/JTUSjIg1_i6t8kCHKm459Wlhyw.woff2" as="font" type="font/woff2" crossorigin>
 
-      <title>Fastest CSR App</title>
+      <title>Client-side Rendering</title>
     </head>
     <body>
       <link rel="preload" href="${pageScript}" as="script">
