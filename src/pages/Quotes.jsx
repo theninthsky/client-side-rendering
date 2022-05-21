@@ -11,8 +11,8 @@ const Quotes = () => {
       <Title>Quotes</Title>
 
       <If condition={data}>
-        {data?.map(({ q, a }) => (
-          <blockquote className={style.block}>
+        {data?.map(({ q, a }, ind) => (
+          <blockquote className={style.block} key={ind}>
             <p className={style.quote}>"{q}"</p>
 
             <span className={style.author}>~ {a}</span>

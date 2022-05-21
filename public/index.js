@@ -1,4 +1,4 @@
-module.exports = (pageScript, pageData) => `
+module.exports = (pageScript, dataUrl) => `
   <!DOCTYPE html>
   <html lang="en">
     <head>
@@ -12,7 +12,11 @@ module.exports = (pageScript, pageData) => `
     </head>
     <body>
       <link rel="preload" href="${pageScript}" as="script">
-      ${pageData ? `<link rel="preload" href="${pageData}" as="fetch">` : ''}
+      ${
+        dataUrl
+          ? `<link rel="preload" href="${dataUrl}" as="fetch" ${dataUrl.includes('http') ? 'crossorigin' : ''}>`
+          : ''
+      }
 
       <noscript>You need to enable JavaScript to run this app.</noscript>
 

@@ -78,22 +78,15 @@ module.exports = (_, { mode }) => {
       ...(production ? [] : [new ForkTsCheckerPlugin()]),
       new ESLintPlugin(),
       ...routes.map(
-        route =>
+        ({ path, dataUrl }) =>
           new HtmlPlugin({
-            filename: `${route.slice(1)}.html`,
+            filename: `${path.slice(1)}.html`,
             scriptLoading: 'module',
             templateContent: ({ compilation }) => {
               const assets = compilation.getAssets().map(({ name }) => name)
-              const pageScript = assets.find(name => name.includes(route) && name.endsWith('js'))
-              let pageData
+              const pageScript = assets.find(name => name.includes(path) && name.endsWith('js'))
 
-              try {
-                require(`./public/json${route}.json`)
-
-                pageData = `json${route}.json`
-              } catch {}
-
-              return htmlTemplate(pageScript, pageData)
+              return htmlTemplate(pageScript, dataUrl)
             }
           })
       ),

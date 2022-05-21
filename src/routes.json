@@ -1,1 +1,17 @@
-["/index", "/info", "/quotes"]
+[
+  {
+    "path": "/index"
+  },
+  {
+    "path": "/info",
+    "dataUrl": "json/info.json"
+  },
+  {
+    "path": "/quotes",
+    "dataUrl": "json/quotes.json"
+  },
+  {
+    "path": "/pokemon",
+    "dataUrl": "https://pokeapi.co/api/v2/type/3"
+  }
+]
