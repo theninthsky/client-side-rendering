@@ -6,7 +6,6 @@ import { css, cx } from '@emotion/css'
 const linkManifest = [
   { to: '/', title: 'Home' },
   { to: 'info', title: 'Info' },
-  { to: 'quotes', title: 'Quotes' },
   { to: 'pokemon', title: 'Pokémon' }
 ]
 

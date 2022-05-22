@@ -1,4 +1,4 @@
-module.exports = (pageScript, dataUrl) => `
+module.exports = (script, data) => `
   <!DOCTYPE html>
   <html lang="en">
     <head>
@@ -11,11 +11,14 @@ module.exports = (pageScript, dataUrl) => `
       <title>Client-side Rendering</title>
     </head>
     <body>
-      <link rel="preload" href="${pageScript}" as="script">
+      <link rel="preload" href="${script}" as="script">
       ${
-        dataUrl
-          ? `<link rel="preload" href="${dataUrl}" as="fetch" ${dataUrl.includes('http') ? 'crossorigin' : ''}>`
-          : ''
+        data
+          ?.map(
+            ({ url, crossorigin }) =>
+              `<link rel="preload" href="${url}" as="fetch" ${crossorigin ? `crossorigin=${crossorigin}` : ''}>`
+          )
+          .join('') || ''
       }
 
       <noscript>You need to enable JavaScript to run this app.</noscript>

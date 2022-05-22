@@ -5,7 +5,7 @@ const HtmlPlugin = require('html-webpack-plugin')
 const CopyPlugin = require('copy-webpack-plugin')
 
 const htmlTemplate = require('./public/index')
-const routes = require('./src/routes.json')
+const chunks = require('./src/chunks.json')
 
 module.exports = (_, { mode }) => {
   const production = mode === 'production'
@@ -77,16 +77,19 @@ module.exports = (_, { mode }) => {
     plugins: [
       ...(production ? [] : [new ForkTsCheckerPlugin()]),
       new ESLintPlugin(),
-      ...routes.map(
-        ({ path, dataUrl }) =>
+      ...chunks.map(
+        ({ name, data }) =>
           new HtmlPlugin({
-            filename: `${path.slice(1)}.html`,
+            filename: `${name}.html`,
             scriptLoading: 'module',
             templateContent: ({ compilation }) => {
-              const assets = compilation.getAssets().map(({ name }) => name)
-              const pageScript = assets.find(name => name.includes(path) && name.endsWith('js'))
+              const script = compilation
+                .getAssets()
+                .find(({ name: assetName }) => assetName.includes(`/${name}.`) && assetName.endsWith('.js')).name
 
-              return htmlTemplate(pageScript, dataUrl)
+              if (data && !Array.isArray(data)) data = [data]
+
+              return htmlTemplate(script, data)
             }
           })
       ),

@@ -7,13 +7,11 @@ import Layout from 'components/Layout'
 
 const Home = lazyPrefetch(() => import(/* webpackChunkName: "index" */ 'pages/Home'))
 const Info = lazyPrefetch(() => import(/* webpackChunkName: "info" */ 'pages/Info'))
-const Quotes = lazyPrefetch(() => import(/* webpackChunkName: "quotes" */ 'pages/Quotes'))
 const Pokemon = lazyPrefetch(() => import(/* webpackChunkName: "pokemon" */ 'pages/Pokemon'))
 
 const routeManifest = {
   '/': Home,
   '/info': Info,
-  '/quotes': Quotes,
   '/pokemon': Pokemon
 }
 

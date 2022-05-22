@@ -1,0 +1,28 @@
+[
+  {
+    "name": "index"
+  },
+  {
+    "name": "info",
+    "data": {
+      "url": "json/info.json"
+    }
+  },
+  {
+    "name": "pokemon",
+    "data": [
+      {
+        "url": "https://pokeapi.co/api/v2/type/1",
+        "crossorigin": "anonymous"
+      },
+      {
+        "url": "https://pokeapi.co/api/v2/type/2",
+        "crossorigin": "anonymous"
+      },
+      {
+        "url": "https://pokeapi.co/api/v2/type/3",
+        "crossorigin": "anonymous"
+      }
+    ]
+  }
+]
