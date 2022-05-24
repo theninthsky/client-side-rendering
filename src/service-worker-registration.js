@@ -13,7 +13,7 @@ const unregister = () => {
   navigator.serviceWorker.ready
     .then(registration => registration.unregister())
     .then(() => console.log('Service worker unregistered!'))
-    .catch(err => console.error(err.message))
+    .catch(err => console.error(err))
 }
 
 if ('serviceWorker' in navigator) {
