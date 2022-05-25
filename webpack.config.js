@@ -4,7 +4,7 @@ const ESLintPlugin = require('eslint-webpack-plugin')
 const HtmlPlugin = require('html-webpack-plugin')
 const CopyPlugin = require('copy-webpack-plugin')
 
-const chunkManifest = require('./src/route-chunk-manifest.json')
+const pagesManifest = require('./src/pages-manifest.json')
 const htmlTemplate = require('./public/index')
 
 module.exports = (_, { mode }) => {
@@ -76,7 +76,7 @@ module.exports = (_, { mode }) => {
     plugins: [
       ...(production ? [] : [new ForkTsCheckerPlugin()]),
       new ESLintPlugin(),
-      ...chunkManifest.map(
+      ...pagesManifest.map(
         ({ name, data }) =>
           new HtmlPlugin({
             filename: `${name}.html`,

@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { lazyPrefetch } from 'frontend-essentials'
 
-import routeManifest from 'route-chunk-manifest.json'
+import pagesManifest from 'pages-manifest.json'
 import Navigation from 'components/Navigation'
 import Layout from 'components/Layout'
 
@@ -11,7 +11,7 @@ const LoremIpsum = lazyPrefetch(() => import(/* webpackChunkName: "lorem-ipsum" 
 const Pokemon = lazyPrefetch(() => import(/* webpackChunkName: "pokemon" */ 'pages/Pokemon'))
 
 const pages = [Home, LoremIpsum, Pokemon]
-const routes = routeManifest.map(({ path }, ind) => {
+const routes = pagesManifest.map(({ path }, ind) => {
   const Element = pages[ind]
 
   return <Route key={path} path={path} element={<Element />} />
@@ -21,7 +21,10 @@ const App = () => {
   const { pathname } = useLocation()
 
   useEffect(() => {
-    document.title = routeManifest.find(({ path }) => path === pathname)?.title
+    const { title, description } = pagesManifest.find(({ path }) => path === pathname) || {}
+
+    document.title = title
+    document.head.querySelector('meta[name="description"]').setAttribute('content', description)
   }, [pathname])
 
   return (

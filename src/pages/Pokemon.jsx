@@ -1,11 +1,11 @@
 import { If, useFetch } from 'frontend-essentials'
 import { css } from '@emotion/css'
 
-import routeManifest from 'route-chunk-manifest.json'
+import pagesManifest from 'pages-manifest.json'
 import Title from 'components/common/Title'
 import Info from 'components/common/Info'
 
-const { title, data } = routeManifest.find(({ name }) => name === 'pokemon')
+const { title, description, data } = pagesManifest.find(({ name }) => name === 'pokemon')
 
 const Pokemon = () => {
   const { data: { pokemon: type1 = [] } = {} } = useFetch(data[0].url)
@@ -18,9 +18,7 @@ const Pokemon = () => {
     <div>
       <Title>{title}</Title>
 
-      <Info className={style.info}>
-        This page demostrates dynamic data that is fetched in parallel to other assets.
-      </Info>
+      <Info className={style.info}>{description}</Info>
 
       <If condition={pokemon}>
         {pokemon?.map(({ pokemon }, ind) => (

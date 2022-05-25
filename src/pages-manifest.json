@@ -1,21 +1,24 @@
 [
   {
+    "name": "index",
     "path": "/",
     "title": "Home",
-    "name": "index"
+    "description": "This page demonstrates a large amount of components that are rendered on the screen."
   },
   {
+    "name": "lorem-ipsum",
     "path": "/lorem-ipsum",
     "title": "Lorem Ipsum",
-    "name": "lorem-ipsum",
+    "description": "This page demonstrates a large amount of static text that is pre-generated and fetched in parallel with other assets.",
     "data": {
       "url": "json/lorem-ipsum.json"
     }
   },
   {
+    "name": "pokemon",
     "path": "/pokemon",
     "title": "Pokémon",
-    "name": "pokemon",
+    "description": "This page demonstrates dynamic data that is fetched in parallel with other assets.",
     "data": [
       {
         "url": "https://pokeapi.co/api/v2/type/1",

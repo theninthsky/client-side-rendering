@@ -1,11 +1,11 @@
 import { useFetch } from 'frontend-essentials'
 import { css } from '@emotion/css'
 
-import routeManifest from 'route-chunk-manifest.json'
+import pagesManifest from 'pages-manifest.json'
 import Title from 'components/common/Title'
 import Info from 'components/common/Info'
 
-const { title, data } = routeManifest.find(({ name }) => name === 'lorem-ipsum')
+const { title, description, data } = pagesManifest.find(({ name }) => name === 'lorem-ipsum')
 
 const LoremIpsum = () => {
   const { data: loremIpsum } = useFetch(data.url, { credentials: 'include', mode: 'no-cors' })
@@ -14,10 +14,7 @@ const LoremIpsum = () => {
     <div>
       <Title>{title}</Title>
 
-      <Info className={style.info}>
-        This page demostrates a large amount of static text that is pre-generated and fetched in parallel to other
-        assets.
-      </Info>
+      <Info className={style.info}>{description}</Info>
 
       {loremIpsum?.split('\n').map((paragraph, ind) => (
         <p key={ind} className={style.paragraph}>

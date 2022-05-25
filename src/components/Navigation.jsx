@@ -3,7 +3,7 @@ import { NavLink } from 'react-router-dom'
 import { useDelayedNavigate } from 'frontend-essentials'
 import { css, cx } from '@emotion/css'
 
-import routeManifest from 'route-chunk-manifest.json'
+import pagesManifest from 'pages-manifest.json'
 import SunIcon from 'images/sun.svg'
 import MoonIcon from 'images/moon.svg'
 
@@ -18,7 +18,7 @@ const Navigation = () => {
 
   const links = useMemo(
     () =>
-      routeManifest.map(({ path, title }) => (
+      pagesManifest.map(({ path, title }) => (
         <NavLink
           key={path}
           className={({ isActive }) => cx(style.item, { [style.activeItem]: isActive })}
@@ -31,7 +31,7 @@ const Navigation = () => {
           <span>{title}</span>
         </NavLink>
       )),
-    [routeManifest]
+    [pagesManifest]
   )
 
   const toggleTheme = newTheme => {

@@ -1,20 +1,18 @@
 import { css, cx } from '@emotion/css'
 import { Button, Switch, TextField, Select, MenuItem, Slider } from '@mui/material'
 
-import routeManifest from 'route-chunk-manifest.json'
+import pagesManifest from 'pages-manifest.json'
 import Title from 'components/common/Title'
 import Info from 'components/common/Info'
 
-const { title } = routeManifest.find(({ name }) => name === 'index')
+const { title, description } = pagesManifest.find(({ name }) => name === 'index')
 
 const Home = () => {
   return (
     <div>
       <Title>{title}</Title>
 
-      <Info className={style.info}>
-        This page demostrates a large amount of components that are rendered on the screen.
-      </Info>
+      <Info className={style.info}>{description}</Info>
 
       <div className={style.inputs}>
         <Button className={style.input} variant="outlined">
