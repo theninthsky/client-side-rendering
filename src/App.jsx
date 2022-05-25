@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { lazyPrefetch } from 'frontend-essentials'
 
-import routeManifest from './route-chunk-manifest.json'
+import routeManifest from 'route-chunk-manifest.json'
 import Navigation from 'components/Navigation'
 import Layout from 'components/Layout'
 

@@ -8,10 +8,6 @@ injectGlobal`
     -webkit-tap-highlight-color: transparent;
   }
 
-  body {
-    font-family: 'Montserrat', sans-serif;
-  }
-
   input {
     font-family: inherit;
   }

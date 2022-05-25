@@ -1,16 +1,21 @@
 import { injectGlobal } from '@emotion/css'
 
 injectGlobal`
-	.relative {
-		position: relative;
+	:root {
+		--text-color: #24292e;
+		--bg-color: #fff;
 	}
 
-	.w-full {
-		width: 100%;
+	[data-theme='dark'] {
+		--text-color: #fff;
+		--bg-color: #0f0e0e;
 	}
 
-	.max-w-full {
-		max-width: 100%;
+	body {
+		font-family: 'Montserrat', sans-serif;
+		color: var(--text-color);
+		background-color: var(--bg-color);
+		transition: color 0.2s, background-color 0.2s;
 	}
 
 	.hidden {
@@ -35,18 +40,6 @@ injectGlobal`
 		flex-wrap: wrap;
 	}
 
-	.flex-1 {
-		flex: 1;
-	}
-
-	.flex-2 {
-		flex: 2;
-	}
-
-	.flex-3 {
-		flex: 3;
-	}
-
 	.justify-between {
 		display: flex;
 		justify-content: space-between;
@@ -65,21 +58,5 @@ injectGlobal`
 	.items-end {
 		display: flex;
 		align-items: flex-end;
-	}
-
-	.cursor-pointer {
-		cursor: pointer;
-	}
-
-	.pointer-events-none {
-		pointer-events: none;
-	}
-
-	.text-center {
-		text-align: center;
-	}
-
-	.grayscale {
-		filter: grayscale(100%);
 	}
 `
