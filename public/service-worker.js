@@ -12,9 +12,7 @@ const networkFirst = async event => {
 }
 
 self.addEventListener('install', event => {
-  const cache = caches.open('csr')
-
-  event.waitUntil(cache.add('./'))
+  event.waitUntil(caches.open('csr').then(cache => cache.add('./')))
   self.skipWaiting()
 })
 
