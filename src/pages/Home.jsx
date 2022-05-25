@@ -12,6 +12,10 @@ const Home = () => {
     <div>
       <Title>{title}</Title>
 
+      <Info className={style.info}>
+        This page demostrates a large amount of components that are rendered on the screen.
+      </Info>
+
       <div className={style.inputs}>
         <Button className={style.input} variant="outlined">
           Button
@@ -34,6 +38,9 @@ const Home = () => {
 }
 
 const style = {
+  info: css`
+    margin-top: 20px;
+  `,
   inputs: css`
     display: flex;
     flex-direction: column;

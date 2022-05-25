@@ -1,8 +1,8 @@
-import { css } from '@emotion/css'
+import { css, cx } from '@emotion/css'
 
-const Info = ({ children, ...otherProps }) => {
+const Info = ({ className, children, ...otherProps }) => {
   return (
-    <div className={style.wrapper} {...otherProps}>
+    <div className={cx(style.wrapper, className)} {...otherProps}>
       {children}
     </div>
   )
@@ -10,6 +10,9 @@ const Info = ({ children, ...otherProps }) => {
 
 const style = {
   wrapper: css`
+    display: inline-block;
+    padding: 8px 10px;
+    border-radius: 4px;
     color: white;
     background-color: dodgerblue;
   `

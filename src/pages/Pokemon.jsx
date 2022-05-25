@@ -3,6 +3,7 @@ import { css } from '@emotion/css'
 
 import routeManifest from 'route-chunk-manifest.json'
 import Title from 'components/common/Title'
+import Info from 'components/common/Info'
 
 const { title, data } = routeManifest.find(({ name }) => name === 'pokemon')
 
@@ -17,6 +18,10 @@ const Pokemon = () => {
     <div>
       <Title>{title}</Title>
 
+      <Info className={style.info}>
+        This page demostrates dynamic data that is fetched in parallel to other assets.
+      </Info>
+
       <If condition={pokemon}>
         {pokemon?.map(({ pokemon }, ind) => (
           <span className={style.pokemon} key={ind}>
@@ -29,9 +34,16 @@ const Pokemon = () => {
 }
 
 const style = {
+  info: css`
+    margin-top: 20px;
+  `,
   pokemon: css`
     display: block;
     margin-top: 10px;
+
+    :first-of-type {
+      margin-top: 20px;
+    }
   `
 }
 
