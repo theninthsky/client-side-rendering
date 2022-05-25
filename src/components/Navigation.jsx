@@ -9,7 +9,7 @@ import MoonIcon from 'images/moon.svg'
 
 const [THEME_LIGHT, THEME_DARK] = ['light', 'dark']
 
-document.documentElement.setAttribute('data-theme', localStorage.theme || 'light')
+document.documentElement.setAttribute('data-theme', localStorage.theme || THEME_LIGHT)
 
 const Navigation = () => {
   const [theme, setTheme] = useState(localStorage.theme || THEME_LIGHT)
@@ -34,9 +34,7 @@ const Navigation = () => {
     [routeManifest]
   )
 
-  const toggleTheme = () => {
-    const newTheme = document.documentElement.getAttribute('data-theme') === THEME_LIGHT ? THEME_DARK : THEME_LIGHT
-
+  const toggleTheme = newTheme => {
     setTheme(newTheme)
     document.documentElement.setAttribute('data-theme', newTheme)
     localStorage.setItem('theme', newTheme)
@@ -48,9 +46,9 @@ const Navigation = () => {
 
       <button className={style.theme}>
         {theme === THEME_LIGHT ? (
-          <SunIcon width="22px" onClick={toggleTheme} />
+          <SunIcon width="22px" onClick={() => toggleTheme(THEME_DARK)} />
         ) : (
-          <MoonIcon width="22px" onClick={toggleTheme} />
+          <MoonIcon width="22px" onClick={() => toggleTheme(THEME_LIGHT)} />
         )}
       </button>
     </div>
