@@ -4,8 +4,8 @@ const ESLintPlugin = require('eslint-webpack-plugin')
 const HtmlPlugin = require('html-webpack-plugin')
 const CopyPlugin = require('copy-webpack-plugin')
 
+const chunkManifest = require('./src/route-chunk-manifest.json')
 const htmlTemplate = require('./public/index')
-const chunks = require('./src/chunks.json')
 
 module.exports = (_, { mode }) => {
   const production = mode === 'production'
@@ -14,7 +14,6 @@ module.exports = (_, { mode }) => {
     devServer: {
       historyApiFallback: true,
       port: 3000,
-      open: true,
       devMiddleware: { stats: 'errors-warnings' }
     },
     cache: { type: 'filesystem' },
@@ -77,7 +76,7 @@ module.exports = (_, { mode }) => {
     plugins: [
       ...(production ? [] : [new ForkTsCheckerPlugin()]),
       new ESLintPlugin(),
-      ...chunks.map(
+      ...chunkManifest.map(
         ({ name, data }) =>
           new HtmlPlugin({
             filename: `${name}.html`,

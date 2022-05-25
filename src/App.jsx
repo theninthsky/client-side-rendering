@@ -1,7 +1,8 @@
-import { useMemo } from 'react'
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { useEffect } from 'react'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { lazyPrefetch } from 'frontend-essentials'
 
+import routeManifest from './route-chunk-manifest.json'
 import Navigation from 'components/Navigation'
 import Layout from 'components/Layout'
 
@@ -9,18 +10,19 @@ const Home = lazyPrefetch(() => import(/* webpackChunkName: "index" */ 'pages/Ho
 const Info = lazyPrefetch(() => import(/* webpackChunkName: "info" */ 'pages/Info'))
 const Pokemon = lazyPrefetch(() => import(/* webpackChunkName: "pokemon" */ 'pages/Pokemon'))
 
-const routeManifest = {
-  '/': Home,
-  '/info': Info,
-  '/pokemon': Pokemon
-}
+const pages = [Home, Info, Pokemon]
+const routes = routeManifest.map(({ path }, ind) => {
+  const Element = pages[ind]
+
+  return <Route key={path} path={path} element={<Element />} />
+})
 
 const App = () => {
-  const routes = useMemo(
-    () =>
-      Object.entries(routeManifest).map(([path, Element]) => <Route key={path} path={path} element={<Element />} />),
-    [routeManifest]
-  )
+  const { pathname } = useLocation()
+
+  useEffect(() => {
+    document.title = routeManifest.find(({ path }) => path === pathname)?.title
+  }, [pathname])
 
   return (
     <>

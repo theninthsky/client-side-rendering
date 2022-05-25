@@ -1,14 +1,20 @@
 [
   {
+    "path": "/",
+    "title": "Home",
     "name": "index"
   },
   {
+    "path": "/info",
+    "title": "Info",
     "name": "info",
     "data": {
       "url": "json/info.json"
     }
   },
   {
+    "path": "/pokemon",
+    "title": "Pokémon",
     "name": "pokemon",
     "data": [
       {
