@@ -5,11 +5,11 @@
     "name": "index"
   },
   {
-    "path": "/info",
-    "title": "Info",
-    "name": "info",
+    "path": "/lorem-ipsum",
+    "title": "Lorem Ipsum",
+    "name": "lorem-ipsum",
     "data": {
-      "url": "json/info.json"
+      "url": "json/lorem-ipsum.json"
     }
   },
   {

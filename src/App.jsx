@@ -7,10 +7,10 @@ import Navigation from 'components/Navigation'
 import Layout from 'components/Layout'
 
 const Home = lazyPrefetch(() => import(/* webpackChunkName: "index" */ 'pages/Home'))
-const Info = lazyPrefetch(() => import(/* webpackChunkName: "info" */ 'pages/Info'))
+const LoremIpsum = lazyPrefetch(() => import(/* webpackChunkName: "lorem-ipsum" */ 'pages/LoremIpsum'))
 const Pokemon = lazyPrefetch(() => import(/* webpackChunkName: "pokemon" */ 'pages/Pokemon'))
 
-const pages = [Home, Info, Pokemon]
+const pages = [Home, LoremIpsum, Pokemon]
 const routes = routeManifest.map(({ path }, ind) => {
   const Element = pages[ind]
 

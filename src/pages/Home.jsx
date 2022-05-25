@@ -1,12 +1,16 @@
 import { css, cx } from '@emotion/css'
 import { Button, Switch, TextField, Select, MenuItem, Slider } from '@mui/material'
 
+import routeManifest from 'route-chunk-manifest.json'
 import Title from 'components/common/Title'
+import Info from 'components/common/Info'
+
+const { title } = routeManifest.find(({ name }) => name === 'index')
 
 const Home = () => {
   return (
     <div>
-      <Title>Home</Title>
+      <Title>{title}</Title>
 
       <div className={style.inputs}>
         <Button className={style.input} variant="outlined">

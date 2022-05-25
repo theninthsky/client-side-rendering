@@ -8,10 +8,10 @@ const axiosOptions = { transformResponse: res => res }
 mkdir(path, { recursive: true })
 process.on('beforeExit', () => console.log('Fetched all static assets.'))
 
-const fetchInfo = async () => {
-  const { data } = await axios.get('https://baconipsum.com/api/?type=meat-and-filler&paras=100', axiosOptions)
+const fetchLoremIpsum = async () => {
+  const { data } = await axios.get('https://loripsum.net/api/200/long/plaintext', axiosOptions)
 
-  writeFile(`${path}/info.json`, data)
+  writeFile(`${path}/lorem-ipsum.json`, JSON.stringify(data))
 }
 
-fetchInfo()
+fetchLoremIpsum()
