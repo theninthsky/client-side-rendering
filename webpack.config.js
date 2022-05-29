@@ -63,7 +63,7 @@ module.exports = (_, { mode }) => {
     optimization: {
       runtimeChunk: 'single',
       splitChunks: {
-        chunks: 'initial',
+        chunks: 'all',
         minSize: 40000,
         cacheGroups: {
           vendor: {

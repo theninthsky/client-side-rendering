@@ -5,7 +5,7 @@ module.exports = (script, data) => `
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1">
       <meta name="theme-color" content="#1e90ff">
-      <meta name="description" content="A client-side rendering showcase.">
+      <meta name="description" content="A client-side rendering demonstration.">
       <meta property="og:title" content="Client-side Rendering">
       <meta property="og:type" content="website">
       <meta property="og:url" content="https://client-side-rendering.pages.dev">

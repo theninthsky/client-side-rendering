@@ -1,3 +1,4 @@
+import { isDate } from 'moment'
 import { If, useFetch } from 'frontend-essentials'
 import { css } from '@emotion/css'
 
@@ -13,6 +14,8 @@ const Pokemon = () => {
   const { data: { pokemon: type3 = [] } = {} } = useFetch(data[2].url)
 
   const pokemon = [...type1, ...type2, ...type3]
+
+  console.log(isDate(new Date()))
 
   return (
     <div>

@@ -1,3 +1,4 @@
+import { isDate } from 'moment'
 import { useFetch } from 'frontend-essentials'
 import { css } from '@emotion/css'
 
@@ -9,6 +10,8 @@ const { title, description, data } = pagesManifest.find(({ name }) => name === '
 
 const LoremIpsum = () => {
   const { data: loremIpsum } = useFetch(data.url, { credentials: 'include', mode: 'no-cors' })
+
+  console.log(isDate(new Date()))
 
   return (
     <div>

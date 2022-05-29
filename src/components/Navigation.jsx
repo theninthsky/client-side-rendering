@@ -3,6 +3,7 @@ import { NavLink } from 'react-router-dom'
 import { useDelayedNavigate } from 'frontend-essentials'
 import { css, cx } from '@emotion/css'
 
+import { MOBILE_VIEWPORT } from 'styles/constants'
 import pagesManifest from 'pages-manifest.json'
 import SunIcon from 'images/sun.svg'
 import MoonIcon from 'images/moon.svg'
@@ -74,6 +75,10 @@ const style = {
     font-weight: 600;
     text-align: center;
     text-decoration: none;
+
+    @media ${MOBILE_VIEWPORT} {
+      margin-right: 5px;
+    }
   `,
   activeItem: css`
     border-left: 5px solid dodgerblue;
