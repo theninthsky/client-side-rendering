@@ -10,6 +10,7 @@
     "path": "/lorem-ipsum",
     "title": "Lorem Ipsum",
     "description": "This page demonstrates a large amount of static text that is pre-generated and fetched in parallel with other assets.",
+    "vendors": ["moment"],
     "data": {
       "url": "json/lorem-ipsum.json"
     }
@@ -19,6 +20,7 @@
     "path": "/pokemon",
     "title": "Pokémon",
     "description": "This page demonstrates dynamic data that is fetched in parallel with other assets.",
+    "vendors": ["moment"],
     "data": [
       {
         "url": "https://pokeapi.co/api/v2/type/1",

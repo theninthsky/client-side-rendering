@@ -77,18 +77,26 @@ module.exports = (_, { mode }) => {
       ...(production ? [] : [new ForkTsCheckerPlugin()]),
       new ESLintPlugin(),
       ...pagesManifest.map(
-        ({ name, data }) =>
+        ({ name, vendors, data }) =>
           new HtmlPlugin({
             filename: `${name}.html`,
             scriptLoading: 'module',
             templateContent: ({ compilation }) => {
-              const script = compilation
-                .getAssets()
-                .find(({ name: assetName }) => assetName.includes(`/${name}.`) && assetName.endsWith('.js')).name
+              const assets = compilation.getAssets()
+              const script = assets.find(
+                ({ name: assetName }) => assetName.includes(`/${name}.`) && assetName.endsWith('.js')
+              ).name
+              const vendorScripts = vendors
+                ? assets
+                    .filter(({ name }) => vendors.find(vendor => name.includes(`/${vendor}.`) && name.endsWith('.js')))
+                    .map(({ name }) => name)
+                : []
+
+              console.log(vendorScripts)
 
               if (data && !Array.isArray(data)) data = [data]
 
-              return htmlTemplate(script, data)
+              return htmlTemplate([script, ...vendorScripts], data)
             }
           })
       ),

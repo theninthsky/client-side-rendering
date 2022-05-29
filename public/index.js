@@ -1,4 +1,4 @@
-module.exports = (script, data) => `
+module.exports = (scripts, data) => `
   <!DOCTYPE html>
   <html lang="en">
     <head>
@@ -19,7 +19,7 @@ module.exports = (script, data) => `
       <title>Client-side Rendering</title>
     </head>
     <body>
-      <link rel="preload" href="${script}" as="script">
+      ${scripts.map(script => `<link rel="preload" href="${script}" as="script"></link>`).join('')}
       ${
         data
           ?.map(
