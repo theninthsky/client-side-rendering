@@ -92,8 +92,6 @@ module.exports = (_, { mode }) => {
                     .map(({ name }) => name)
                 : []
 
-              console.log(vendorScripts)
-
               if (data && !Array.isArray(data)) data = [data]
 
               return htmlTemplate([script, ...vendorScripts], data)

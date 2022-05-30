@@ -1,4 +1,4 @@
-module.exports = (scripts, data) => `
+module.exports = (scripts, data = []) => `
   <!DOCTYPE html>
   <html lang="en">
     <head>
@@ -20,14 +20,12 @@ module.exports = (scripts, data) => `
     </head>
     <body>
       ${scripts.map(script => `<link rel="preload" href="${script}" as="script"></link>`).join('')}
-      ${
-        data
-          ?.map(
-            ({ url, crossorigin }) =>
-              `<link rel="preload" href="${url}" as="fetch" ${crossorigin ? `crossorigin=${crossorigin}` : ''}>`
-          )
-          .join('') || ''
-      }
+      ${data
+        .map(
+          ({ url, crossorigin }) =>
+            `<link rel="preload" href="${url}" as="fetch" ${crossorigin ? `crossorigin=${crossorigin}` : ''}>`
+        )
+        .join('')}
 
       <noscript>You need to enable JavaScript to run this app.</noscript>
 

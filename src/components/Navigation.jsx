@@ -77,7 +77,7 @@ const style = {
     text-decoration: none;
 
     @media ${MOBILE_VIEWPORT} {
-      margin-right: 5px;
+      margin-right: 15px;
     }
   `,
   activeItem: css`
