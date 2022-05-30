@@ -1,6 +1,7 @@
 import { isDate } from 'moment'
-import { If, useFetch } from 'frontend-essentials'
+import { useFetch } from 'frontend-essentials'
 import { css } from '@emotion/css'
+import { Skeleton } from '@mui/material'
 
 import pagesManifest from 'pages-manifest.json'
 import Title from 'components/common/Title'
@@ -23,27 +24,45 @@ const Pokemon = () => {
 
       <Info className={style.info}>{description}</Info>
 
-      <If condition={pokemon}>
-        {pokemon?.map(({ pokemon }, ind) => (
-          <span className={style.pokemon} key={ind}>
-            {pokemon.name}
-          </span>
-        ))}
-      </If>
+      <main className={style.main}>
+        {type1.length && type2.length && type3.length ? (
+          pokemon.map(({ pokemon }, ind) => (
+            <span className={style.pokemon} key={ind}>
+              {pokemon.name}
+            </span>
+          ))
+        ) : (
+          <MainSkeleton />
+        )}
+      </main>
     </div>
   )
+}
+
+const MainSkeleton = () => {
+  return new Array(30)
+    .fill()
+    .map((_, ind) => (
+      <Skeleton className={style.skeleton} key={ind} variant="text" width={75} height={20} animation={false} />
+    ))
 }
 
 const style = {
   info: css`
     margin-top: 20px;
   `,
+  main: css`
+    margin-top: 20px;
+  `,
+  skeleton: css`
+    margin-top: 5px;
+    background-color: rgba(0, 0, 0, 0.05);
+  `,
   pokemon: css`
     display: block;
-    margin-top: 10px;
 
-    :first-of-type {
-      margin-top: 20px;
+    :not(:first-child) {
+      margin-top: 10px;
     }
   `
 }
