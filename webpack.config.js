@@ -82,14 +82,10 @@ module.exports = (_, { mode }) => {
             filename: `${name}.html`,
             scriptLoading: 'module',
             templateContent: ({ compilation }) => {
-              const assets = compilation.getAssets()
-              const script = assets.find(
-                ({ name: assetName }) => assetName.includes(`/${name}.`) && assetName.endsWith('.js')
-              ).name
+              const assets = compilation.getAssets().map(({ name }) => name)
+              const script = assets.find(assetName => assetName.includes(`/${name}.`) && assetName.endsWith('.js'))
               const vendorScripts = vendors
-                ? assets
-                    .filter(({ name }) => vendors.find(vendor => name.includes(`/${vendor}.`) && name.endsWith('.js')))
-                    .map(({ name }) => name)
+                ? assets.filter(name => vendors.find(vendor => name.includes(`/${vendor}.`) && name.endsWith('.js')))
                 : []
 
               if (data && !Array.isArray(data)) data = [data]
