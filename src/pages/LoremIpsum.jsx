@@ -1,5 +1,6 @@
+import { useState, useEffect } from 'react'
 import { isDate } from 'moment'
-import { useFetch } from 'frontend-essentials'
+import { persistState, getPersistedState, useFetch } from 'frontend-essentials'
 import { css, cx } from '@emotion/css'
 import { Skeleton } from '@mui/material'
 
@@ -10,10 +11,18 @@ import Info from 'components/common/Info'
 const { title, description, data } = pagesManifest.find(({ name }) => name === 'lorem-ipsum')
 
 const LoremIpsum = () => {
-  const { loading: fetchingLoremIpsum, data: loremIpsum } = useFetch(data.url, {
+  const [loremIpsum, setLoremIpsum] = useState(getPersistedState('loremIpsum'))
+
+  useFetch(data.url, {
     credentials: 'include',
-    mode: 'no-cors'
+    mode: 'no-cors',
+    manual: !!loremIpsum,
+    onSuccess: ({ data }) => setLoremIpsum(data)
   })
+
+  useEffect(() => {
+    if (loremIpsum) persistState('loremIpsum', loremIpsum)
+  }, [loremIpsum])
 
   console.log(isDate(new Date()))
 
@@ -24,14 +33,14 @@ const LoremIpsum = () => {
       <Info className={style.info}>{description}</Info>
 
       <main className={style.main}>
-        {fetchingLoremIpsum ? (
-          <MainSkeleton />
-        ) : (
-          loremIpsum?.split('\n').map((paragraph, ind) => (
+        {loremIpsum ? (
+          loremIpsum.split('\n').map((paragraph, ind) => (
             <p key={ind} className={style.paragraph}>
               {paragraph}
             </p>
           ))
+        ) : (
+          <MainSkeleton />
         )}
       </main>
     </div>

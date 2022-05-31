@@ -1,5 +1,6 @@
+import { useEffect, useState } from 'react'
 import { isDate } from 'moment'
-import { useFetch } from 'frontend-essentials'
+import { persistState, getPersistedState, useFetch } from 'frontend-essentials'
 import { css } from '@emotion/css'
 import { Skeleton } from '@mui/material'
 
@@ -10,11 +11,24 @@ import Info from 'components/common/Info'
 const { title, description, data } = pagesManifest.find(({ name }) => name === 'pokemon')
 
 const Pokemon = () => {
-  const { data: { pokemon: type1 = [] } = {} } = useFetch(data[0].url)
-  const { data: { pokemon: type2 = [] } = {} } = useFetch(data[1].url)
-  const { data: { pokemon: type3 = [] } = {} } = useFetch(data[2].url)
+  const [pokemon, setPokemon] = useState(getPersistedState('pokemon') || [])
 
-  const pokemon = [...type1, ...type2, ...type3]
+  useFetch(data[0].url, {
+    manual: pokemon.length,
+    onSuccess: ({ data }) => setPokemon(prevPokemon => [...prevPokemon, ...data.pokemon])
+  })
+  useFetch(data[1].url, {
+    manual: pokemon.length,
+    onSuccess: ({ data }) => setPokemon(prevPokemon => [...prevPokemon, ...data.pokemon])
+  })
+  useFetch(data[2].url, {
+    manual: pokemon.length,
+    onSuccess: ({ data }) => setPokemon(prevPokemon => [...prevPokemon, ...data.pokemon])
+  })
+
+  useEffect(() => {
+    if (pokemon) persistState('pokemon', pokemon)
+  }, [pokemon])
 
   console.log(isDate(new Date()))
 
@@ -25,7 +39,7 @@ const Pokemon = () => {
       <Info className={style.info}>{description}</Info>
 
       <main className={style.main}>
-        {type1.length && type2.length && type3.length ? (
+        {pokemon.length ? (
           pokemon.map(({ pokemon }, ind) => (
             <span className={style.pokemon} key={ind}>
               {pokemon.name}
@@ -43,7 +57,7 @@ const MainSkeleton = () => {
   return new Array(30)
     .fill()
     .map((_, ind) => (
-      <Skeleton className={style.skeleton} key={ind} variant="text" width={75} height={20} animation={false} />
+      <Skeleton className={style.skeleton} key={ind} variant="text" width={60} height={20} animation={false} />
     ))
 }
 
