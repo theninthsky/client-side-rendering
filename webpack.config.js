@@ -63,11 +63,12 @@ module.exports = (_, { mode }) => {
     optimization: {
       runtimeChunk: 'single',
       splitChunks: {
-        chunks: 'all',
+        chunks: 'initial',
         minSize: 40000,
         cacheGroups: {
           vendor: {
             test: /[\\/]node_modules[\\/]/,
+            chunks: 'all',
             name: ({ context }) => (context.match(/[\\/]node_modules[\\/](.*?)([\\/]|$)/) || [])[1]
           }
         }
