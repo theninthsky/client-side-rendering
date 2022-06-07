@@ -1,10 +1,8 @@
 const path = require('path')
-const zlib = require('zlib')
 const ForkTsCheckerPlugin = require('fork-ts-checker-webpack-plugin')
 const ESLintPlugin = require('eslint-webpack-plugin')
 const HtmlPlugin = require('html-webpack-plugin')
 const CopyPlugin = require('copy-webpack-plugin')
-const CompressionPlugin = require('compression-webpack-plugin')
 
 const pagesManifest = require('./src/pages-manifest.json')
 const htmlTemplate = require('./public/index')
@@ -104,16 +102,6 @@ module.exports = (_, { mode }) => {
             globOptions: { ignore: ['**/index.js'] }
           }
         ]
-      }),
-      new CompressionPlugin({
-        filename: '[path][base].br',
-        algorithm: 'brotliCompress',
-        test: /\.(html|js|json)$/,
-        compressionOptions: {
-          params: {
-            [zlib.constants.BROTLI_PARAM_QUALITY]: 11
-          }
-        }
       })
     ]
   }
