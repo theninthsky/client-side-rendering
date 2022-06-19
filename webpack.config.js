@@ -1,4 +1,6 @@
 const path = require('path')
+const ReactRefreshPlugin = require('@pmmmwh/react-refresh-webpack-plugin')
+const ReactRefreshTypeScript = require('react-refresh-typescript')
 const ForkTsCheckerPlugin = require('fork-ts-checker-webpack-plugin')
 const ESLintPlugin = require('eslint-webpack-plugin')
 const HtmlPlugin = require('html-webpack-plugin')
@@ -12,6 +14,7 @@ module.exports = (_, { mode }) => {
 
   return {
     devServer: {
+      hot: true,
       historyApiFallback: true,
       port: 3000,
       devMiddleware: { stats: 'errors-warnings' }
@@ -30,7 +33,12 @@ module.exports = (_, { mode }) => {
           use: [
             {
               loader: 'ts-loader',
-              options: { transpileOnly: true }
+              options: {
+                getCustomTransformers: () => ({
+                  before: production ? [ReactRefreshTypeScript()] : []
+                }),
+                transpileOnly: true
+              }
             }
           ]
         },
@@ -75,6 +83,7 @@ module.exports = (_, { mode }) => {
       }
     },
     plugins: [
+      ...(production ? [] : [new ReactRefreshPlugin()]),
       ...(production ? [] : [new ForkTsCheckerPlugin()]),
       new ESLintPlugin(),
       ...pagesManifest.map(
