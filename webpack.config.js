@@ -20,7 +20,6 @@ module.exports = (_, { mode }) => {
       devMiddleware: { stats: 'errors-warnings' }
     },
     cache: { type: 'filesystem' },
-    devtool: production ? undefined : 'source-map',
     resolve: {
       modules: [path.resolve(__dirname, 'src'), 'node_modules'],
       extensions: ['.ts', '.tsx', '.js', '.jsx']
@@ -35,7 +34,7 @@ module.exports = (_, { mode }) => {
               loader: 'ts-loader',
               options: {
                 getCustomTransformers: () => ({
-                  before: production ? [ReactRefreshTypeScript()] : []
+                  before: production ? [] : [ReactRefreshTypeScript()]
                 }),
                 transpileOnly: true
               }
