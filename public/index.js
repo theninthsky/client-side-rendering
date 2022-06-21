@@ -10,7 +10,6 @@ module.exports = (scripts, data = []) => `
       <meta property="og:type" content="website">
       <meta property="og:url" content="https://client-side-rendering.pages.dev">
       <meta property="og:image:secure_url" itemprop="image" content="https://client-side-rendering.pages.dev/icons/icon-x192.png">
-      <meta name="google-site-verification" content="VizFjhwWDUBYMsq1bJtp6N2NPjz8sLdGH1513MlrytU" />
 
       <link rel="shortcut icon" href="icons/favicon.ico">
       <link rel="manifest" href="manifest.json">
