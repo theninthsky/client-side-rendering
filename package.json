@@ -3,10 +3,12 @@
   "version": "1.0.0",
   "scripts": {
     "start": "webpack serve --mode development",
-    "prebuild": "node scripts/fetch-static.mjs",
+    "prebuild": "npm-run-all -p fetch-static create-sitemap",
     "build": "webpack --mode production",
     "postbuild": "node scripts/create-404.mjs",
-    "serve": "serve build"
+    "serve": "serve build",
+    "fetch-static": "node scripts/fetch-static.mjs",
+    "create-sitemap": "node scripts/create-sitemap.mjs"
   },
   "dependencies": {
     "@emotion/css": "^11.9.0",
@@ -34,8 +36,10 @@
     "eslint-webpack-plugin": "^3.1.1",
     "fork-ts-checker-webpack-plugin": "^7.2.6",
     "html-webpack-plugin": "^5.5.0",
+    "npm-run-all": "^4.1.5",
     "react-refresh-typescript": "^2.0.5",
     "serve": "^13.0.2",
+    "sitemap": "^7.1.1",
     "style-loader": "^3.3.1",
     "ts-loader": "^9.2.8",
     "typescript": "^4.6.3",
