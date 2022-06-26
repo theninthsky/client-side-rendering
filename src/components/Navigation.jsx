@@ -12,6 +12,25 @@ const [THEME_LIGHT, THEME_DARK] = ['light', 'dark']
 
 document.documentElement.setAttribute('data-theme', localStorage.theme || THEME_LIGHT)
 
+const createPreload = ({ url, crossorigin, preloadOnHover }) => {
+  if (!preloadOnHover || document.body.querySelector(`link[href="${url}"]`)) return
+
+  document.body.appendChild(
+    Object.assign(document.createElement('link'), {
+      rel: 'preload',
+      href: url,
+      as: 'fetch',
+      crossOrigin: crossorigin
+    })
+  )
+}
+
+const onLinkHover = data => {
+  if (Array.isArray(data)) return data.forEach(createPreload)
+
+  createPreload(data)
+}
+
 const Navigation = () => {
   const [theme, setTheme] = useState(localStorage.theme || THEME_LIGHT)
 
@@ -19,11 +38,12 @@ const Navigation = () => {
 
   const links = useMemo(
     () =>
-      pagesManifest.map(({ path, title }) => (
+      pagesManifest.map(({ path, title, data }) => (
         <NavLink
           key={path}
           className={({ isActive }) => cx(style.item, { [style.activeItem]: isActive })}
           to={path}
+          onMouseEnter={data && (() => onLinkHover(data))}
           onClick={event => {
             event.preventDefault()
             navigate(path)

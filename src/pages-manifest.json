@@ -12,7 +12,8 @@
     "description": "This page demonstrates a large amount of static text that is pre-generated and fetched in parallel with other assets.",
     "vendors": ["moment"],
     "data": {
-      "url": "json/lorem-ipsum.json"
+      "url": "json/lorem-ipsum.json",
+      "preloadOnHover": true
     }
   },
   {
@@ -24,7 +25,8 @@
     "data": [
       {
         "url": "https://pokeapi.co/api/v2/type/1",
-        "crossorigin": "anonymous"
+        "crossorigin": "anonymous",
+        "preloadOnHover": true
       },
       {
         "url": "https://pokeapi.co/api/v2/type/2",
