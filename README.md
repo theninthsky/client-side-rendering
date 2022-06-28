@@ -33,6 +33,48 @@ Etc...
 
 This is crucial not only for CSR apps, but also for SSR and SSG ones, since the bigger your bundle is - the longer it will take the page to be interactive (either through hydration or regular rendering).
 
+### Caching
+
+Ideally, every hashed file should be cached, and `index.html` should **NEVER** be cached.
+It means that the browser would initially cache `main.[hash].js` and would have to redownload it only if its hash (content) changes.
+
+However, since `main.js` includes the entire bundle, the slightest change in code would cause its cache to expire, meaning the browser would have to download it again.
+Now, what part of our bundle comprises most of its weight? The answer is the **dependencies**, also called **vendors**.
+
+So if we could split the vendors to their own hashed chunk, that would allow a separation between our code and the vendors code, leading to less cache invalidations:
+
+```
+optimization: {
+  runtimeChunk: 'single',
+  splitChunks: {
+    chunks: 'initial',
+    cacheGroups: {
+      vendor: {
+        test: /[\\/]node_modules[\\/]/,
+        name: 'vendors'
+      }
+    }
+  }
+}
+```
+
+That will create a `vendors.[hash].js` file.
+
+Although this is a substantial improvement, what would happen if we updated a very small dependency?
+In such case, the entire vendors chunk's cache will invalidate.
+
+So, in order to make this even better, we will split **each dependency** to its own hashed chunk:
+
+```
+name: ({ context }) => (context.match(/[\\/]node_modules[\\/](.*?)([\\/]|$)/) || [])[1]
+```
+
+That will create files like `react-dom.[hash].js`, `react-router-dom.[hash].js` etc.
+
+More info about the default configurations (such as the split threshold size) can be found here:
+<br>
+https://webpack.js.org/plugins/split-chunks-plugin/#defaults
+
 ### Code Splitting
 
 A lot of the features we write end up being used only in a few of our pages, so we would like them to be downloaded only when the user visits the page they are being used in.
@@ -41,12 +83,14 @@ For Example, we wouldn't want users to download the [react-big-calendar](https:/
 
 The way we achieve this is (preferably) by route-based code splitting:
 
-const Home = lazy(() => import(/_ webpackChunkName: "index" _/ 'pages/Home'))
-<br>
-const LoremIpsum = lazy(() => import(/_ webpackChunkName: "lorem-ipsum" _/ 'pages/LoremIpsum'))
-<br>
-const Pokemon = lazy(() => import(/_ webpackChunkName: "pokemon" _/ 'pages/Pokemon'))
+```
+const Home = lazy(() => import(/* webpackChunkName: "index" */ 'pages/Home'))
+const LoremIpsum = lazy(() => import(/* webpackChunkName: "lorem-ipsum" */ 'pages/LoremIpsum'))
+const Pokemon = lazy(() => import(/* webpackChunkName: "pokemon" */ 'pages/Pokemon'))
+```
 
 So when the user visits the LoremIpsum page, they only download the main chunk script (which includes all shared dependencies such as the framework) and the lorem-ipsum chunk.
 
-Note: I believe that it is completely fine (and even encouraged) to have the user download your entire site (so they can have a smooth navigation experience). But it is _VERY_ wrong to have all the assets being downloaded _initially_, delaying the forst render of the page. These async chunks can be gladly downloaded _after_ the user-requested page has finished rendering and is visible to the user.
+Note: I believe that it is completely fine (and even encouraged) to have the user download your entire site (so they can have a smooth _app-like_ navigation experience). But it is **VERY** wrong to have all the assets being downloaded **initially**, delaying the first render of the page.
+<br>
+These async chunks can be gladly downloaded **after** the user-requested page has finished rendering and is visible to the user.
