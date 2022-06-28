@@ -1,4 +1,3 @@
-const { API_KEY } = process.env
 const BOT_AGENTS = [
   'googlebot',
   'yahoo! slurp',
@@ -85,7 +84,7 @@ const prerenderRequest = request => {
   const prerenderUrl = `https://service.prerender.io/${url}`
   const headersToSend = new Headers(headers)
 
-  headersToSend.set('X-Prerender-Token', API_KEY)
+  headersToSend.set('X-Prerender-Token', PRERENDER_API_KEY)
 
   const prerenderRequest = new Request(prerenderUrl, {
     headers: headersToSend,
