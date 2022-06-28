@@ -84,7 +84,7 @@ const prerenderRequest = request => {
   const prerenderUrl = `https://service.prerender.io/${url}`
   const headersToSend = new Headers(headers)
 
-  headersToSend.set('X-Prerender-Token', PRERENDER_API_KEY)
+  headersToSend.set('X-Prerender-Token', '' /*PRERENDER_API_KEY*/)
 
   const prerenderRequest = new Request(prerenderUrl, {
     headers: headersToSend,
