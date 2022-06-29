@@ -5,12 +5,12 @@ import pagesManifest from 'pages-manifest.json'
 import Title from 'components/common/Title'
 import Info from 'components/common/Info'
 
-const { title, description } = pagesManifest.find(({ name }) => name === 'index')
+const { description } = pagesManifest.find(({ name }) => name === 'index')
 
 const Home = () => {
   return (
     <div>
-      <Title>{title}</Title>
+      <Title>Home</Title>
 
       <Info className={style.info}>{description}</Info>
 
