@@ -3,7 +3,8 @@
     "name": "index",
     "path": "/",
     "title": "Client-side Rendering",
-    "description": "This page demonstrates a large amount of components that are rendered on the screen."
+    "description": "This page demonstrates a large amount of components that are rendered on the screen.",
+    "heading": "Home"
   },
   {
     "name": "lorem-ipsum",

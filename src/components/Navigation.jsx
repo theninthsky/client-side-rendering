@@ -38,7 +38,7 @@ const Navigation = () => {
 
   const links = useMemo(
     () =>
-      pagesManifest.map(({ path, title, data }) => (
+      pagesManifest.map(({ path, title, heading, data }) => (
         <NavLink
           key={path}
           className={({ isActive }) => cx(style.item, { [style.activeItem]: isActive })}
@@ -49,7 +49,7 @@ const Navigation = () => {
             navigate(path)
           }}
         >
-          <span>{title}</span>
+          <span>{heading || title}</span>
         </NavLink>
       )),
     [pagesManifest]
