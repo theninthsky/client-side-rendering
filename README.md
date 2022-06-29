@@ -99,7 +99,7 @@ These assets should be downloaded **after** the user-requested page has finished
 
 Code splitting has one major flaw - the runtime doesn't know these async chunks are needed until the main script executes, leading to them being fetched in a significant delay:
 
-![Without Prefetch](images/without-prefetch.png)
+![Without Preload](images/without-preload.png)
 
 The way we can solve this issue is by generating multiple html files (one for each pages) and preloading the relevant assets:
 
@@ -142,4 +142,4 @@ _Please note that other types of assets can be preloaded the same way (like styl
 <br>
 This way, the browser is able to fetch the page-related script **in parallel** with render-critical assets:
 
-![With Prefetch](images/with-prefetch.png)
+![With Preload](images/with-preload.png)
