@@ -86,7 +86,7 @@ module.exports = (_, { mode }) => {
       ...(production ? [] : [new ForkTsCheckerPlugin()]),
       new ESLintPlugin(),
       ...pagesManifest.map(
-        ({ name, vendors, data }) =>
+        ({ name, title, description, vendors, data }) =>
           new HtmlPlugin({
             filename: `${name}.html`,
             scriptLoading: 'module',
@@ -99,7 +99,7 @@ module.exports = (_, { mode }) => {
 
               if (data && !Array.isArray(data)) data = [data]
 
-              return htmlTemplate([script, ...vendorScripts], data)
+              return htmlTemplate({ scripts: [script, ...vendorScripts], title, description, data })
             }
           })
       ),
