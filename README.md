@@ -93,4 +93,53 @@ So when the user visits the LoremIpsum page, they only download the main chunk s
 
 Note: I believe that it is completely fine (and even encouraged) to have the user download your entire site (so they can have a smooth _app-like_ navigation experience). But it is **VERY** wrong to have all the assets being downloaded **initially**, delaying the first render of the page.
 <br>
-These async chunks can be gladly downloaded **after** the user-requested page has finished rendering and is visible to the user.
+These assets should be downloaded **after** the user-requested page has finished rendering and is visible to the user.
+
+### Preloading Async Chunks
+
+Code splitting has one major flaw - the runtime doesn't know these async chunks are needed until the main script executes, leading to them being fetched in a significant delay:
+
+![Without Prefetch](images/without-prefetch.png)
+
+The way we can solve this issue is by generating multiple html files (one for each pages) and preloading the relevant assets:
+
+```
+plugins: [
+  ...pagesManifest.map(
+    ({ name }) =>
+      new HtmlPlugin({
+        filename: `${name}.html`,
+        scriptLoading: 'module',
+        templateContent: ({ compilation }) => {
+          const assets = compilation.getAssets().map(({ name }) => name)
+          const script = assets.find(assetName => assetName.includes(`/${name}.`) && assetName.endsWith('.js'))
+
+          return htmlTemplate(script)
+        }
+      })
+  ),
+]
+```
+
+```
+module.exports = script => `
+  <!DOCTYPE html>
+  <html lang="en">
+    <head>
+      <title>CSR</title>
+    </head>
+    <body>
+      <link rel="preload" href="${script}" as="script"></link>
+
+      <div id="root"></div>
+    </body>
+  </html>
+`
+```
+
+_Please note that other types of assets can be preloaded the same way (like stylesheets)._
+<br>
+<br>
+This way, the browser is able to fetch the page-related script **in parallel** with render-critical assets:
+
+![With Prefetch](images/with-prefetch.png)
