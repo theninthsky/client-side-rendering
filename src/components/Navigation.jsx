@@ -13,7 +13,7 @@ const [THEME_LIGHT, THEME_DARK] = ['light', 'dark']
 document.documentElement.setAttribute('data-theme', localStorage.theme || THEME_LIGHT)
 
 const createPreload = ({ url, crossorigin, preloadOnHover }) => {
-  if (!preloadOnHover || document.body.querySelector(`link[href="${url}"]`)) return
+  if (!preloadOnHover || document.body.querySelector(`body > link[href="${url}"]`)) return
 
   document.body.appendChild(
     Object.assign(document.createElement('link'), {
