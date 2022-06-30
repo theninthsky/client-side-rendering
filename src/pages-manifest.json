@@ -14,7 +14,7 @@
     "vendors": ["moment"],
     "data": {
       "url": "json/lorem-ipsum.json",
-      "preloadOnHover": true
+      "preload": true
     }
   },
   {
@@ -27,7 +27,7 @@
       {
         "url": "https://pokeapi.co/api/v2/type/1",
         "crossorigin": "anonymous",
-        "preloadOnHover": true
+        "preload": true
       },
       {
         "url": "https://pokeapi.co/api/v2/type/2",

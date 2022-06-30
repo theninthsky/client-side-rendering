@@ -26,8 +26,8 @@ _Note: while this project is implemented using React, the majority of it's tweak
 The first rule of thumb is to use as fewer dependencies as possible, and among those, to select the ones with smaller filesize.
 
 For example:
-
-Use _[date-fns](https://www.npmjs.com/package/date-fns)_ instead of _[moment](https://www.npmjs.com/package/moment)_, _[zustand](https://www.npmjs.com/package/zustand)_ instead of _[redux](https://www.npmjs.com/package/redux)_ etc...
+<br>
+Use _[date-fns](https://www.npmjs.com/package/date-fns)_ instead of _[moment](https://www.npmjs.com/package/moment)_, _[zustand](https://www.npmjs.com/package/zustand)_ instead of _[redux](https://www.npmjs.com/package/redux)_ etc.
 
 This is crucial not only for CSR apps, but also for SSR and SSG ones, since the bigger your bundle is - the longer it will take the page to be interactive (either through hydration or regular rendering).
 
@@ -80,7 +80,7 @@ https://webpack.js.org/plugins/split-chunks-plugin/#defaults
 
 A lot of the features we write end up being used only in a few of our pages, so we would like them to be downloaded only when the user visits the page they are being used in.
 
-For Example, we wouldn't want users to download the [react-big-calendar](https://www.npmjs.com/package/react-big-calendar) package if they just tried to get to the home page. We would only want that to happen when they visit the calendar page.
+For Example, we wouldn't want users to download the _[react-big-calendar](https://www.npmjs.com/package/react-big-calendar)_ package if they just tried to get to the home page. We would only want that to happen when they visit the calendar page.
 
 The way we achieve this is (preferably) by route-based code splitting:
 
@@ -90,11 +90,11 @@ const LoremIpsum = lazy(() => import(/* webpackChunkName: "lorem-ipsum" */ 'page
 const Pokemon = lazy(() => import(/* webpackChunkName: "pokemon" */ 'pages/Pokemon'))
 ```
 
-So when the user visits the Lorem Ipsum page, they only download the main chunk script (which includes all shared dependencies such as the framework) and the lorem-ipsum.[hash].js chunk.
+So when the user visits the Lorem Ipsum page, they only download the main chunk script (which includes all shared dependencies such as the framework) and the `lorem-ipsum.[hash].js` chunk.
 
-_Note: I believe that it is completely fine (and even encouraged) to have the user download your entire site (so they can have a smooth **app-like** navigation experience). But it is **VERY** wrong to have all the assets being downloaded **initially**, delaying the first render of the page._
+_Note: I believe that it is completely fine (and even encouraged) to have the user download your entire site (so they can have a smooth **app-like** navigation experience). But it is **VERY** wrong to have all the assets being downloaded **initially**, delaying the first render of the page.
 <br>
-These assets should be downloaded **after** the user-requested page has finished rendering and is visible to the user.
+These assets should be downloaded **after** the user-requested page has finished rendering and is visible to the user._
 
 ### Preloading Async Chunks
 
