@@ -29,10 +29,10 @@ const NavigationLink = ({ className, to, data, children, ...otherProps }) => {
 
   const navigate = useDelayedNavigate()
 
-  const { mobile } = useMedia({ mobile: MOBILE_VIEWPORT })
+  const { unhoverable } = useMedia({ unhoverable: '(hover: none)' })
 
   useEffect(() => {
-    if (!mobile || !data) return
+    if (!unhoverable || !data) return
 
     const observer = new IntersectionObserver(
       (_, observer) => {
@@ -43,7 +43,7 @@ const NavigationLink = ({ className, to, data, children, ...otherProps }) => {
     )
 
     observer.observe(ref.current)
-  }, [mobile])
+  }, [unhoverable])
 
   return (
     <NavLink
