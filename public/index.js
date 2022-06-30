@@ -6,10 +6,10 @@ module.exports = ({ scripts, title, description, data = [] }) => `
       <meta name="viewport" content="width=device-width, initial-scale=1">
       <meta name="theme-color" content="#1e90ff">
       <meta name="description" content="${description}">
-      <meta property="og:title" content="Client-side Rendering">
+      <meta property="og:title" content="${title}">
       <meta property="og:type" content="website">
       <meta property="og:url" content="https://client-side-rendering.pages.dev">
-      <meta property="og:image:secure_url" itemprop="image" content="https://client-side-rendering.pages.dev/icons/icon-x192.png">
+      <meta property="og:image" content="https://client-side-rendering.pages.dev/icons/icon-x512.png">
 
       <link rel="shortcut icon" href="icons/favicon.ico">
       <link rel="manifest" href="manifest.json">
