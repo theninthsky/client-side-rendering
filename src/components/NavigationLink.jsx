@@ -29,10 +29,10 @@ const NavigationLink = ({ className, to, data, children, ...otherProps }) => {
 
   const navigate = useDelayedNavigate()
 
-  const { unhoverable } = useMedia({ unhoverable: '(hover: none)' })
+  const { hoverable } = useMedia({ hoverable: '(hover: hover) and (pointer: fine)' })
 
   useEffect(() => {
-    if (!unhoverable || !data) return
+    if (hoverable || !data) return
 
     const observer = new IntersectionObserver(
       (_, observer) => {
@@ -43,19 +43,22 @@ const NavigationLink = ({ className, to, data, children, ...otherProps }) => {
     )
 
     observer.observe(ref.current)
-  }, [unhoverable])
+  }, [hoverable])
 
   return (
     <NavLink
       className={({ isActive }) => cx(style.item, { [style.activeItem]: isActive }, className)}
       ref={ref}
       to={to}
-      onMouseEnter={data && (() => onLinkEvent(data))}
-      onFocus={data && (() => onLinkEvent(data))}
       onClick={event => {
         event.preventDefault()
         navigate(to)
       }}
+      {...(hoverable &&
+        data && {
+          onMouseEnter: () => onLinkEvent(data),
+          onFocus: () => onLinkEvent(data)
+        })}
       {...otherProps}
     >
       {children}

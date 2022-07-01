@@ -9,7 +9,7 @@ module.exports = ({ scripts, title, description, data = [] }) => `
       <meta property="og:title" content="${title}">
       <meta property="og:type" content="website">
       <meta property="og:url" content="https://client-side-rendering.pages.dev">
-      <meta property="og:image" content="https://client-side-rendering.pages.dev/icons/icon-x384.png">
+      <meta property="og:image" content="https://client-side-rendering.pages.dev/icons/og-icon.png">
 
       <link rel="shortcut icon" href="icons/favicon.ico">
       <link rel="manifest" href="manifest.json">
