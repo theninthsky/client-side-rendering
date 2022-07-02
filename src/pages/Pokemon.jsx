@@ -41,9 +41,9 @@ const Pokemon = () => {
       <main className={style.main}>
         {pokemon.length ? (
           pokemon.map(({ pokemon }, ind) => (
-            <span className={style.pokemon} key={ind}>
+            <p className={style.pokemon} key={ind}>
               {pokemon.name}
-            </span>
+            </p>
           ))
         ) : (
           <MainSkeleton />
