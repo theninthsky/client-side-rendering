@@ -49,6 +49,11 @@ const style = {
   `,
   input: css`
     margin-top: 20px;
+    color: #1976d2;
+
+    .MuiOutlinedInput-notchedOutline {
+      border: 1px solid rgba(25, 118, 210, 0.5);
+    }
   `,
   switch: css`
     margin-left: -10px;

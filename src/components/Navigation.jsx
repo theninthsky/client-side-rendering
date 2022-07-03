@@ -71,7 +71,7 @@ const style = {
   drawer: css`
     .MuiDrawer-paper {
       align-items: flex-start;
-      padding: 10px 15px;
+      padding: 10px 22px;
       background-color: var(--bg-color);
     }
   `,

@@ -1,4 +1,4 @@
-module.exports = ({ scripts, title, description, data = [] }) => `
+module.exports = ({ path, title, description, scripts, data = [] }) => `
   <!DOCTYPE html>
   <html lang="en">
     <head>
@@ -8,7 +8,7 @@ module.exports = ({ scripts, title, description, data = [] }) => `
       <meta name="description" content="${description}">
       <meta property="og:title" content="${title}">
       <meta property="og:type" content="website">
-      <meta property="og:url" content="https://client-side-rendering.pages.dev">
+      <meta property="og:url" content="https://client-side-rendering.pages.dev${path}">
       <meta property="og:image" content="https://client-side-rendering.pages.dev/icons/og-icon.png">
 
       <link rel="shortcut icon" href="icons/favicon.ico">
