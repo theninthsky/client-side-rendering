@@ -87,6 +87,7 @@ const style = {
       margin: 0;
       padding: 8px 0;
       border: none;
+      font-size: 18px;
     }
   `,
   activeItem: css`
