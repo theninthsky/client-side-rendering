@@ -18,6 +18,10 @@ injectGlobal`
 		transition: color 0.2s, background-color 0.2s;
 	}
 
+	svg {
+		fill: currentColor;
+	}
+
 	.hidden {
 		display: none;
 	}

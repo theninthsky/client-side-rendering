@@ -24,7 +24,7 @@ const onLinkEvent = data => {
   createPreload(data)
 }
 
-const NavigationLink = ({ className, to, data, children, ...otherProps }) => {
+const NavigationLink = ({ className, to, data, onClick, children, ...otherProps }) => {
   const ref = useRef()
 
   const navigate = useDelayedNavigate()
@@ -37,7 +37,7 @@ const NavigationLink = ({ className, to, data, children, ...otherProps }) => {
     const observer = new IntersectionObserver(
       (_, observer) => {
         onLinkEvent(data)
-        observer.unobserve(ref.current)
+        if (ref.current) observer.unobserve(ref.current)
       },
       { root: document.body }
     )
@@ -45,15 +45,18 @@ const NavigationLink = ({ className, to, data, children, ...otherProps }) => {
     observer.observe(ref.current)
   }, [hoverable])
 
+  const onLinkClick = event => {
+    event.preventDefault()
+    navigate(to)
+    onClick?.()
+  }
+
   return (
     <NavLink
       className={({ isActive }) => cx(style.item, { [style.activeItem]: isActive }, className)}
       ref={ref}
       to={to}
-      onClick={event => {
-        event.preventDefault()
-        navigate(to)
-      }}
+      onClick={onLinkClick}
       {...(hoverable &&
         data && {
           onMouseEnter: () => onLinkEvent(data),
@@ -81,13 +84,19 @@ const style = {
     text-decoration: none;
 
     @media ${MOBILE_VIEWPORT} {
-      margin-right: 15px;
+      margin: 0;
+      padding: 8px 0;
+      border: none;
     }
   `,
   activeItem: css`
     border-left: 5px solid dodgerblue;
     color: dodgerblue;
     cursor: default;
+
+    @media ${MOBILE_VIEWPORT} {
+      border: none;
+    }
   `
 }
 
