@@ -18,7 +18,7 @@ module.exports = ({ path, title, description, scripts, data = [] }) => `
       <title>${title}</title>
     </head>
     <body>
-      ${scripts.map(script => `<link rel="preload" href="${script}" as="script"></link>`).join('')}
+      ${scripts.map(script => `<link rel="preload" href="${script}" as="script">`).join('')}
       ${data
         .map(
           ({ url, crossorigin }) =>

@@ -100,7 +100,7 @@ These assets should be downloaded **after** the user-requested page has finished
 
 Code splitting has one major flaw - the runtime doesn't know these async chunks are needed until the main script executes, leading to them being fetched in a significant delay:
 
-![Without Preload](images/without-preload.png)
+![Without Chunk Preload](images/without-chunk-preload.png)
 
 The way we can solve this issue is by generating multiple html files (one for each pages) and preloading the relevant assets:
 
@@ -130,7 +130,7 @@ module.exports = script => `
       <title>CSR</title>
     </head>
     <body>
-      <link rel="preload" href="${script}" as="script"></link>
+      <link rel="preload" href="${script}" as="script">
 
       <div id="root"></div>
     </body>
@@ -143,4 +143,82 @@ _Please note that other types of assets can be preloaded the same way (like styl
 <br>
 This way, the browser is able to fetch the page-related script **in parallel** with render-critical assets:
 
-![With Preload](images/with-preload.png)
+![With Chunk Preload](images/with-chunk-preload.png)
+
+### Generating Static Data
+
+I like the idea of SSG: we create a cacheable html file and inject static data into it.
+<br>
+This can be useful for data that is not highly dynamic, such as content from CMS.
+
+So why not make ourselves some static data?
+<br>
+We will execute the following script during build time:
+
+```
+import { mkdir, writeFile } from 'fs/promises'
+import axios from 'axios'
+
+const path = 'public/json'
+const axiosOptions = { transformResponse: res => res }
+
+mkdir(path, { recursive: true })
+
+const fetchLoremIpsum = async () => {
+const { data } = await axios.get('https://loripsum.net/api/200/long/plaintext', axiosOptions)
+
+writeFile(`${path}/lorem-ipsum.json`, JSON.stringify(data))
+}
+
+fetchLoremIpsum()
+```
+
+That would create a `json/lorem-ipsum.json` file to be stored in the CDN.
+
+And now we simply fetch our static data:
+
+`fetch('json/lorem-ipsum.json')`
+
+There are numerous advantages to this approach:
+
+- We generate static data so we won’t bother our server or CMS for every user request.
+- The data will be fetched a lot faster from a nearby CDN edge rather than a remote server.
+- Since this script runs on our server during build time, we can authenticate with services however we want, there is no limit to what can be sent (secret tokens for example).
+
+Whenever we need to update the static data we simply rebuild the app or, better yet, rerun the script.
+
+### Preloading Data
+
+One of the disadvantages of CSR over SSR is that data will be fetched only after JS has been downloaded, parsed and executed in the browser:
+
+![Without Data Preload](images/without-data-preload.png)
+
+So we will use preloading once again, this time for the data itself:
+
+```
+module.exports = ({ script, data }) => `
+
+  <!DOCTYPE html>
+  <html lang="en">
+    <head>
+      <title>CSR</title>
+    </head>
+    <body>
+      <link rel="preload" href="${script}" as="script">
+      <link rel="preload" href="${data.url}" as="fetch">
+
+      <div id="root"></div>
+    </body>
+
+  </html>
+`
+```
+
+Now we can see that the data is being fetched right away:
+
+![With Data Preload](images/with-data-preload.png)
+
+There are, however, two limitations to this approach:
+
+1. We can only preload GET resources (should not be a problem with a well-architected backend).
+2. We can not preload dynamic route resources (such as `posts/[:id]`).
