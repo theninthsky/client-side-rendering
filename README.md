@@ -1,5 +1,3 @@
-# Client-side Rendering
-
 This project is a case study of CSR, it aims to explore the potential of client-side rendered apps in comparison to server-side rendering.
 
 ## Motivation
@@ -8,7 +6,7 @@ In the recent years, server-side rendering frameworks such as Next.js and Remix 
 <br>
 While SSR has it's own set of perks, those frameworks are braging about how fast they are ("Performance as a default"), implying Client-side rendering is slow.
 <br>
-In addition, it is a common perception that great SEO can only be achieved by using those SSR frameworks, and that CSR apps will give worse results.
+In addition, it is a common perception that great SEO can only be achieved by using SSR, and that CSR apps will give worse results.
 
 This project implements CSR best practices with some tricks that can make it infinitely scalable.
 The idea is to simulate a production grade app in terms of number of packages used and see how fast it can load.
@@ -19,7 +17,7 @@ This case study will cover two major aspects: performance and SEO. It will try t
 
 _Note: while this project is implemented using React, the majority of it's tweaks are not tied to any framework and are purely browser-based._
 
-## Performance
+# Performance
 
 ### Bundle Size
 
@@ -102,7 +100,7 @@ Code splitting has one major flaw - the runtime doesn't know these async chunks 
 
 ![Without Chunk Preload](images/without-chunk-preload.png)
 
-The way we can solve this issue is by generating multiple html files (one for each pages) and preloading the relevant assets:
+The way we can solve this issue is by generating multiple HTML files (one for each pages) and preloading the relevant assets:
 
 ```
 plugins: [
@@ -147,7 +145,7 @@ This way, the browser is able to fetch the page-related script **in parallel** w
 
 ### Generating Static Data
 
-I like the idea of SSG: we create a cacheable html file and inject static data into it.
+I like the idea of SSG: we create a cacheable HTML file and inject static data into it.
 <br>
 This can be useful for data that is not highly dynamic, such as content from CMS.
 
@@ -181,7 +179,7 @@ And now we simply fetch our static data:
 
 There are numerous advantages to this approach:
 
-- We generate static data so we won’t bother our server or CMS for every user request.
+- We generate static data so we won't bother our server or CMS for every user request.
 - The data will be fetched a lot faster from a nearby CDN edge rather than a remote server.
 - Since this script runs on our server during build time, we can authenticate with services however we want, there is no limit to what can be sent (secret tokens for example).
 
@@ -197,7 +195,6 @@ So we will use preloading once again, this time for the data itself:
 
 ```
 module.exports = ({ script, data }) => `
-
   <!DOCTYPE html>
   <html lang="en">
     <head>
@@ -222,3 +219,108 @@ There are, however, two limitations to this approach:
 
 1. We can only preload GET resources (should not be a problem with a well-architected backend).
 2. We can not preload dynamic route resources (such as `posts/[:id]`).
+
+## Tweaking Further
+
+### Splitting Vendors From Async Chunks
+
+Code splitting introduced us to a new problem: vendor duplication.
+
+Say we have two async chunks: `lorem-ipsum.[hash].js` and `pokemon.[hash].js`.
+If they both include the same dependency that is not part of the main chunk, that means the user will download that dependency **twice**.
+
+So if that said dependency is `moment` and it weighs 72kb minzipped, then both async chunk's size will be **at least** 72kb.
+
+We need to split this dependency from these async chunks so that it could be shared between them:
+
+```
+optimization: {
+  runtimeChunk: 'single',
+  splitChunks: {
+    chunks: 'initial',
+    cacheGroups: {
+      vendor: {
+        test: /[\\/]node_modules[\\/]/,
+        chunks: 'all',
+        name: ({ context }) => (context.match(/[\\/]node_modules[\\/](.*?)([\\/]|$)/) || [])[1]
+      }
+    }
+  }
+}
+```
+
+Now both `lorem-ipsum.[hash].js` and `pokemon.[hash].js` will use the extracted `moment.[hash].js` chunk, sparing the user a lot of network traffic (and give these assets better cache persistence).
+
+However, we have no way of telling which async chunks will be split before we build the application, so we wouldn't know which async vendor chunks we need to preload (refer to the “Preloading Async Chunks” section):
+
+[image]
+
+Unfortunately, I did not find a way to automatically match an async chunk to its dependencies (through Webpack's compilation object), so we'll have to manually specify these dependencies until and automatic solution will be found.
+
+We can easily find these async dependencies by looking at the waterfall:
+
+[image]
+
+Then we will have them being added to the page's HTML:
+
+```
+plugins: [
+  ...pagesManifest.map(
+    ({ name, vendors, data }) =>
+      new HtmlPlugin({
+        filename: `${name}.html`,
+        scriptLoading: 'module',
+        templateContent: ({ compilation }) => {
+          const assets = compilation.getAssets().map(({ name }) => name)
+          const script = assets.find(assetName => assetName.includes(`/${name}.`) && assetName.endsWith('.js'))
+          const vendorScripts = vendors
+                ? assets.filter(name => vendors.find(vendor => name.includes(`/${vendor}.`) && name.endsWith('.js')))
+                : []
+
+          return htmlTemplate({ scripts: [script, ...vendorScripts], data })
+        }
+      })
+  ),
+]
+```
+
+```
+module.exports = ({ scripts, data }) => `
+  <!DOCTYPE html>
+  <html lang="en">
+    <head>
+      <title>CSR</title>
+    </head>
+    <body>
+      ${scripts.map(script => `<link rel="preload" href="${script}" as="script">`).join('')}
+      <link rel="preload" href="${data.url}" as="fetch">
+
+      <div id="root"></div>
+    </body>
+  </html>
+`
+```
+
+Now all async vendor chunks will be fetched in parallel with their parent async chunks:
+
+[image]
+
+### Preloading Other Pages Data
+
+We can preload data when hovering over links (desktop) or when links enter the viewport (mobile):
+
+```
+const createPreload = url => {
+  if (document.body.querySelector(`body > link[href="${url}"]`)) return
+
+  document.body.appendChild(
+    Object.assign(document.createElement('link'), {
+      rel: 'preload',
+      href: url,
+      as: 'fetch'
+    })
+  )
+}
+```
+
+This time, we **can** preload dynamic route resources (such as `posts/[:id]`), since JS has already been loaded and the sky is the limit.
