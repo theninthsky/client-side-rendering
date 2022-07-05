@@ -4,7 +4,7 @@ This project is a case study of CSR, it aims to explore the potential of client-
 
 In the recent years, server-side rendering frameworks such as Next.js and Remix started to gain popularity in an increasing pace.
 <br>
-While SSR has it's own set of perks, those frameworks are braging about how fast they are ("Performance as a default"), implying Client-side rendering is slow.
+While SSR has it's own set of perks, those frameworks are bragging about how fast they are ("Performance as a default"), implying client-side rendering is slow.
 <br>
 In addition, it is a common perception that great SEO can only be achieved by using SSR, and that CSR apps will give worse results.
 
@@ -251,9 +251,7 @@ optimization: {
 
 Now both `lorem-ipsum.[hash].js` and `pokemon.[hash].js` will use the extracted `moment.[hash].js` chunk, sparing the user a lot of network traffic (and give these assets better cache persistence).
 
-However, we have no way of telling which async chunks will be split before we build the application, so we wouldn't know which async vendor chunks we need to preload (refer to the “Preloading Async Chunks” section):
-
-[image]
+However, we have no way of telling which async vendor chunks will be split before we build the application, so we wouldn't know which async vendor chunks we need to preload (refer to the "Preloading Async Chunks" section).
 
 Unfortunately, I did not find a way to automatically match an async chunk to its dependencies (through Webpack's compilation object), so we'll have to manually specify these dependencies until and automatic solution will be found.
 
@@ -301,7 +299,7 @@ module.exports = ({ scripts, data }) => `
 `
 ```
 
-Now all async vendor chunks will be fetched in parallel with their parent async chunks:
+Now all async vendor chunks will be fetched in parallel with their parent async chunk:
 
 [image]
 

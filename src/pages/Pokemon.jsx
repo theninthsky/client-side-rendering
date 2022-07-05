@@ -40,11 +40,13 @@ const Pokemon = () => {
 
       <main className={style.main}>
         {pokemon.length ? (
-          pokemon.map(({ pokemon }, ind) => (
-            <p className={style.pokemon} key={ind}>
-              {pokemon.name}
-            </p>
-          ))
+          <ul className={style.list}>
+            {pokemon.map(({ pokemon }, ind) => (
+              <li className={style.pokemon} key={ind}>
+                {pokemon.name}
+              </li>
+            ))}
+          </ul>
         ) : (
           <MainSkeleton />
         )}
@@ -67,6 +69,9 @@ const style = {
   `,
   main: css`
     margin-top: 20px;
+  `,
+  list: css`
+    list-style: none;
   `,
   skeleton: css`
     margin-top: 5px;
