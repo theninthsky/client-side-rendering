@@ -100,7 +100,7 @@ Code splitting has one major flaw - the runtime doesn't know these async chunks 
 
 ![Without Async Preload](images/without-async-preload.png)
 
-The way we can solve this issue is by generating multiple HTML files (one for each pages) and preloading the relevant assets:
+The way we can solve this issue is by generating multiple HTML files (one for each page) and preloading the relevant assets:
 
 ```
 plugins: [
@@ -136,9 +136,10 @@ module.exports = script => `
 `
 ```
 
+`pages-manifest.json` can be found [here](src/pages-manifest.json).
+
 _Please note that other types of assets can be preloaded the same way (like stylesheets)._
-<br>
-<br>
+
 This way, the browser is able to fetch the page-related script **in parallel** with render-critical assets:
 
 ![With Async Preload](images/with-async-preload.png)
