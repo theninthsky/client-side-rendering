@@ -330,7 +330,7 @@ The biggest advantage of a static app is that it can be served entirely from a C
 <br>
 A CDN has many PoPs (Points of Presence), also called 'Edge Networks'. These PoPs are distributed around the globe and thus are able to serve files to every region _much_ faster than a remote server.
 
-The fastest CDN to date is Cloudflare, which has more than 250 PoPs (and counting).
+The fastest CDN to date is Cloudflare, which has more than 250 PoPs (and counting):
 
 ![Cloudflare PoPs](images/cloudflare-pops.png)
 
@@ -341,3 +341,51 @@ https://blog.cloudflare.com/benchmarking-edge-network-performance
 We can easily deploy our app using Cloudflare Pages:
 <br>
 https://pages.cloudflare.com
+
+# SEO
+
+It is often said that Google is having trouble correctly indexing a CSR app.
+<br>
+That might have been the case in 2018, but as of 2022, Google prefectly indexes every CSR app you throw at it.
+<br>
+The indexed pages will have a title, description and even content, as long as we remember to dynamically set them (either manually or using something like _[react-helmet](https://www.npmjs.com/package/react-helmet)_).
+
+In other words, it will not matter if we use SSR or not in terms of Google indexing.
+
+![Google Search Results](images/google-search-results.png)
+
+### Social Media Share Preview
+
+When we share a CSR app link in social media, we can see that no matter what page we link, the preview will remain the same.
+<br>
+This happens because most CSR apps have only one HTML file, and social share previews do not render JS.
+<br>
+In our setup, we generate multiple HTML files (one for each page), so we have control of what `og` meta tags will be present in the document:
+
+```
+module.exports = ({ path, title, description }) => `
+  <!DOCTYPE html>
+  <html lang="en">
+    <head>
+      <meta name="description" content="${description}">
+      <meta property="og:title" content="${title}">
+      <meta property="og:type" content="website">
+      <meta property="og:url" content="https://client-side-rendering.pages.dev${path}">
+      <meta property="og:image" content="https://client-side-rendering.pages.dev/icons/og-icon.png">
+
+      <title>${title}</title>
+    </head>
+    <body>
+      <noscript>You need to enable JavaScript to run this app.</noscript>
+
+      <div id="root"></div>
+    </body>
+  </html>
+`
+```
+
+This gives us the correct preview for every page:
+
+![Facebook Share Preview](images/facebook-share-preview.png)
+
+_Note that we cannot create a preview for dynamic route pages (such as `posts/[:id]`)._
