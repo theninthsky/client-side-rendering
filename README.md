@@ -98,7 +98,7 @@ These assets should be downloaded **after** the user-requested page has finished
 
 Code splitting has one major flaw - the runtime doesn't know these async chunks are needed until the main script executes, leading to them being fetched in a significant delay:
 
-![Without Chunk Preload](images/without-chunk-preload.png)
+![Without Async Preload](images/without-async-preload.png)
 
 The way we can solve this issue is by generating multiple HTML files (one for each pages) and preloading the relevant assets:
 
@@ -141,7 +141,7 @@ _Please note that other types of assets can be preloaded the same way (like styl
 <br>
 This way, the browser is able to fetch the page-related script **in parallel** with render-critical assets:
 
-![With Chunk Preload](images/with-chunk-preload.png)
+![With Async Preload](images/with-async-preload.png)
 
 ### Generating Static Data
 
@@ -257,7 +257,7 @@ Unfortunately, I did not find a way to automatically match an async chunk to its
 
 We can easily find these async dependencies by looking at the waterfall:
 
-[image]
+![Without Async Vendor Preload](images/without-async-vendor-preload.png)
 
 Then we will have them being added to the page's HTML:
 
@@ -301,7 +301,7 @@ module.exports = ({ scripts, data }) => `
 
 Now all async vendor chunks will be fetched in parallel with their parent async chunk:
 
-[image]
+![With Async Vendor Preload](images/with-async-vendor-preload.png)
 
 ### Preloading Other Pages Data
 
