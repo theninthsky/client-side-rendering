@@ -332,7 +332,7 @@ A CDN has many PoPs (Points of Presence), also called 'Edge Networks'. These PoP
 
 The fastest CDN to date is Cloudflare, which has more than 250 PoPs (and counting).
 
-![Cloudflare PoPs](images/cloudlfare-pops.png)
+![Cloudflare PoPs](images/cloudflare-pops.png)
 
 https://speed.cloudflare.com
 
