@@ -25,7 +25,7 @@ The first rule of thumb is to use as fewer dependencies as possible, and among t
 
 For example:
 <br>
-Use _[date-fns](https://www.npmjs.com/package/date-fns)_ instead of _[moment](https://www.npmjs.com/package/moment)_, _[zustand](https://www.npmjs.com/package/zustand)_ instead of _[redux](https://www.npmjs.com/package/redux)_ etc.
+We can use _[date-fns](https://www.npmjs.com/package/date-fns)_ instead of _[moment](https://www.npmjs.com/package/moment)_, _[zustand](https://www.npmjs.com/package/zustand)_ instead of _[redux toolkit](https://www.npmjs.com/package/@reduxjs/toolkit)_ etc.
 
 This is crucial not only for CSR apps, but also for SSR and SSG ones, since the bigger your bundle is - the longer it will take the page to be interactive (either through hydration or regular rendering).
 
@@ -323,3 +323,21 @@ const createPreload = url => {
 ```
 
 This time, we **can** preload dynamic route resources (such as `posts/[:id]`), since JS has already been loaded and the sky is the limit.
+
+## Deploying
+
+The biggest advantage of a static app is that it can be served entirely from a CDN.
+<br>
+A CDN has many PoPs (Points of Presence), also called 'Edge Networks'. These PoPs are distributed around the globe and thus are able to serve files to every region _much_ faster than a remote server.
+
+The fastest CDN to date is Cloudflare, which has more than 250 PoPs (and counting).
+
+![Cloudflare PoPs](images/cloudlfare-pops.png)
+
+https://speed.cloudflare.com
+
+https://blog.cloudflare.com/benchmarking-edge-network-performance
+
+We can easily deploy our app using Cloudflare Pages:
+<br>
+https://pages.cloudflare.com
