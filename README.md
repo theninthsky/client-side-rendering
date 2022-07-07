@@ -80,8 +80,9 @@ In such case, the entire vendors chunk's cache will invalidate.
 
 So, in order to make this even better, we will split **each dependency** to its own hashed chunk:
 
-```
-name: ({ context }) => (context.match(/[\\/]node_modules[\\/](.*?)([\\/]|$)/) || [])[1]
+```diff
+- name: 'vendors'
++ name: ({ context }) => (context.match(/[\\/]node_modules[\\/](.*?)([\\/]|$)/) || [])[1]
 ```
 
 This will create files like `react-dom.[hash].js`, `react-router-dom.[hash].js` etc.
@@ -210,7 +211,7 @@ One of the disadvantages of CSR over SSR is that data will be fetched only after
 
 So we will use preloading once again, this time for the data itself:
 
-```
+```diff
 module.exports = ({ script, data }) => `
   <!DOCTYPE html>
   <html lang="en">
@@ -219,7 +220,7 @@ module.exports = ({ script, data }) => `
     </head>
     <body>
       <link rel="preload" href="${script}" as="script">
-      <link rel="preload" href="${data.url}" as="fetch">
++     <link rel="preload" href="${data.url}" as="fetch">
 
       <div id="root"></div>
     </body>
@@ -250,7 +251,7 @@ So if that said dependency is `moment` and it weighs 72kb minzipped, then both a
 
 We need to split this dependency from these async chunks so that it could be shared between them:
 
-```
+```diff
 optimization: {
   runtimeChunk: 'single',
   splitChunks: {
@@ -258,7 +259,7 @@ optimization: {
     cacheGroups: {
       vendor: {
         test: /[\\/]node_modules[\\/]/,
-        chunks: 'all',
++       chunks: 'all',
         name: ({ context }) => (context.match(/[\\/]node_modules[\\/](.*?)([\\/]|$)/) || [])[1]
       }
     }
@@ -266,7 +267,7 @@ optimization: {
 }
 ```
 
-Now both `lorem-ipsum.[hash].js` and `pokemon.[hash].js` will use the extracted `moment.[hash].js` chunk, sparing the user a lot of network traffic (and give these assets better cache persistence).
+Now both `lorem-ipsum.[hash].js` and `pokemon.[hash].js` will use the extracted `moment.[hash].js` chunk, sparing the user a lot of network traffic (and giving these assets better cache persistence).
 
 However, we have no way of telling which async vendor chunks will be split before we build the application, so we wouldn't know which async vendor chunks we need to preload (refer to the "Preloading Async Chunks" section).
 
@@ -278,7 +279,7 @@ We can easily find these async dependencies by looking at the waterfall:
 
 Then we will have them being added to the page's HTML:
 
-```
+```diff
 plugins: [
   ...pagesManifest.map(
     ({ name, vendors, data }) =>
@@ -288,18 +289,19 @@ plugins: [
         templateContent: ({ compilation }) => {
           const assets = compilation.getAssets().map(({ name }) => name)
           const script = assets.find(assetName => assetName.includes(`/${name}.`) && assetName.endsWith('.js'))
-          const vendorScripts = vendors
-                ? assets.filter(name => vendors.find(vendor => name.includes(`/${vendor}.`) && name.endsWith('.js')))
-                : []
++         const vendorScripts = vendors
++               ? assets.filter(name => vendors.find(vendor => name.includes(`/${vendor}.`) && name.endsWith('.js')))
++               : []
 
-          return htmlTemplate({ scripts: [script, ...vendorScripts], data })
+-         return htmlTemplate(script)
++         return htmlTemplate({ scripts: [script, ...vendorScripts], data })
         }
       })
   ),
 ]
 ```
 
-```
+```diff
 module.exports = ({ scripts, data }) => `
   <!DOCTYPE html>
   <html lang="en">
@@ -307,7 +309,8 @@ module.exports = ({ scripts, data }) => `
       <title>CSR</title>
     </head>
     <body>
-      ${scripts.map(script => `<link rel="preload" href="${script}" as="script">`).join('')}
+-     <link rel="preload" href="${script}" as="script">
++     ${scripts.map(script => `<link rel="preload" href="${script}" as="script">`).join('')}
       <link rel="preload" href="${data.url}" as="fetch">
 
       <div id="root"></div>
