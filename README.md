@@ -1,6 +1,22 @@
 This project is a case study of CSR, it aims to explore the potential of client-side rendered apps in comparison to server-side rendering.
 
-## Motivation
+## Table of Contents
+- [Motivation](#motivation)
+- [Performance](#performance)
+    + [Bundle Size](#bundle-size)
+    + [Caching](#caching)
+    + [Code Splitting](#code-splitting)
+    + [Preloading Async Chunks](#preloading-async-chunks)
+    + [Generating Static Data](#generating-static-data)
+    + [Preloading Data](#preloading-data)
+  * [Tweaking Further](#tweaking-further)
+    + [Splitting Vendors From Async Chunks](#splitting-vendors-from-async-chunks)
+    + [Preloading Other Pages Data](#preloading-other-pages-data)
+  * [Deploying](#deploying)
+- [SEO](#seo)
+    + [Social Media Share Preview](#social-media-share-preview)
+
+# Motivation
 
 In the recent years, server-side rendering frameworks such as Next.js and Remix started to gain popularity in an increasing pace.
 <br>
@@ -254,7 +270,7 @@ Now both `lorem-ipsum.[hash].js` and `pokemon.[hash].js` will use the extracted 
 
 However, we have no way of telling which async vendor chunks will be split before we build the application, so we wouldn't know which async vendor chunks we need to preload (refer to the "Preloading Async Chunks" section).
 
-Unfortunately, I did not find a way to automatically match an async chunk to its dependencies (through Webpack's compilation object), so we'll have to manually specify these dependencies until and automatic solution will be found.
+Unfortunately, I did not find a way to automatically match an async chunk to its dependencies (through Webpack's compilation object), so we'll have to manually specify these dependencies until an automatic solution will be found.
 
 We can easily find these async dependencies by looking at the waterfall:
 
@@ -350,7 +366,7 @@ That might have been the case in 2018, but as of 2022, Google prefectly indexes 
 <br>
 The indexed pages will have a title, description and even content, as long as we remember to dynamically set them (either manually or using something like _[react-helmet](https://www.npmjs.com/package/react-helmet)_).
 
-In other words, it will not matter if we use SSR or not in terms of Google indexing.
+In other words, it won't matter if we used SSR or not in terms of Google indexing.
 
 ![Google Search Results](images/google-search-results.png)
 
