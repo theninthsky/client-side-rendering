@@ -1,20 +1,23 @@
 This project is a case study of CSR, it aims to explore the potential of client-side rendered apps in comparison to server-side rendering.
 
 ## Table of Contents
+
 - [Motivation](#motivation)
 - [Performance](#performance)
-    + [Bundle Size](#bundle-size)
-    + [Caching](#caching)
-    + [Code Splitting](#code-splitting)
-    + [Preloading Async Chunks](#preloading-async-chunks)
-    + [Generating Static Data](#generating-static-data)
-    + [Preloading Data](#preloading-data)
+  - [Bundle Size](#bundle-size)
+  - [Caching](#caching)
+  - [Code Splitting](#code-splitting)
+  - [Preloading Async Chunks](#preloading-async-chunks)
+  - [Generating Static Data](#generating-static-data)
+  - [Preloading Data](#preloading-data)
   * [Tweaking Further](#tweaking-further)
-    + [Splitting Vendors From Async Chunks](#splitting-vendors-from-async-chunks)
-    + [Preloading Other Pages Data](#preloading-other-pages-data)
+    - [Splitting Vendors From Async Chunks](#splitting-vendors-from-async-chunks)
+    - [Preloading Other Pages Data](#preloading-other-pages-data)
+    - [Preventing Sequenced Rendering](#preventing-sequenced-rendering)
+    - [Transitioning Async Pages](#transitioning-async-pages)
   * [Deploying](#deploying)
 - [SEO](#seo)
-    + [Social Media Share Preview](#social-media-share-preview)
+  - [Social Media Share Preview](#social-media-share-preview)
 
 # Motivation
 
@@ -342,6 +345,93 @@ const createPreload = url => {
 ```
 
 This time, we **can** preload dynamic route resources (such as `posts/[:id]`), since JS has already been loaded and the sky is the limit.
+
+### Preventing Sequenced Rendering
+
+When we split a page from the main app, we separate its render phase, meaning the app will render before the page renders:
+
+![Before Page Render](images/before-page-render.png)
+![After Page Render](images/after-page-render.png)
+
+This happens due to the common approach of wrapping routes with Suspense:
+
+```
+const App = () => {
+  return (
+    <>
+      <Navigation />
+
+      <Suspense>
+        <Routes>{routes}</Routes>
+      </Suspense>
+    </>
+  )
+}
+```
+
+This method has a lot of sense to it:
+<br>
+We would like the app to be visually complete in a single render, but we wouldn't want to stall the page render until the async chunk finishes downloading.
+
+However, since we preload all async chunks (and their vendors), this won't be a problem for us. So we should suspense the entire app until the async chunk finishes downloading (which, in our case, happens really fast):
+
+```
+createRoot(document.getElementById('root')).render(
+  <BrowserRouter>
+    <Suspense>
+        <App />
+    </Suspense>
+  </BrowserRouter>
+)
+```
+
+This would make our app and the async page visually render at the same time.
+
+### Transitioning Async Pages
+
+_Note: this technique requires React 18_
+
+We will see a similar effect when we move to another async page: a blank space that remains until the page's script finishes downloading.
+
+React 18 introduced us to the useTransition hook, which allows us to delay a render until some criteria are met.
+<br>
+We will use this hook in to delay the page navigation until it is ready:
+
+```
+import { useTransition } from 'react'
+import { useNavigate } from 'react-router-dom'
+
+const useDelayedNavigate = () => {
+  const [, startTransition] = useTransition()
+  const navigate = useNavigate()
+
+  return to => startTransition(() => navigate(to))
+}
+
+export default useDelayedNavigate
+```
+
+```
+const NavigationLink = ({ to, onClick, children }) => {
+  const navigate = useDelayedNavigate()
+
+  const onLinkClick = event => {
+    event.preventDefault()
+    navigate(to)
+    onClick?.()
+  }
+
+  return (
+    <NavLink to={to} onClick={onLinkClick}>
+      {children}
+    </NavLink>
+  )
+}
+
+export default NavigationLink
+```
+
+Now async pages will feel like they were never split from the main app.
 
 ## Deploying
 
