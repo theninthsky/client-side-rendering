@@ -16,6 +16,7 @@ This project is a case study of CSR, it aims to explore the potential of client-
     - [Preventing Sequenced Rendering](#preventing-sequenced-rendering)
     - [Transitioning Async Pages](#transitioning-async-pages)
   - [Deploying](#deploying)
+  - [Benchmark](#benchmark)
 - [SEO](#seo)
   - [Indexing](#indexing)
     - [Google](#google)
@@ -453,6 +454,19 @@ https://blog.cloudflare.com/benchmarking-edge-network-performance
 We can easily deploy our app using Cloudflare Pages:
 <br>
 https://pages.cloudflare.com
+
+## Benchmark
+
+To conclude this section, here's a benchmark of our app compared to [Next.js](https://nextjs.org/docs/getting-started)'s documentation site (which is **entirely SSG**).
+<br>
+I chose the most minimalistic page I could find in it (Fast Refresh) and compared it to my Lorem Ipsum page.
+
+The benchmark is performed through [PageSpeed Insights](https://pagespeed.web.dev/) simulating a slow 4G network.
+
+![Next.js Benchmark](images/next-js-benchmark.png)
+![Client-side Rendering Benchmark](images/client-side-rendering-benchmark.png)
+
+It turns out that performance is not a default in Next.js.
 
 # SEO
 
