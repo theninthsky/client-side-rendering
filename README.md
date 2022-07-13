@@ -489,7 +489,9 @@ In other words, it won't matter if we used SSR or not in terms of Google indexin
 
 Other inferior search engines such as Bing cannot render JS (despite claiming they can). So in order to have them index our app correctly, we will serve them a **prerendered** version of our pages.
 <br>
-The best tool for this job is _[prerender.io](https://prerender.io/)_, which is able to crawl our app in production, generate a simple, styleless, HTML file for each page and serve it to web crawlers on demand.
+The best tool for this job is _[Prerender.io](https://prerender.io/)_, which is able to crawl our app in production, generate a simple, styleless, HTML file for each page and serve it to web crawlers on demand.
+
+![Prerender.io Table](images/prerender-io-table.png)
 
 We can easily integrate it with Cloudflare Workers:
 <br>
@@ -497,7 +499,7 @@ https://docs.prerender.io/docs/24-cloudflare
 
 Using prerendering produces the **exact same** SEO results as using SSR.
 
-_Note that if you only care about Google indexing, there's little sense to prerendering your website, since **googlebot** crawls JS apps flawlessly._
+_Note that if you only care about Google indexing, there's little sense to prerendering your website, since googlebot crawls JS apps flawlessly._
 
 ### Social Media Share Previews
 
