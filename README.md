@@ -441,7 +441,7 @@ Now async pages will feel like they were never split from the main app.
 
 The biggest advantage of a static app is that it can be served entirely from a CDN.
 <br>
-A CDN has many PoPs (Points of Presence), also called 'Edge Networks'. These PoPs are distributed around the globe and thus are able to serve files to every region _much_ faster than a remote server.
+A CDN has many PoPs (Points of Presence), also called 'Edge Networks'. These PoPs are distributed around the globe and thus are able to serve files to every region **much** faster than a remote server.
 
 The fastest CDN to date is Cloudflare, which has more than 250 PoPs (and counting):
 
@@ -503,11 +503,11 @@ _Note that if you only care about Google indexing, there's little sense to prere
 
 ### Social Media Share Previews
 
-When we share a CSR app link in social media, we can see that no matter what page we link, the preview will remain the same.
+When we share a CSR app link in social media, we can see that no matter what page we link to, the preview will remain the same.
 <br>
 This happens because most CSR apps have only one HTML file, and social share previews do not render JS.
 <br>
-In our setup, we generate multiple HTML files (one for each page), so we have control of what `og` meta tags will be present in the document:
+In our setup, we generate multiple HTML files (one for each page), so we have control of what `og` meta tags will be present in each document:
 
 ```
 module.exports = ({ path, title, description }) => `
