@@ -15,9 +15,12 @@ This project is a case study of CSR, it aims to explore the potential of client-
     - [Preloading Other Pages Data](#preloading-other-pages-data)
     - [Preventing Sequenced Rendering](#preventing-sequenced-rendering)
     - [Transitioning Async Pages](#transitioning-async-pages)
-  * [Deploying](#deploying)
+  - [Deploying](#deploying)
 - [SEO](#seo)
-  - [Social Media Share Preview](#social-media-share-preview)
+  - [Indexing](#indexing)
+    - [Google](#google)
+    - [Other Search Engines](#other-search-engines)
+  * [Social Media Share Previews](#social-media-share-previews)
 
 # Motivation
 
@@ -453,9 +456,13 @@ https://pages.cloudflare.com
 
 # SEO
 
+## Indexing
+
+### Google
+
 It is often said that Google is having trouble correctly indexing a CSR app.
 <br>
-That might have been the case in 2018, but as of 2022, Google prefectly indexes every CSR app you throw at it.
+That might have been the case in 2018, but as of 2022, Google prefectly indexes every JS app.
 <br>
 The indexed pages will have a title, description and even content, as long as we remember to dynamically set them (either manually or using something like _[react-helmet](https://www.npmjs.com/package/react-helmet)_).
 
@@ -463,7 +470,21 @@ In other words, it won't matter if we used SSR or not in terms of Google indexin
 
 ![Google Search Results](images/google-search-results.png)
 
-### Social Media Share Preview
+### Other Search Engines
+
+Other inferior search engines such as Bing cannot render JS (despite claiming they can). So in order to have them index our app correctly, we will serve them a **prerendered** version of our pages.
+<br>
+The best tool for this job is _[prerender.io](https://prerender.io/)_, which is able to crawl our app in production, generate a simple, styleless, HTML file for each page and serve it to web crawlers on demand.
+
+We can easily integrate it with Cloudflare Workers:
+<br>
+https://docs.prerender.io/docs/24-cloudflare
+
+Using prerendering produces the **exact same** SEO results as using SSR.
+
+_Note that if you only care about Google indexing, there's little sense to prerendering your website, since **googlebot** crawls JS apps flawlessly._
+
+### Social Media Share Previews
 
 When we share a CSR app link in social media, we can see that no matter what page we link, the preview will remain the same.
 <br>
