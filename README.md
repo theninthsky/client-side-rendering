@@ -483,6 +483,7 @@ The indexed pages will have a title, description and even content, as long as we
 In other words, it won't matter if we used SSR or not in terms of Google indexing.
 
 ![Google Search Results](images/google-search-results.png)
+![Google Lorem Ipsum Search Results](images/google-lorem-ipsum-search-results.png)
 
 ### Other Search Engines
 
