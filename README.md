@@ -466,7 +466,7 @@ The benchmark is performed through [PageSpeed Insights](https://pagespeed.web.de
 ![Next.js Benchmark](images/next-js-benchmark.png)
 ![Client-side Rendering Benchmark](images/client-side-rendering-benchmark.png)
 
-It turns out that performance is not a default in Next.js.
+As it turns out, performance is not a default in Next.js.
 
 # SEO
 
