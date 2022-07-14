@@ -15,6 +15,7 @@ This project is a case study of CSR, it aims to explore the potential of client-
     - [Preloading Other Pages Data](#preloading-other-pages-data)
     - [Preventing Sequenced Rendering](#preventing-sequenced-rendering)
     - [Transitioning Async Pages](#transitioning-async-pages)
+    - [Prefetching Async Pages](#prefetching-async-pages)
   - [Deploying](#deploying)
   - [Benchmark](#benchmark)
 - [SEO](#seo)
@@ -27,14 +28,14 @@ This project is a case study of CSR, it aims to explore the potential of client-
 
 In the recent years, server-side rendering frameworks such as Next.js and Remix started to gain popularity in an increasing pace.
 <br>
-While SSR has it's own set of perks, those frameworks are bragging about how fast they are ("Performance as a default"), implying client-side rendering is slow.
+While SSR has it's own advantages, those frameworks are bragging about how fast they are ("Performance as a default"), implying client-side rendering is slow.
 <br>
-In addition, it is a common perception that great SEO can only be achieved by using SSR, and that CSR apps will give worse results.
+In addition, it is a common misconception that great SEO can only be achieved by using SSR, and that CSR apps will give worse results.
 
 This project implements CSR best practices with some tricks that can make it infinitely scalable.
-The idea is to simulate a production grade app in terms of number of packages used and see how fast it can load.
+The goal is to simulate a production grade app in terms of number of packages used and try to speed up its loading times as much as possible.
 
-It is important to note that improving performance should not come at the expense of developer experience, so the way this project is architected should vary only slightly compared to "normal" react projects.
+It is important to note that improving performance should not come at the expense of developer experience, so the way this project is architected should vary only slightly compared to "normal" react projects, and not be extremely opinionated as Next.js is.
 
 This case study will cover two major aspects: performance and SEO. It will try to inspect how we can achieve great scores in either of them, both compared to SSR and on their own.
 
@@ -437,11 +438,45 @@ export default NavigationLink
 
 Now async pages will feel like they were never split from the main app.
 
+### Prefetching Async Pages
+
+Users should have a smooth navigation experience in our app.
+<br>
+However, splitting every page causes a noticeable delay in navigation, since every page has to be downloaded before it can be rendered on screen.
+
+That's why I think all pages should be prefetched ahead of time.
+
+We can do this by writing a wrapper function around React's _lazy_ function:
+
+```
+import { lazy } from 'react'
+
+const lazyPrefetch = chunk => {
+  window.addEventListener('load', () => setTimeout(chunk, 200), { once: true })
+
+  return lazy(chunk)
+}
+
+export default lazyPrefetch
+```
+
+```diff
+- const Home = lazy(() => import(/* webpackChunkName: "index" */ 'pages/Home'))
+- const LoremIpsum = lazy(() => import(/* webpackChunkName: "lorem-ipsum" */ 'pages/LoremIpsum'))
+- const Pokemon = lazy(() => import(/* webpackChunkName: "pokemon" */ 'pages/Pokemon'))
+
++ const Home = lazyPrefetch(() => import(/* webpackChunkName: "index" */ 'pages/Home'))
++ const LoremIpsum = lazyPrefetch(() => import(/* webpackChunkName: "lorem-ipsum" */ 'pages/LoremIpsum'))
++ const Pokemon = lazyPrefetch(() => import(/* webpackChunkName: "pokemon" */ 'pages/Pokemon'))
+```
+
+Now every page will be prefetched (but not executed) 200ms after the browser's _load_ event.
+
 ## Deploying
 
 The biggest advantage of a static app is that it can be served entirely from a CDN.
 <br>
-A CDN has many PoPs (Points of Presence), also called 'Edge Networks'. These PoPs are distributed around the globe and thus are able to serve files to every region _much_ faster than a remote server.
+A CDN has many PoPs (Points of Presence), also called 'Edge Networks'. These PoPs are distributed around the globe and thus are able to serve files to every region **much** faster than a remote server.
 
 The fastest CDN to date is Cloudflare, which has more than 250 PoPs (and counting):
 
@@ -503,11 +538,11 @@ _Note that if you only care about Google indexing, there's little sense to prere
 
 ### Social Media Share Previews
 
-When we share a CSR app link in social media, we can see that no matter what page we link, the preview will remain the same.
+When we share a CSR app link in social media, we can see that no matter what page we link to, the preview will remain the same.
 <br>
 This happens because most CSR apps have only one HTML file, and social share previews do not render JS.
 <br>
-In our setup, we generate multiple HTML files (one for each page), so we have control of what `og` meta tags will be present in the document:
+In our setup, we generate multiple HTML files (one for each page), so we have control of what `og` meta tags will be present in each document:
 
 ```
 module.exports = ({ path, title, description }) => `
