@@ -23,6 +23,8 @@ This project is a case study of CSR, it aims to explore the potential of client-
     - [Google](#google)
     - [Other Search Engines](#other-search-engines)
   * [Social Media Share Previews](#social-media-share-previews)
+- [CSR vs. SSR](#csr-vs-ssr)
+  - [The Cost of Hydration](#the-cost-of-hydration)
 
 # Motivation
 
@@ -571,3 +573,28 @@ This gives us the correct preview for every page:
 ![Facebook Share Preview](images/facebook-share-preview.png)
 
 _Note that we cannot create a preview for dynamic route pages (such as `posts/[:id]`)._
+
+# CSR vs. SSR
+
+## The Cost of Hydration
+
+It is a fact that under fast internet connection, both CSR and SSR perform great (as long as they are both optimized). And the higher the connection speed - the closer they get in terms of loading times.
+
+However, when dealing with slow connections (such as mobile networks), it seems that SSR has an edge over CSR regarding loading times.
+<br>
+Since SSR apps are rendered on the server, the browser receives the already-constructed HTML tree, and so it can show it to the user without waiting for JS to download. When JS is eventually download and parsed, the framework is able to "hydrate" the DOM with functionality (without having to reconstruct it).
+
+Although it seems like a big advantage, this behaviour has one major flaw on slow connections - until JS is loaded, users can click wherever they desire, but the app won't react to them.
+<br>
+It might be a small inconvenience when buttons don't respond when being pressed, but it becomes a much larger problem when default events are not being prevented.
+
+This is a comparison between Next.js documentation site and Client-side Rendering app in a fast 3G connection:
+
+![SSR Load 3G](images/ssr-load-3g.png)
+![CSR Load 3G](images/csr-load-3g.png)
+
+What happened here?
+<br>
+Since JS hasn't been loaded yet, Next.js decumentation site could not prevent the default behaviour of anchor tags to navigate to another page, resulting in every click on them to cause a full reload.
+<br>
+It is impossible for this issue to occur in CSR apps, since the moment they render - JS has already been fully loaded.
