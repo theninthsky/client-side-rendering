@@ -590,8 +590,8 @@ It might be a small inconvenience when buttons don't respond when being pressed,
 
 This is a comparison between Next.js documentation site and Client-side Rendering app in a fast 3G connection:
 
-![SSR Load 3G](images/ssr-load-3g.png)
-![CSR Load 3G](images/csr-load-3g.png)
+![SSR Load 3G](images/ssr-load-3g.gif)
+![CSR Load 3G](images/csr-load-3g.gif)
 
 What happened here?
 <br>
