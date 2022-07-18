@@ -503,7 +503,7 @@ The benchmark is performed through [PageSpeed Insights](https://pagespeed.web.de
 ![Next.js Benchmark](images/next-js-benchmark.png)
 ![Client-side Rendering Benchmark](images/client-side-rendering-benchmark.png)
 
-As it turns out, performance is not a default in Next.js.
+As it turns out, performance is **not** a default in Next.js.
 
 # SEO
 
@@ -572,7 +572,7 @@ This gives us the correct preview for every page:
 
 ![Facebook Share Preview](images/facebook-share-preview.png)
 
-_Note that we cannot create a preview for dynamic route pages (such as `posts/[:id]`)._
+_Note that we cannot create a preview for dynamic route pages (such as `posts/[:id]`), so we will need to use prerendering if it matters to us._
 
 # CSR vs. SSR
 
@@ -588,13 +588,15 @@ Although it seems like a big advantage, this behaviour has one major flaw on slo
 <br>
 It might be a small inconvenience when buttons don't respond when being pressed, but it becomes a much larger problem when default events are not being prevented.
 
-This is a comparison between Next.js documentation site and Client-side Rendering app in a fast 3G connection:
+This is a comparison between Next.js's website and Client-side Rendering app on a fast 3G connection:
 
 ![SSR Load 3G](images/ssr-load-3g.gif)
 ![CSR Load 3G](images/csr-load-3g.gif)
 
 What happened here?
 <br>
-Since JS hasn't been loaded yet, Next.js decumentation site could not prevent the default behaviour of anchor tags to navigate to another page, resulting in every click on them to cause a full reload.
+Since JS hasn't been loaded yet, Next.js's website could not prevent the default behaviour of anchor tags to navigate to another page, resulting in every click on them to cause a full reload.
 <br>
+It goes without saying that the slower the connection is - the more severe this issue becomes.
+
 It is impossible for this issue to occur in CSR apps, since the moment they render - JS has already been fully loaded.
