@@ -582,11 +582,11 @@ It is a fact that under fast internet connection, both CSR and SSR perform great
 
 However, when dealing with slow connections (such as mobile networks), it seems that SSR has an edge over CSR regarding loading times.
 <br>
-Since SSR apps are rendered on the server, the browser receives the already-constructed HTML tree, and so it can show it to the user without waiting for JS to download. When JS is eventually download and parsed, the framework is able to "hydrate" the DOM with functionality (without having to reconstruct it).
+Since SSR apps are rendered on the server, the browser receives the fully-constructed HTML file, and so it can show the page to the user without waiting for JS to download. When JS is eventually download and parsed, the framework is able to "hydrate" the DOM with functionality (without having to reconstruct it).
 
 Although it seems like a big advantage, this behaviour has one major flaw on slow connections - until JS is loaded, users can click wherever they desire, but the app won't react to them.
 <br>
-It might be a small inconvenience when buttons don't respond when being pressed, but it becomes a much larger problem when default events are not being prevented.
+It might be somewhat of an inconvenience when buttons don't respond when being clicked, but it becomes a much larger problem when default events are not being prevented.
 
 This is a comparison between Next.js's website and Client-side Rendering app on a fast 3G connection:
 
@@ -595,8 +595,8 @@ This is a comparison between Next.js's website and Client-side Rendering app on 
 
 What happened here?
 <br>
-Since JS hasn't been loaded yet, Next.js's website could not prevent the default behaviour of anchor tags to navigate to another page, resulting in every click on them to cause a full reload.
+Since JS hasn't been loaded yet, Next.js's website could not prevent the default behaviour of anchor tags to navigate to another page, resulting in every click on them triggering a full page reload.
 <br>
-It goes without saying that the slower the connection is - the more severe this issue becomes.
+It goes without saying that the slower the connection is, the more severe this issue becomes.
 
 It is impossible for this issue to occur in CSR apps, since the moment they render - JS has already been fully loaded.
