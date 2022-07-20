@@ -53,11 +53,11 @@ For example:
 <br>
 We can use _[date-fns](https://www.npmjs.com/package/date-fns)_ instead of _[moment](https://www.npmjs.com/package/moment)_, _[zustand](https://www.npmjs.com/package/zustand)_ instead of _[redux toolkit](https://www.npmjs.com/package/@reduxjs/toolkit)_ etc.
 
-This is crucial not only for CSR apps, but also for SSR and SSG ones, since the bigger your bundle is - the longer it will take the page to be interactive (either through hydration or regular rendering).
+This is crucial not only for CSR apps, but also for SSR (and SSG) apps, since the bigger our bundle is - the longer it will take the page to be interactive (either through hydration or regular rendering).
 
 ### Caching
 
-Ideally, every hashed file should be cached, and `index.html` should **NEVER** be cached.
+Ideally, every hashed file should be cached, and `index.html` should **Never** be cached.
 <br>
 It means that the browser would initially cache `main.[hash].js` and would have to redownload it only if its hash (content) changes.
 
@@ -105,7 +105,7 @@ https://webpack.js.org/plugins/split-chunks-plugin/#defaults
 
 A lot of the features we write end up being used only in a few of our pages, so we would like them to be downloaded only when the user visits the page they are being used in.
 
-For Example, we wouldn't want users to download the _[react-big-calendar](https://www.npmjs.com/package/react-big-calendar)_ package if they just tried to get to the home page. We would only want that to happen when they visit the calendar page.
+For Example, we wouldn't want users to download the _[react-big-calendar](https://www.npmjs.com/package/react-big-calendar)_ package if they just loaded the home page. We would only want that to happen when they visit the calendar page.
 
 The way we achieve this is (preferably) by route-based code splitting:
 
@@ -117,9 +117,9 @@ const Pokemon = lazy(() => import(/* webpackChunkName: "pokemon" */ 'pages/Pokem
 
 So when the user visits the Lorem Ipsum page, they only download the main chunk script (which includes all shared dependencies such as the framework) and the `lorem-ipsum.[hash].js` chunk.
 
-_Note: I believe that it is completely fine (and even encouraged) to have the user download your entire site (so they can have a smooth **app-like** navigation experience). But it is **VERY** wrong to have all the assets being downloaded **initially**, delaying the first render of the page.
+_Note: I believe that it is completely fine (and even encouraged) to have the user download your entire site (so they can have a smooth **app-like** navigation experience). But it is **very wrong** to have all the assets being downloaded **initially**, delaying the first render of the page.
 <br>
-These assets should be downloaded **after** the user-requested page has finished rendering and is visible to the user._
+These assets should be downloaded after the user-requested page has finished rendering and is visible to the user._
 
 ### Preloading Async Chunks
 
@@ -292,7 +292,8 @@ Then we will have them being added to the page's HTML:
 ```diff
 plugins: [
   ...pagesManifest.map(
-    ({ name, vendors, data }) =>
+-   ({ name }) =>
++   ({ name, vendors, data }) =>
       new HtmlPlugin({
         filename: `${name}.html`,
         scriptLoading: 'module',
@@ -312,7 +313,8 @@ plugins: [
 ```
 
 ```diff
-module.exports = ({ scripts, data }) => `
+- module.exports = ({ script, data }) => `
++ module.exports = ({ scripts, data }) => `
   <!DOCTYPE html>
   <html lang="en">
     <head>
@@ -351,7 +353,7 @@ const createPreload = url => {
 }
 ```
 
-This time, we **can** preload dynamic route resources (such as `posts/[:id]`), since JS has already been loaded and the sky is the limit.
+This time, we **can** preload dynamic route resources (such as `posts/[:id]`), since JS has already been loaded and there are no limits to what can be done.
 
 ### Preventing Sequenced Rendering
 
@@ -378,9 +380,9 @@ const App = () => {
 
 This method has a lot of sense to it:
 <br>
-We would like the app to be visually complete in a single render, but we wouldn't want to stall the page render until the async chunk finishes downloading.
+We would prefer the app to be visually complete in a single render, but we would never want to stall the page render until the async chunk finishes downloading.
 
-However, since we preload all async chunks (and their vendors), this won't be a problem for us. So we should suspense the entire app until the async chunk finishes downloading (which, in our case, happens really fast):
+However, since we preload all async chunks (and their vendors), this won't be a problem for us. So we should suspense the entire app until the async chunk finishes downloading (which, in our case, happens in parallel with all the render-critical assets):
 
 ```
 createRoot(document.getElementById('root')).render(
@@ -511,7 +513,7 @@ As it turns out, performance is **not** a default in Next.js.
 
 ### Google
 
-It is often said that Google is having trouble correctly indexing a CSR app.
+It is often said that Google is having trouble correctly indexing CSR (JS) apps.
 <br>
 That might have been the case in 2018, but as of 2022, Google prefectly indexes every JS app.
 <br>
@@ -521,6 +523,10 @@ In other words, it won't matter if we used SSR or not in terms of Google indexin
 
 ![Google Search Results](images/google-search-results.png)
 ![Google Lorem Ipsum Search Results](images/google-lorem-ipsum-search-results.png)
+
+The following video explains how the new googlebot renders JS apps:
+<br>
+https://www.youtube.com/watch?v=Ey0N1Ry0BPM
 
 ### Other Search Engines
 
@@ -586,7 +592,7 @@ Since SSR apps are rendered on the server, the browser receives the fully-constr
 
 Although it seems like a big advantage, this behaviour has one major flaw on slow connections - until JS is loaded, users can click wherever they desire, but the app won't react to them.
 <br>
-It might be somewhat of an inconvenience when buttons don't respond when being clicked, but it becomes a much larger problem when default events are not being prevented.
+It might be somewhat of an inconvenience when buttons don't respond to click events, but it becomes a much larger problem when default events are not being prevented.
 
 This is a comparison between Next.js's website and Client-side Rendering app on a fast 3G connection:
 
