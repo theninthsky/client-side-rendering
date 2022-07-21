@@ -34,12 +34,12 @@ const BOT_AGENTS = [
   'telegrambot'
 ]
 
-const fetchPrerendered = async (request, env) => {
+const fetchPrerendered = async request => {
   const { url, headers } = request
   const prerenderUrl = `https://service.prerender.io/${url}`
   const headersToSend = new Headers(headers)
 
-  headersToSend.set('X-Prerender-Token', env.PRERENDER_IO_KEY)
+  headersToSend.set('X-Prerender-Token', '7vGsiwq4BB5avp2mXVfq')
 
   const prerenderRequest = new Request(prerenderUrl, {
     headers: headersToSend,
@@ -55,7 +55,7 @@ export default {
   fetch(request, env) {
     const userAgent = (request.headers.get('User-Agent') || '').toLowerCase()
 
-    if (BOT_AGENTS.includes(userAgent)) return fetchPrerendered(request, env)
+    if (BOT_AGENTS.includes(userAgent)) return fetchPrerendered(request)
 
     return env.ASSETS.fetch(request)
   }
