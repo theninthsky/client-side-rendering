@@ -588,7 +588,9 @@ We have two options for generating prerendered pages:
 
 2. We can make our own prerender server using free open-source tools such as [Rendertron](https://github.com/GoogleChrome/rendertron).
 
-Then we redirect web crawlers (identified by their User-Agent header string) to our prerendered pages using Cloudflare Workers.
+Then we redirect web crawlers (identified by their User-Agent header string) to our prerendered pages using Cloudflare Workers:
+<br>
+[public/\_worker.js](public/_worker.js)
 
 Using prerendering produces the **exact same** SEO results as using SSR.
 
