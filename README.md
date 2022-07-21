@@ -19,6 +19,7 @@ This project is a case study of CSR, it aims to explore the potential of client-
   - [Deploying](#deploying)
   - [Benchmark](#benchmark)
 - [SEO](#seo)
+  - [Sitemaps](#sitemaps)
   - [Indexing](#indexing)
     - [Google](#google)
     - [Other Search Engines](#other-search-engines)
@@ -509,6 +510,51 @@ As it turns out, performance is **not** a default in Next.js.
 
 # SEO
 
+## Sitemaps
+
+In order to make all of our app pages discoverable to search engines, we need to create a `sitemap.xml` file which specifies all of our website routes.
+
+Since we already have a centralized `pages-manifest` file, we can easily generate a sitemap during build time:
+
+```
+import { Readable } from 'stream'
+import { writeFile } from 'fs/promises'
+import { SitemapStream, streamToPromise } from 'sitemap'
+
+import pagesManifest from '../src/pages-manifest.json' assert { type: 'json' }
+
+const stream = new SitemapStream({ hostname: 'https://client-side-rendering.pages.dev' })
+const links = pagesManifest.map(({ path }) => ({ url: path, changefreq: 'daily' }))
+
+streamToPromise(Readable.from(links).pipe(stream))
+  .then(data => data.toString())
+  .then(res => writeFile('public/sitemap.xml', res))
+  .catch(console.log)
+
+```
+
+This will emit the following sitemap:
+
+```
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1" xmlns:news="http://www.google.com/schemas/sitemap-news/0.9" xmlns:video="http://www.google.com/schemas/sitemap-video/1.1" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+   <url>
+      <loc>https://client-side-rendering.pages.dev/</loc>
+      <changefreq>daily</changefreq>
+   </url>
+   <url>
+      <loc>https://client-side-rendering.pages.dev/lorem-ipsum</loc>
+      <changefreq>daily</changefreq>
+   </url>
+   <url>
+      <loc>https://client-side-rendering.pages.dev/pokemon</loc>
+      <changefreq>daily</changefreq>
+   </url>
+</urlset>
+```
+
+We can manually submit our sitemap to [Google Search Console](https://search.google.com/search-console) and [Bing Webmaster Tools](https://www.bing.com/webmasters).
+
 ## Indexing
 
 ### Google
@@ -524,7 +570,7 @@ In other words, it won't matter if we used SSR or not in terms of Google indexin
 ![Google Search Results](images/google-search-results.png)
 ![Google Lorem Ipsum Search Results](images/google-lorem-ipsum-search-results.png)
 
-The following video explains how the new googlebot renders JS apps:
+The following video explains how the new Googlebot renders JS apps:
 <br>
 https://www.youtube.com/watch?v=Ey0N1Ry0BPM
 
@@ -532,17 +578,21 @@ https://www.youtube.com/watch?v=Ey0N1Ry0BPM
 
 Other inferior search engines such as Bing cannot render JS (despite claiming they can). So in order to have them index our app correctly, we will serve them a **prerendered** version of our pages.
 <br>
-The best tool for this job is _[Prerender.io](https://prerender.io/)_, which is able to crawl our app in production, generate a simple, styleless, HTML file for each page and serve it to web crawlers on demand.
+Prerendering is the act of crawling web apps in production (using headless Chromium) and generating a complete HTML file for each page.
+
+We have two options for generating prerendered pages:
+
+1. We can use a dedicated service such as [Prerender.io](https://prerender.io/).
 
 ![Prerender.io Table](images/prerender-io-table.png)
 
-We can easily integrate it with Cloudflare Workers:
-<br>
-https://docs.prerender.io/docs/24-cloudflare
+2. We can make our own prerender server using free open-source tools such as [Rendertron](https://github.com/GoogleChrome/rendertron).
+
+Then we redirect web crawlers (identified by their User-Agent header string) to our prerendered pages using Cloudflare Workers.
 
 Using prerendering produces the **exact same** SEO results as using SSR.
 
-_Note that if you only care about Google indexing, there's little sense to prerendering your website, since googlebot crawls JS apps flawlessly._
+_Note that if you only care about Google indexing, there's little sense to prerendering your website, since Googlebot crawls JS apps flawlessly._
 
 ### Social Media Share Previews
 
