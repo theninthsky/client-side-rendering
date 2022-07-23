@@ -55,7 +55,7 @@ export default {
   fetch(request, env) {
     const userAgent = (request.headers.get('User-Agent') || '').toLowerCase()
 
-    if (BOT_AGENTS.includes(userAgent)) return fetchPrerendered(request)
+    if (BOT_AGENTS.some(agent => userAgent.includes(agent))) return fetchPrerendered(request)
 
     return env.ASSETS.fetch(request)
   }
