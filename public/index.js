@@ -11,8 +11,8 @@ module.exports = ({ path, title, description, scripts, data = [] }) => `
       <meta property="og:url" content="https://client-side-rendering.pages.dev${path}">
       <meta property="og:image" content="https://client-side-rendering.pages.dev/icons/og-icon.png">
 
-      <link rel="shortcut icon" href="icons/favicon.ico">
-      <link rel="manifest" href="manifest.json">
+      <link rel="shortcut icon" href="/icons/favicon.ico">
+      <link rel="manifest" href="/manifest.json">
       <link rel="preload" href="https://fonts.gstatic.com/s/montserrat/v21/JTUSjIg1_i6t8kCHKm459Wlhyw.woff2" as="font" type="font/woff2" crossorigin>
 
       <title>${title}</title>
@@ -46,7 +46,7 @@ module.exports = ({ path, title, description, scripts, data = [] }) => `
       }
     </head>
     <body>
-      ${scripts.map(script => `<link rel="preload" href="${script}" as="script">`).join('')}
+      ${scripts.map(script => `<link rel="preload" href="/${script}" as="script">`).join('')}
 
       <noscript>You need to enable JavaScript to run this app.</noscript>
 
