@@ -3,6 +3,7 @@ import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { lazyPrefetch } from 'frontend-essentials'
 
 import pagesManifest from 'pages-manifest.json'
+import { setMetaTags } from 'utils/meta-tags'
 import Navigation from 'components/Navigation'
 import Layout from 'components/Layout'
 
@@ -21,11 +22,12 @@ const App = () => {
   const { pathname } = useLocation()
 
   useEffect(() => {
-    const { title, description } =
-      pagesManifest.find(({ path }) => pathname === path || pathname.startsWith(path.replace('/*', ''))) || {}
+    const page =
+      pagesManifest.find(
+        ({ path }) => pathname === path || (path !== '/' && pathname.startsWith(path.replace('/*', '')))
+      ) || {}
 
-    document.title = title
-    document.head.querySelector('meta[name="description"]').setAttribute('content', description)
+    setMetaTags(page)
   }, [pathname])
 
   return (

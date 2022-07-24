@@ -6,6 +6,10 @@ module.exports = pages => `
       <meta name="viewport" content="width=device-width, initial-scale=1">
       <meta name="theme-color" content="#1e90ff">
       <meta name="description" content="A demonstration of CSR">
+      <meta property="og:title" content="">
+      <meta property="og:type" content="website">
+      <meta property="og:url" content="">
+      <meta property="og:image" content="https://client-side-rendering.pages.dev/icons/og-icon.png">
 
       <link rel="shortcut icon" href="/icons/favicon.ico">
       <link rel="manifest" href="/manifest.json">
