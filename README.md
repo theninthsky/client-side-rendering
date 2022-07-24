@@ -188,7 +188,7 @@ I like the idea of SSG: we create a cacheable HTML file and inject static data i
 <br>
 This can be useful for data that is not highly dynamic, such as content from CMS.
 
-So why not make ourselves some static data?
+So how can we create static data?
 <br>
 We will execute the following script during build time:
 
@@ -219,10 +219,10 @@ And now we simply fetch our static data:
 There are numerous advantages to this approach:
 
 - We generate static data so we won't bother our server or CMS for every user request.
-- The data will be fetched a lot faster from a nearby CDN edge rather than a remote server.
+- The data will be fetched a lot faster from a nearby CDN edge than from a remote server.
 - Since this script runs on our server during build time, we can authenticate with services however we want, there is no limit to what can be sent (secret tokens for example).
 
-Whenever we need to update the static data we simply rebuild the app or, better yet, rerun the script.
+Whenever we need to update the static data we simply rebuild the app or, better yet, just rerun the script.
 
 ### Preloading Data
 
@@ -230,7 +230,7 @@ One of the disadvantages of CSR over SSR is that data will be fetched only after
 
 ![Without Data Preload](images/without-data-preload.png)
 
-So we will use preloading once again, this time for the data itself:
+To overcome this, we will use preloading once again, this time for the data itself:
 
 ```diff
 plugins: [
@@ -695,35 +695,31 @@ When we share a CSR app link in social media, we can see that no matter what pag
 <br>
 This happens because most CSR apps have only one HTML file, and social share previews do not render JS.
 <br>
-In our setup, we generate multiple HTML files (one for each page), so we have control of what `og` meta tags will be present in each document:
+This is where prerendering comes to our aid once again, we only need to make sure to set the correct meta tags dynamically:
 
 ```
-module.exports = ({ path, title, description }) => `
-  <!DOCTYPE html>
-  <html lang="en">
-    <head>
-      <meta name="description" content="${description}">
-      <meta property="og:title" content="${title}">
-      <meta property="og:type" content="website">
-      <meta property="og:url" content="https://client-side-rendering.pages.dev${path}">
-      <meta property="og:image" content="https://client-side-rendering.pages.dev/icons/og-icon.png">
-
-      <title>${title}</title>
-    </head>
-    <body>
-      <noscript>You need to enable JavaScript to run this app.</noscript>
-
-      <div id="root"></div>
-    </body>
-  </html>
-`
+export const setMetaTags = ({ title, description }) => {
+  document.title = title
+  document.head.querySelector('meta[name="description"]').setAttribute('content', description)
+  document.head.querySelector('meta[property="og:title"]').setAttribute('content', title)
+  document.head.querySelector('meta[property="og:url"]').setAttribute('content', window.location.href)
+}
 ```
 
-This gives us the correct preview for every page:
+```
+useEffect(() => {
+  const page =
+    pagesManifest.find(
+      ({ path }) => pathname === path || (path !== '/' && pathname.startsWith(path.replace('/*', '')))
+    ) || {}
+
+  setMetaTags(page)
+}, [pathname])
+```
+
+This, after going through prerendering, gives us the correct preview for every page:
 
 ![Facebook Share Preview](images/facebook-share-preview.png)
-
-_Note that we cannot create a preview for dynamic route pages (such as `posts/[:id]`), so we will need to use prerendering if it matters to us._
 
 # CSR vs. SSR
 
