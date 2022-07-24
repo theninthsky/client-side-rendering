@@ -86,24 +86,24 @@ module.exports = (_, { mode }) => {
       ...(production ? [] : [new ReactRefreshPlugin()]),
       ...(production ? [] : [new ForkTsCheckerPlugin()]),
       new ESLintPlugin(),
-      ...pagesManifest.map(
-        ({ name, path, title, description, vendors, data }) =>
-          new HtmlPlugin({
-            filename: `${name}.html`,
-            scriptLoading: 'module',
-            templateContent: ({ compilation }) => {
-              const assets = compilation.getAssets().map(({ name }) => name)
-              const script = assets.find(assetName => assetName.includes(`/${name}.`) && assetName.endsWith('.js'))
-              const vendorScripts = vendors
-                ? assets.filter(name => vendors.find(vendor => name.includes(`/${vendor}.`) && name.endsWith('.js')))
-                : []
+      new HtmlPlugin({
+        scriptLoading: 'module',
+        templateContent: ({ compilation }) => {
+          const pages = pagesManifest.map(({ name, path, vendors, data }) => {
+            const assets = compilation.getAssets().map(({ name }) => name)
+            const script = assets.find(assetName => assetName.includes(`/${name}.`) && assetName.endsWith('.js'))
+            const vendorScripts = vendors
+              ? assets.filter(name => vendors.find(vendor => name.includes(`/${vendor}.`) && name.endsWith('.js')))
+              : []
 
-              if (data && !Array.isArray(data)) data = [data]
+            if (data && !Array.isArray(data)) data = [data]
 
-              return htmlTemplate({ path, title, description, scripts: [script, ...vendorScripts], data })
-            }
+            return { name, path, scripts: [script, ...vendorScripts], data }
           })
-      ),
+
+          return htmlTemplate(pages)
+        }
+      }),
       new CopyPlugin({
         patterns: [
           {

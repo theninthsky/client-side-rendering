@@ -5,7 +5,6 @@
     "start": "webpack serve --mode development",
     "prebuild": "npm-run-all -p fetch-static create-sitemap",
     "build": "webpack --mode production",
-    "postbuild": "node scripts/create-404.mjs",
     "serve": "serve build",
     "fetch-static": "node scripts/fetch-static.mjs",
     "create-sitemap": "node scripts/create-sitemap.mjs"
