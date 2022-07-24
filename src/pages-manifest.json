@@ -13,7 +13,7 @@
     "description": "This page demonstrates a large amount of static text that is pre-generated and fetched in parallel with other assets.",
     "vendors": ["moment"],
     "data": {
-      "url": "json/lorem-ipsum.json",
+      "url": "/json/lorem-ipsum.json",
       "preload": true
     }
   },

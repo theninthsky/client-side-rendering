@@ -29,18 +29,18 @@ This project is a case study of CSR, it aims to explore the potential of client-
 
 # Motivation
 
-In the recent years, server-side rendering frameworks such as Next.js and Remix started to gain popularity in an increasing pace.
+Over the last few years, server-side rendering frameworks such as Next.js and Remix started to gain popularity in an increasing pace.
 <br>
-While SSR has it's own advantages, those frameworks are bragging about how fast they are ("Performance as a default"), implying client-side rendering is slow.
+While SSR has some advantages, those frameworks are bragging about how fast they are ("Performance as a default"), implying client-side rendering is slow.
 <br>
 In addition, it is a common misconception that great SEO can only be achieved by using SSR, and that CSR apps will give worse results.
 
-This project implements CSR best practices with some tricks that can make it infinitely scalable.
+This project implements CSR best practices with some tricks that can make it infinitely scalable in terms of performance.
 The goal is to simulate a production grade app in terms of number of packages used and try to speed up its loading times as much as possible.
 
-It is important to note that improving performance should not come at the expense of developer experience, so the way this project is architected should vary only slightly compared to "normal" react projects, and not be extremely opinionated as Next.js is.
+It is important to note that improving performance should not come at the expense of developer experience, so the way this project is architected should vary only slightly compared to "normal" react projects, and it won't be extremely opinionated as Next.js is.
 
-This case study will cover two major aspects: performance and SEO. It will try to inspect how we can achieve great scores in either of them, both compared to SSR and on their own.
+This case study will cover two major aspects: performance and SEO. We will try to inspect how we can achieve great scores in either of them, both compared to SSR and on their own.
 
 _Note: while this project is implemented using React, the majority of it's tweaks are not tied to any framework and are purely browser-based._
 
@@ -52,13 +52,13 @@ The first rule of thumb is to use as fewer dependencies as possible, and among t
 
 For example:
 <br>
-We can use _[date-fns](https://www.npmjs.com/package/date-fns)_ instead of _[moment](https://www.npmjs.com/package/moment)_, _[zustand](https://www.npmjs.com/package/zustand)_ instead of _[redux toolkit](https://www.npmjs.com/package/@reduxjs/toolkit)_ etc.
+We can use _[day.js](https://www.npmjs.com/package/dayjs)_ instead of _[moment](https://www.npmjs.com/package/moment)_, _[zustand](https://www.npmjs.com/package/zustand)_ instead of _[redux toolkit](https://www.npmjs.com/package/@reduxjs/toolkit)_ etc.
 
-This is crucial not only for CSR apps, but also for SSR (and SSG) apps, since the bigger our bundle is - the longer it will take the page to be interactive (either through hydration or regular rendering).
+This is crucial not only for CSR apps, but also for SSR (and SSG) apps, since the bigger our bundle is - the longer it will take the page to be interactive (either through hydration or normal rendering).
 
 ### Caching
 
-Ideally, every hashed file should be cached, and `index.html` should **Never** be cached.
+Ideally, every hashed file should be cached, and `index.html` should **never** be cached.
 <br>
 It means that the browser would initially cache `main.[hash].js` and would have to redownload it only if its hash (content) changes.
 
@@ -128,36 +128,46 @@ Code splitting has one major flaw - the runtime doesn't know these async chunks 
 
 ![Without Async Preload](images/without-async-preload.png)
 
-The way we can solve this issue is by generating multiple HTML files (one for each page) and preloading the relevant assets:
+The way we can solve this issue is by implementing a script in the document that will be responsible of preloading assets:
 
 ```
 plugins: [
-  ...pagesManifest.map(
-    ({ name }) =>
-      new HtmlPlugin({
-        filename: `${name}.html`,
-        scriptLoading: 'module',
-        templateContent: ({ compilation }) => {
-          const assets = compilation.getAssets().map(({ name }) => name)
-          const script = assets.find(assetName => assetName.includes(`/${name}.`) && assetName.endsWith('.js'))
+  new HtmlPlugin({
+    scriptLoading: 'module',
+    templateContent: ({ compilation }) => {
+      const pages = pagesManifest.map(({ name, path }) => {
+        const assets = compilation.getAssets().map(({ name }) => name)
+        const script = assets.find(assetName => assetName.includes(`/${name}.`) && assetName.endsWith('.js'))
 
-          return htmlTemplate(script)
-        }
+        return { path, script }
       })
-  ),
+
+      return htmlTemplate(pages)
+    }
+  })
 ]
 ```
 
 ```
-module.exports = script => `
+module.exports = pages => `
   <!DOCTYPE html>
   <html lang="en">
     <head>
       <title>CSR</title>
+
+      <script>
+        const { pathname } = window.location
+
+        ;${JSON.stringify(pages)}.forEach(({ path, scripts }) => {
+          if (pathname !== path) return
+
+          document.head.appendChild(
+            Object.assign(document.createElement('link'), { rel: 'preload', href: '/' + script, as: 'script' })
+          )
+        })
+      </script>
     </head>
     <body>
-      <link rel="preload" href="${script}" as="script">
-
       <div id="root"></div>
     </body>
   </html>
@@ -223,19 +233,70 @@ One of the disadvantages of CSR over SSR is that data will be fetched only after
 So we will use preloading once again, this time for the data itself:
 
 ```diff
-module.exports = ({ script, data }) => `
+plugins: [
+  new HtmlPlugin({
+    scriptLoading: 'module',
+    templateContent: ({ compilation }) => {
+-     const pages = pagesManifest.map(({ name, path }) => {
++     const pages = pagesManifest.map(({ name, path, data }) => {
+        const assets = compilation.getAssets().map(({ name }) => name)
+        const script = assets.find(assetName => assetName.includes(`/${name}.`) && assetName.endsWith('.js'))
+
++       if (data && !Array.isArray(data)) data = [data]
+
+-       return { path, script }
++       return { path, script, data }
+      })
+
+      return htmlTemplate(pages)
+    }
+  })
+]
+```
+
+```diff
+module.exports = pages => `
   <!DOCTYPE html>
   <html lang="en">
     <head>
       <title>CSR</title>
+
+      <script>
+        const { pathname } = window.location
+
+-        ;${JSON.stringify(pages)}.forEach(({ path, scripts }) => {
++        ;${JSON.stringify(pages)}.forEach(({ path, scripts, data }) => {
+-         if (pathname !== path) return
++         if (pathname !== path && !pathname.startsWith(path.replace('/*', ''))) return
+
+          document.head.appendChild(
+            Object.assign(document.createElement('link'), { rel: 'preload', href: '/' + script, as: 'script' })
+          )
+
++         if (!data) return
++
++         data.forEach(({ url, crossorigin }) => {
++           let fullURL = url
++
++           if (url.includes('/:')) {
++             const index = +url.match(/:(\\d+)/)[1]
++             const [id] = pathname.split('/').slice(index, index + 1)
++
++             if (!id) return
++
++             fullURL = url.replace(/:\\d+/, id)
++           }
++
++           document.head.appendChild(
++             Object.assign(document.createElement('link'), { rel: 'preload', href: fullURL, as: 'fetch', crossOrigin: crossorigin })
++           )
++         })
+        })
+      </script>
     </head>
     <body>
-      <link rel="preload" href="${script}" as="script">
-+     <link rel="preload" href="${data.url}" as="fetch">
-
       <div id="root"></div>
     </body>
-
   </html>
 `
 ```
@@ -244,10 +305,13 @@ Now we can see that the data is being fetched right away:
 
 ![With Data Preload](images/with-data-preload.png)
 
-There are, however, two limitations to this approach:
+Please note our ability to fetch dynamic route data (such as `posts/[:id]`).
+<br>
+This implementation found here assumes that the dynamic route contains a number that represents the placeholder's index location relative to the URL.
 
-1. We can only preload GET resources (should not be a problem with a well-architected backend).
-2. We can not preload dynamic route resources (such as `posts/[:id]`).
+For example: the route `v1/posts/:2` would match the URL `posts/472375` and therefore will prefetch `v1/posts/472375`.
+
+The only limitation of this approach is that we can only preload GET resources, but this would not be a problem if the backend is well-architected.
 
 ## Tweaking Further
 
@@ -292,40 +356,71 @@ Then we will have them being added to the page's HTML:
 
 ```diff
 plugins: [
-  ...pagesManifest.map(
--   ({ name }) =>
-+   ({ name, vendors, data }) =>
-      new HtmlPlugin({
-        filename: `${name}.html`,
-        scriptLoading: 'module',
-        templateContent: ({ compilation }) => {
-          const assets = compilation.getAssets().map(({ name }) => name)
-          const script = assets.find(assetName => assetName.includes(`/${name}.`) && assetName.endsWith('.js'))
-+         const vendorScripts = vendors
-+               ? assets.filter(name => vendors.find(vendor => name.includes(`/${vendor}.`) && name.endsWith('.js')))
-+               : []
+  new HtmlPlugin({
+    scriptLoading: 'module',
+    templateContent: ({ compilation }) => {
+-     const pages = pagesManifest.map(({ name, path, data }) => {
++     const pages = pagesManifest.map(({ name, path, vendors, data }) => {
+        const assets = compilation.getAssets().map(({ name }) => name)
+        const script = assets.find(assetName => assetName.includes(`/${name}.`) && assetName.endsWith('.js'))
++       const vendorScripts = vendors
++         ? assets.filter(name => vendors.find(vendor => name.includes(`/${vendor}.`) && name.endsWith('.js')))
++         : []
 
--         return htmlTemplate(script)
-+         return htmlTemplate({ scripts: [script, ...vendorScripts], data })
-        }
+        if (data && !Array.isArray(data)) data = [data]
+
+-       return { path, script, data }
++       return { path, scripts: [script, ...vendorScripts], data }
       })
-  ),
+
+      return htmlTemplate(pages)
+    }
+  })
 ]
 ```
 
 ```diff
-- module.exports = ({ script, data }) => `
-+ module.exports = ({ scripts, data }) => `
+module.exports = pages => `
   <!DOCTYPE html>
   <html lang="en">
     <head>
       <title>CSR</title>
+
+      <script>
+        const { pathname } = window.location
+
+-       ;${JSON.stringify(pages)}.forEach(({ path, script, data }) => {
++       ;${JSON.stringify(pages)}.forEach(({ path, scripts, data }) => {
+          if (pathname !== path && !pathname.startsWith(path.replace('/*', ''))) return
+
++         scripts.forEach(script => {
+            document.head.appendChild(
+              Object.assign(document.createElement('link'), { rel: 'preload', href: '/' + script, as: 'script' })
+            )
++         })
+
+          if (!data) return
+
+          data.forEach(({ url, crossorigin }) => {
+            let fullURL = url
+
+            if (url.includes('/:')) {
+              const index = +url.match(/:(\\d+)/)[1]
+              const [id] = pathname.split('/').slice(index, index + 1)
+
+              if (!id) return
+
+              fullURL = url.replace(/:\\d+/, id)
+            }
+
+            document.head.appendChild(
+              Object.assign(document.createElement('link'), { rel: 'preload', href: fullURL, as: 'fetch', crossOrigin: crossorigin })
+            )
+          })
+        })
+      </script>
     </head>
     <body>
--     <link rel="preload" href="${script}" as="script">
-+     ${scripts.map(script => `<link rel="preload" href="${script}" as="script">`).join('')}
-      <link rel="preload" href="${data.url}" as="fetch">
-
       <div id="root"></div>
     </body>
   </html>
@@ -342,9 +437,9 @@ We can preload data when hovering over links (desktop) or when links enter the v
 
 ```
 const createPreload = url => {
-  if (document.body.querySelector(`body > link[href="${url}"]`)) return
+  if (document.head.querySelector(`link[href="${url}"]`)) return
 
-  document.body.appendChild(
+  document.head.appendChild(
     Object.assign(document.createElement('link'), {
       rel: 'preload',
       href: url,
@@ -353,8 +448,6 @@ const createPreload = url => {
   )
 }
 ```
-
-This time, we **can** preload dynamic route resources (such as `posts/[:id]`), since JS has already been loaded and there are no limits to what can be done.
 
 ### Preventing Sequenced Rendering
 
