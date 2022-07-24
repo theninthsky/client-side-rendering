@@ -16,15 +16,37 @@ module.exports = ({ path, title, description, scripts, data = [] }) => `
       <link rel="preload" href="https://fonts.gstatic.com/s/montserrat/v21/JTUSjIg1_i6t8kCHKm459Wlhyw.woff2" as="font" type="font/woff2" crossorigin>
 
       <title>${title}</title>
-    </head>
-    <body>
-      ${scripts.map(script => `<link rel="preload" href="${script}" as="script">`).join('')}
+
       ${data
+        .filter(({ url }) => !url.includes('/:'))
         .map(
           ({ url, crossorigin }) =>
             `<link rel="preload" href="${url}" as="fetch" ${crossorigin ? `crossorigin=${crossorigin}` : ''}>`
         )
         .join('')}
+
+      ${
+        data.some(({ url }) => url.includes('/:'))
+          ? `<script>
+              ${JSON.stringify(data.filter(({ url }) => url.includes('/:')))}
+                .forEach(({ url, crossorigin }) => {
+                  const index = +(url.match(/\:(\d+)/) || [])[1]
+
+                  if (Number.isNaN(index)) return
+
+                  const [id] = window.location.pathname.split('/').slice(index, index + 1)
+                  const fullURL = url.replace(/\:\d+/, id)
+
+                  document.head.appendChild(
+                    Object.assign(document.createElement('link'), { rel: 'preload', href: fullURL, as: 'fetch', crossOrigin: crossorigin })
+                  )
+                })
+            </script>`
+          : ''
+      }
+    </head>
+    <body>
+      ${scripts.map(script => `<link rel="preload" href="${script}" as="script">`).join('')}
 
       <noscript>You need to enable JavaScript to run this app.</noscript>
 

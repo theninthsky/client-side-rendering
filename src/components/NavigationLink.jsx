@@ -6,9 +6,9 @@ import { css, cx } from '@emotion/css'
 import { MOBILE_VIEWPORT } from 'styles/constants'
 
 const createPreload = ({ url, crossorigin, preload }) => {
-  if (!preload || document.body.querySelector(`body > link[href="${url}"]`)) return
+  if (!preload || document.head.querySelector(`link[href="${url}"]`)) return
 
-  document.body.appendChild(
+  document.head.appendChild(
     Object.assign(document.createElement('link'), {
       rel: 'preload',
       href: url,
@@ -31,6 +31,8 @@ const NavigationLink = ({ className, to, data, onClick, children, ...otherProps 
 
   const { hoverable } = useMedia({ hoverable: '(hover: hover) and (pointer: fine)' })
 
+  const baseURL = to.replace('/*', '')
+
   useEffect(() => {
     if (hoverable || !data) return
 
@@ -47,7 +49,7 @@ const NavigationLink = ({ className, to, data, onClick, children, ...otherProps 
 
   const onLinkClick = event => {
     event.preventDefault()
-    navigate(to)
+    navigate(baseURL)
     onClick?.()
   }
 
@@ -55,7 +57,7 @@ const NavigationLink = ({ className, to, data, onClick, children, ...otherProps 
     <NavLink
       className={({ isActive }) => cx(style.item, { [style.activeItem]: isActive }, className)}
       ref={ref}
-      to={to}
+      to={baseURL}
       onClick={onLinkClick}
       {...(hoverable &&
         data && {

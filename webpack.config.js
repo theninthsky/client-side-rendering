@@ -64,6 +64,7 @@ module.exports = (_, { mode }) => {
     },
     output: {
       path: path.join(__dirname, 'build'),
+      publicPath: '/',
       filename: 'js/[name].[contenthash:6].js',
       clean: true
     },
