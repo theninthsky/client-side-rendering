@@ -25,12 +25,10 @@ const BOT_AGENTS = [
   'skypeuripreview',
   'nuzzel',
   'discordbot',
-  'google page speed',
   'qwantify',
   'pinterestbot',
   'bitrix link preview',
   'xing-contenttabreceiver',
-  'chrome-lighthouse',
   'telegrambot'
 ]
 

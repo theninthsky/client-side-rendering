@@ -31,11 +31,10 @@ module.exports = pages => `
             let fullURL = url
             
             if (url.includes('/:')) {
-              const index = +(url.match(/:(\\d+)/) || [])[1]
-
-              if (Number.isNaN(index)) return
-
+              const index = +url.match(/:(\\d+)/)[1]
               const [id] = pathname.split('/').slice(index, index + 1)
+
+              if (!id) return
               
               fullURL = url.replace(/:\\d+/, id)
             }
