@@ -10,7 +10,6 @@ module.exports = pages => `
       <meta property="og:type" content="website">
       <meta property="og:url" content="">
       <meta property="og:image" content="https://client-side-rendering.pages.dev/icons/og-icon.png">
-      <meta name="google-site-verification" content="VizFjhwWDUBYMsq1bJtp6N2NPjz8sLdGH1513MlrytU">
 
       <link rel="shortcut icon" href="/icons/favicon.ico">
       <link rel="manifest" href="/manifest.json">
