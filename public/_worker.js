@@ -53,10 +53,8 @@ export default {
   fetch(request, env) {
     const pathname = new URL(request.url).pathname.toLowerCase()
     const userAgent = (request.headers.get('User-Agent') || '').toLowerCase()
-    const crawler = BOT_AGENTS.some(agent => userAgent.includes(agent))
-    const document = !pathname.includes('.') || pathname.endsWith('.html')
 
-    if (crawler && document) return fetchPrerendered(request)
+    if (BOT_AGENTS.some(agent => userAgent.includes(agent)) && !pathname.includes('.')) return fetchPrerendered(request)
 
     return env.ASSETS.fetch(request)
   }
