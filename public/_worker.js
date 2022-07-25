@@ -54,6 +54,7 @@ export default {
     const pathname = new URL(request.url).pathname.toLowerCase()
     const userAgent = (request.headers.get('User-Agent') || '').toLowerCase()
 
+    // a crawler that requests the document
     if (BOT_AGENTS.some(agent => userAgent.includes(agent)) && !pathname.includes('.')) return fetchPrerendered(request)
 
     return env.ASSETS.fetch(request)
