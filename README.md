@@ -18,6 +18,7 @@ This project is a case study of CSR, it aims to explore the potential of client-
     - [Prefetching Async Pages](#prefetching-async-pages)
   - [Deploying](#deploying)
   - [Benchmark](#benchmark)
+  - [Areas for Improvement](#areas-for-improvement)
 - [SEO](#seo)
   - [Sitemaps](#sitemaps)
   - [Indexing](#indexing)
@@ -26,6 +27,7 @@ This project is a case study of CSR, it aims to explore the potential of client-
   * [Social Media Share Previews](#social-media-share-previews)
 - [CSR vs. SSR](#csr-vs-ssr)
   - [The Cost of Hydration](#the-cost-of-hydration)
+- [Conclusion](#conclusion)
 
 # Motivation
 
@@ -594,12 +596,19 @@ To conclude this section, here's a benchmark of our app compared to [Next.js](ht
 <br>
 I chose the most minimalistic page I could find in it (Fast Refresh) and compared it to my Lorem Ipsum page.
 
-The benchmark is performed through [PageSpeed Insights](https://pagespeed.web.dev/) simulating a slow 4G network.
+The benchmark is performed through [PageSpeed Insights](https://pagespeed.web.dev) simulating a slow 4G network.
 
 ![Next.js Benchmark](images/next-js-benchmark.png)
 ![Client-side Rendering Benchmark](images/client-side-rendering-benchmark.png)
 
 As it turns out, performance is **not** a default in Next.js.
+
+## Areas for Improvement
+
+- Automatically detect async vendor chunks during build time (refer to _Splitting Vendors From Async Chunks_ section).
+- Switch to [Preact](https://preactjs.com) when Suspense becomes stable (for a much smaller bundle size).
+- Compress assets using [Brotli level 11](https://d33wubrfki0l68.cloudfront.net/3434fd222424236d1f0f5b4596de1480b5378156/1a5ec/assets/wp-content/uploads/2018/07/compression_estimator_jquery.jpg) (Cloudflare only uses level 4 to save on computing resources).
+- Use the paid [Cloudflare Argo](https://blog.cloudflare.com/argo) service for even better response times.
 
 # SEO
 
@@ -685,7 +694,9 @@ Then we redirect web crawlers (identified by their User-Agent header string) to 
 <br>
 [public/\_worker.js](public/_worker.js)
 
-Using prerendering produces the **exact same** SEO results as using SSR.
+Prerendering, also called _Dynamic Rendering_, is encouraged by [Google](https://developers.google.com/search/docs/advanced/javascript/dynamic-rendering) and [Microsoft](https://blogs.bing.com/webmaster/october-2018/bingbot-Series-JavaScript,-Dynamic-Rendering,-and-Cloaking-Oh-My).
+
+Using prerendering produces the **exact same** SEO results as using SSR in all search engines.
 
 _Note that if you only care about Google indexing, there's little sense to prerendering your website, since Googlebot crawls JS apps flawlessly._
 
@@ -747,3 +758,10 @@ Since JS hasn't been loaded yet, Next.js's website could not prevent the default
 It goes without saying that the slower the connection is, the more severe this issue becomes.
 
 It is impossible for this issue to occur in CSR apps, since the moment they render - JS has already been fully loaded.
+
+# Conclusion
+
+We saw that client-side rendering performance is on par and sometimes even better than SSR in terms of loading times.
+We also learned that using prerendering gives perfect SEO results, and that we don't even need to think about it once it is set up.
+
+The above takings lead to the conclusion that there is just no reason to use SSR, it would only add a lot of complexity to our project and degrade the developer experience.
