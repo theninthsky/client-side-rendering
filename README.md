@@ -26,6 +26,7 @@ This project is a case study of CSR, it aims to explore the potential of client-
     - [Other Search Engines](#other-search-engines)
   * [Social Media Share Previews](#social-media-share-previews)
 - [CSR vs. SSR](#csr-vs-ssr)
+  - [SSR Disadvantages](#ssr-disadvantages)
   - [The Cost of Hydration](#the-cost-of-hydration)
 - [Conclusion](#conclusion)
 
@@ -734,6 +735,14 @@ This, after going through prerendering, gives us the correct preview for every p
 
 # CSR vs. SSR
 
+## SSR Disadvantages
+
+Here's a list of some SSR cons that should not be taken lightly:
+
+- SSR page responses do not include an ETag header and therefore can never return a _[304 Not Modified](https://blog.hubspot.com/marketing/http-304-not-modified#:~:text=An%20HTTP%20304%20not%20modified%20status%20code%20means%20that%20the,to%20speed%20up%20page%20delivery)_ status.
+- When performing client-side data fetching, SSR will **always** be slower than CSR, since its document is always bigger and takes longer to download.
+- Since accessing browser-related objects during the server render phase throws an error, some very helpful tools become unusable, while others (such as [react-media](https://www.npmjs.com/package/react-media#server-side-rendering-ssr)) require SSR-specific customizations.
+
 ## The Cost of Hydration
 
 It is a fact that under fast internet connection, both CSR and SSR perform great (as long as they are both optimized). And the higher the connection speed - the closer they get in terms of loading times.
@@ -755,7 +764,7 @@ What happened here?
 <br>
 Since JS hasn't been loaded yet, Next.js's website could not prevent the default behaviour of anchor tags to navigate to another page, resulting in every click on them triggering a full page reload.
 <br>
-It goes without saying that the slower the connection is, the more severe this issue becomes.
+And the slower the connection is - the more severe this issue becomes.
 
 It is impossible for this issue to occur in CSR apps, since the moment they render - JS has already been fully loaded.
 
