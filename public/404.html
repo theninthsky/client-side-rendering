@@ -17,39 +17,6 @@
     type="font/woff2" crossorigin>
 
   <title>Client-side Rendering</title>
-
-  <script>
-    const { pathname } = window.location
-
-      ;${ JSON.stringify(pages) }.forEach(({ path, scripts, data }) => {
-        if (pathname !== path && !pathname.startsWith(path.replace('/*', ''))) return
-
-        scripts.forEach(script => {
-          document.head.appendChild(
-            Object.assign(document.createElement('link'), { rel: 'preload', href: '/' + script, as: 'script' })
-          )
-        })
-
-        if (!data) return
-
-        data.forEach(({ url, crossorigin }) => {
-          let fullURL = url
-
-          if (url.includes('/:')) {
-            const index = +url.match(/:(\\d+)/)[1]
-            const [id] = pathname.split('/').slice(index, index + 1)
-
-            if (!id) return
-
-            fullURL = url.replace(/:\\d+/, id)
-          }
-
-          document.head.appendChild(
-            Object.assign(document.createElement('link'), { rel: 'preload', href: fullURL, as: 'fetch', crossOrigin: crossorigin })
-          )
-        })
-      })
-  </script>
 </head>
 
 <body>
