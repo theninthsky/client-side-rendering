@@ -9,7 +9,7 @@
   {
     "name": "lorem-ipsum",
     "path": "/lorem-ipsum",
-    "title": "Lorem Ipsum Page",
+    "title": "Lorem Ipsum",
     "description": "This page demonstrates a large amount of static text that is pre-generated and fetched in parallel with other assets.",
     "vendors": ["moment"],
     "data": {
