@@ -594,11 +594,17 @@ https://pages.cloudflare.com
 
 ## Benchmark
 
-To conclude this section, here's a benchmark of our app compared to [Next.js](https://nextjs.org/docs/getting-started)'s documentation site (which is **entirely SSG**).
+To conclude this section, we will perform a benchmark of our app compared to [Next.js](https://nextjs.org/docs/getting-started)'s documentation site (which is **entirely SSG**).
 <br>
-I chose the most minimalistic page I could find in it (Fast Refresh) and compared it to my Lorem Ipsum page.
+We will choose a minimalistic page (Fast Refresh) and compare it to our Lorem Ipsum page.
+<br>
+You can click on each link to perform a live benchmark.
 
-The benchmark is performed through [PageSpeed Insights](https://pagespeed.web.dev) simulating a slow 4G network.
+[Fast Refresh | Next.js](https://pagespeed.web.dev/report?url=https%3A%2F%2Fnextjs.org%2Fdocs%2Fbasic-features%2Ffast-refresh)
+<br>
+[Lorem Ipsum | Client-side Rendering](https://pagespeed.web.dev/report?url=https%3A%2F%2Fclient-side-rendering.pages.dev%2Florem-ipsum)
+
+The benchmark is performed through Google's _PageSpeed Insights_, simulating a slow 4G network.
 
 ![Next.js Benchmark](images/next-js-benchmark.png)
 ![Client-side Rendering Benchmark](images/client-side-rendering-benchmark.png)
