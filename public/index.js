@@ -19,9 +19,9 @@ module.exports = pages => `
 
       <script>
         const { pathname } = window.location
-        const pagesManifest = ${JSON.stringify(pages)}
+        const pages = ${JSON.stringify(pages)}
 
-        pagesManifest.forEach(({ path, scripts, data }) => {
+        pages.forEach(({ path, scripts, data }) => {
           const match = pathname === path || (path !== '/' && pathname.startsWith(path.replace('/*', '')))
       
           if (!match) return

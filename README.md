@@ -19,6 +19,7 @@ This project is a case study of CSR, it aims to explore the potential of client-
   - [Deploying](#deploying)
   - [Benchmark](#benchmark)
   - [Areas for Improvement](#areas-for-improvement)
+  - [Module Federation](#module-federation)
 - [SEO](#seo)
   - [Sitemaps](#sitemaps)
   - [Indexing](#indexing)
@@ -610,6 +611,52 @@ As it turns out, performance is **not** a default in Next.js.
 - Switch to [Preact](https://preactjs.com) when Suspense becomes stable (for a much smaller bundle size).
 - Compress assets using [Brotli level 11](https://d33wubrfki0l68.cloudfront.net/3434fd222424236d1f0f5b4596de1480b5378156/1a5ec/assets/wp-content/uploads/2018/07/compression_estimator_jquery.jpg) (Cloudflare only uses level 4 to save on computing resources).
 - Use the paid [Cloudflare Argo](https://blog.cloudflare.com/argo) service for even better response times.
+
+## Module Federation
+
+Applying the same preloading principles in a Module Federation project should be relatively simple:
+
+1. We generate a `pages-manifest.json` file in every micro-frontend.
+2. When deploying a micro-frontend, we extract the asset-injected _pages_ constant:
+
+```diff
+plugins: [
+  new HtmlPlugin({
+    scriptLoading: 'module',
+    templateContent: ({ compilation }) => {
+-     const pages = pagesManifest.map(({ name, path, vendors, data }) => {
++     const pages = pagesManifest.map(({ name, path, scripts, vendors, data }) => {
++       if (scripts) return { path, scripts, data }
+
+        const assets = compilation.getAssets().map(({ name }) => name)
+        const script = assets.find(assetName => assetName.includes(`/${name}.`) && assetName.endsWith('.js'))
+        const vendorScripts = vendors
+          ? assets.filter(name => vendors.find(vendor => name.includes(`/${vendor}.`) && name.endsWith('.js')))
+          : []
+
+        if (data && !Array.isArray(data)) data = [data]
+
+        return { path, scripts: [script, ...vendorScripts], data }
+      })
+
++     axios.post({ url: 'https://...', data: pages })
++     // OR
++     fs.writeFileSync('.../some-path', pages)
+
+      return htmlTemplate(pages)
+    }
+  })
+]
+```
+
+3. We merge the shell's `pages-manifest.json` file with the _pages_ array.
+4. We deploy the shell.
+
+We will also have to write additional code to preload the `remoteEntry.js` files.
+
+Using this method, everytime a micro-frontend is deployed, the shell has to be deployed aswell.
+<br>
+However, if we have more control over the build files in production, we could spare the shell's deployment by manually editing its `index.html` file and merging the micro-frontend's _pages_ array with the _pages_ constant.
 
 # SEO
 
