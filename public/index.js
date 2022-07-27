@@ -22,7 +22,9 @@ module.exports = pages => `
         const pagesManifest = ${JSON.stringify(pages)}
 
         pagesManifest.forEach(({ path, scripts, data }) => {
-          if (pathname !== path && !pathname.startsWith(path.replace('/*', ''))) return
+          const match = pathname === path || (path !== '/' && pathname.startsWith(path.replace('/*', '')))
+      
+          if (!match) return
           
           scripts.forEach(script => {
             document.head.appendChild(
