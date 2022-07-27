@@ -98,7 +98,7 @@ module.exports = (_, { mode }) => {
 
             if (data && !Array.isArray(data)) data = [data]
 
-            return { name, path, scripts: [script, ...vendorScripts], data }
+            return { path, scripts: [script, ...vendorScripts], data }
           })
 
           return htmlTemplate(pages)
