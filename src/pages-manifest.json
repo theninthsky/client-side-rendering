@@ -19,7 +19,7 @@
   },
   {
     "name": "pokemon",
-    "path": "/pokemon/*",
+    "path": "/pokemon",
     "title": "Pokémon",
     "description": "This page demonstrates dynamic data that is fetched in parallel with other assets.",
     "vendors": ["moment"],
@@ -36,11 +36,20 @@
       {
         "url": "https://pokeapi.co/api/v2/type/3",
         "crossorigin": "anonymous"
-      },
-      {
-        "url": "https://pokeapi.co/api/v2/type/:2",
-        "crossorigin": "anonymous"
       }
     ]
+  },
+  {
+    "name": "pokemon-type",
+    "path": "/pokemon/:id",
+    "title": "Pokémon Type",
+    "description": "This page demonstrates a dynamic path data that is fetched in parallel with other assets.",
+    "vendors": ["moment"],
+    "data": {
+        "url": "https://pokeapi.co/api/v2/type/?",
+        "dynamicPathIndex": 2,
+        "crossorigin": "anonymous"
+      },
+    "menuItem": false
   }
 ]

@@ -18,11 +18,23 @@ module.exports = pages => `
       <title>Client-side Rendering</title>
 
       <script>
-        const { pathname } = window.location
+        const isStructureEqual = (pathname, path) => {
+          pathname = pathname.split('/')
+          path = path.split('/')
+
+          if (pathname.length !== path.length) return false
+
+          return pathname.every((segment, ind) => segment === path[ind] || path[ind].includes(':'))
+        }
+
+        let { pathname } = window.location
+
+        if (pathname !== '/') pathname = pathname.replace(/\\/$/, '')
+
         const pages = ${JSON.stringify(pages)}
 
         pages.forEach(({ path, scripts, data }) => {
-          const match = pathname === path || (path !== '/' && pathname.startsWith(path.replace('/*', '')))
+          const match = pathname === path || (path.includes(':') && isStructureEqual(pathname, path))
       
           if (!match) return
           
@@ -34,16 +46,15 @@ module.exports = pages => `
 
           if (!data) return
           
-          data.forEach(({ url, crossorigin }) => {
+          data.forEach(({ url, dynamicPathIndex, crossorigin }) => {
             let fullURL = url
             
-            if (url.includes('/:')) {
-              const index = +url.match(/:(\\d+)/)[1]
-              const [id] = pathname.split('/').slice(index, index + 1)
+            if (dynamicPathIndex) {
+              const [id] = pathname.split('/').slice(dynamicPathIndex, dynamicPathIndex + 1)
 
               if (!id) return
               
-              fullURL = url.replace(/:\\d+/, id)
+              fullURL = url.replace('?', id)
             }
 
             document.head.appendChild(

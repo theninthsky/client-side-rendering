@@ -20,11 +20,13 @@ const Navigation = () => {
 
   const links = useMemo(
     () =>
-      pagesManifest.map(({ path, title, heading, data }) => (
-        <NavigationLink key={path} to={path} data={data} onClick={() => setDrawerOpen(false)}>
-          {heading || title}
-        </NavigationLink>
-      )),
+      pagesManifest
+        .filter(({ menuItem = true }) => menuItem)
+        .map(({ path, title, heading, data }) => (
+          <NavigationLink key={path} to={path} data={data} onClick={() => setDrawerOpen(false)}>
+            {heading || title}
+          </NavigationLink>
+        )),
     [pagesManifest]
   )
 

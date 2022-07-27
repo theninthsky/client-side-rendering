@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useParams } from 'react-router-dom'
 import { isDate } from 'moment'
 import { persistState, getPersistedState, useFetch } from 'frontend-essentials'
 import { css } from '@emotion/css'
@@ -8,21 +9,27 @@ import pagesManifest from 'pages-manifest.json'
 import Title from 'components/common/Title'
 import Info from 'components/common/Info'
 
-const { title, description, data } = pagesManifest.find(({ name }) => name === 'pokemon')
-
 const Pokemon = () => {
+  const { id } = useParams()
+
+  const { title, description, data } = pagesManifest.find(({ name }) => name === (id ? 'pokemon-type' : 'pokemon'))
+
   const [pokemon, setPokemon] = useState(getPersistedState('pokemon') || [])
 
-  useFetch(data[0].url, {
-    manual: pokemon.length,
+  useFetch(data[0]?.url, {
+    manual: pokemon.length || id,
     onSuccess: ({ data }) => setPokemon(prevPokemon => [...prevPokemon, ...data.pokemon])
   })
-  useFetch(data[1].url, {
-    manual: pokemon.length,
+  useFetch(data[1]?.url, {
+    manual: pokemon.length || id,
     onSuccess: ({ data }) => setPokemon(prevPokemon => [...prevPokemon, ...data.pokemon])
   })
-  useFetch(data[2].url, {
-    manual: pokemon.length,
+  useFetch(data[2]?.url, {
+    manual: pokemon.length || id,
+    onSuccess: ({ data }) => setPokemon(prevPokemon => [...prevPokemon, ...data.pokemon])
+  })
+  useFetch(data.url?.replace('?', id), {
+    manual: pokemon.length || !id,
     onSuccess: ({ data }) => setPokemon(prevPokemon => [...prevPokemon, ...data.pokemon])
   })
 
