@@ -5,8 +5,8 @@ import { css, cx } from '@emotion/css'
 
 import { MOBILE_VIEWPORT } from 'styles/constants'
 
-const createPreload = ({ url, crossorigin, preload }) => {
-  if (!preload || document.head.querySelector(`link[href="${url}"]`)) return
+const createPreload = ({ url, crossorigin, menuPreload }) => {
+  if (!menuPreload || document.head.querySelector(`link[href="${url}"]`)) return
 
   document.head.appendChild(
     Object.assign(document.createElement('link'), {

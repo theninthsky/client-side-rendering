@@ -28,7 +28,7 @@ const Pokemon = () => {
     manual: pokemon.length || id,
     onSuccess: ({ data }) => setPokemon(prevPokemon => [...prevPokemon, ...data.pokemon])
   })
-  useFetch(data.url?.replace('?', id), {
+  useFetch(data.url?.replace('$', id), {
     manual: pokemon.length || !id,
     onSuccess: ({ data }) => setPokemon(prevPokemon => [...prevPokemon, ...data.pokemon])
   })

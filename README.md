@@ -309,7 +309,7 @@ Now we can see that the data is being fetched right away:
 
 ![With Data Preload](images/with-data-preload.png)
 
-Please note our ability to fetch dynamic route data (such as `posts/[:id]`).
+Please note our ability to fetch dynamic route data (such as [pokemon/:id](https://client-side-rendering.pages.dev/pokemon/6)).
 <br>
 This implementation found here assumes that the dynamic route contains a number that represents the placeholder's index location relative to the URL.
 

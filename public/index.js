@@ -54,7 +54,7 @@ module.exports = pages => `
 
               if (!id) return
               
-              fullURL = url.replace('?', id)
+              fullURL = url.replace('$', id)
             }
 
             document.head.appendChild(

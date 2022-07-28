@@ -14,7 +14,7 @@
     "vendors": ["moment"],
     "data": {
       "url": "/json/lorem-ipsum.json",
-      "preload": true
+      "menuPreload": true
     }
   },
   {
@@ -27,7 +27,7 @@
       {
         "url": "https://pokeapi.co/api/v2/type/1",
         "crossorigin": "anonymous",
-        "preload": true
+        "menuPreload": true
       },
       {
         "url": "https://pokeapi.co/api/v2/type/2",
@@ -46,7 +46,7 @@
     "description": "This page demonstrates a dynamic path data that is fetched in parallel with other assets.",
     "vendors": ["moment"],
     "data": {
-        "url": "https://pokeapi.co/api/v2/type/?",
+        "url": "https://pokeapi.co/api/v2/type/$",
         "dynamicPathIndex": 2,
         "crossorigin": "anonymous"
       },
