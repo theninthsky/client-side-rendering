@@ -683,12 +683,12 @@ plugins: [
 ]
 ```
 
-3. We merge the shell's `pages-manifest.json` file with the _pages_ array.
+3. We merge the the _pages_ array with the shell's `pages-manifest.json` file.
 4. We deploy the shell.
 
 We will also have to write additional code to preload the `remoteEntry.js` files.
 
-Using this method, everytime a micro-frontend is deployed, the shell has to be deployed aswell.
+Using this method, every time a micro-frontend is deployed, the shell has to be deployed aswell.
 <br>
 However, if we have more control over the build files in production, we could spare the shell's deployment by manually editing its `index.html` file and merging the micro-frontend's _pages_ array with the _pages_ constant.
 
@@ -698,7 +698,7 @@ However, if we have more control over the build files in production, we could sp
 
 In order to make all of our app pages discoverable to search engines, we need to create a `sitemap.xml` file which specifies all of our website routes.
 
-Since we already have a centralized `pages-manifest` file, we can easily generate a sitemap during build time:
+Since we already have a centralized `pages-manifest.json` file, we can easily generate a sitemap during build time:
 
 ```
 import { Readable } from 'stream'
