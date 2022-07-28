@@ -166,13 +166,15 @@ module.exports = pages => `
 
         const pages = ${JSON.stringify(pages)}
 
-        pages.forEach(({ path, script }) => {
-          if (pathname !== path) return
+        for (const { path, script } of pages) {
+          if (pathname !== path) continue
 
           document.head.appendChild(
             Object.assign(document.createElement('link'), { rel: 'preload', href: '/' + script, as: 'script' })
           )
-        })
+
+          break
+        }
       </script>
     </head>
     <body>
@@ -285,18 +287,18 @@ module.exports = pages => `
 
         const pages = ${JSON.stringify(pages)}
 
--       pages.forEach(({ path, script }) => {
-+       pages.forEach(({ path, script, data }) => {
--         if (pathname !== path) return
+-       for (const { path, script } of pages) {
++       for (const { path, script, data } of pages) {
+-         if (pathname !== path) continue
 +         const match = pathname === path || (path.includes(':') && isStructureEqual(pathname, path))
 +
-+         if (!match) return
++         if (!match) continue
 
           document.head.appendChild(
             Object.assign(document.createElement('link'), { rel: 'preload', href: '/' + script, as: 'script' })
           )
 
-+         if (!data) return
++         if (!data) break
 +
 +          data.forEach(({ url, dynamicPathIndex, crossorigin }) => {
 +           let fullURL = url
@@ -313,7 +315,9 @@ module.exports = pages => `
 +             Object.assign(document.createElement('link'), { rel: 'preload', href: fullURL, as: 'fetch', crossOrigin: crossorigin })
 +           )
           })
-        })
+
+          break
+        }
       </script>
     </head>
     <body>
@@ -420,11 +424,11 @@ module.exports = pages => `
 
         const pages = ${JSON.stringify(pages)}
 
--       pages.forEach(({ path, script, data }) => {
-+       pages.forEach(({ path, scripts, data }) => {
+-       for (const { path, script, data } of pages) {
++       for (const { path, scripts, data } of pages) {
           const match = pathname === path || (path.includes(':') && isStructureEqual(pathname, path))
 
-          if (!match) return
+          if (!match) continue
 
 +         scripts.forEach(script => {
             document.head.appendChild(
@@ -432,7 +436,7 @@ module.exports = pages => `
             )
 +         })
 
-          if (!data) return
+          if (!data) break
 
            data.forEach(({ url, dynamicPathIndex, crossorigin }) => {
             let fullURL = url
@@ -449,7 +453,9 @@ module.exports = pages => `
               Object.assign(document.createElement('link'), { rel: 'preload', href: fullURL, as: 'fetch', crossOrigin: crossorigin })
             )
           })
-        })
+
+          break
+        }
       </script>
     </head>
     <body>

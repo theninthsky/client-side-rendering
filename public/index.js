@@ -33,10 +33,10 @@ module.exports = pages => `
 
         const pages = ${JSON.stringify(pages)}
 
-        pages.forEach(({ path, scripts, data }) => {
+        for (const { path, scripts, data } of pages) {
           const match = pathname === path || (path.includes(':') && isStructureEqual(pathname, path))
       
-          if (!match) return
+          if (!match) continue
           
           scripts.forEach(script => {
             document.head.appendChild(
@@ -44,7 +44,7 @@ module.exports = pages => `
             )
           })
 
-          if (!data) return
+          if (!data) break
           
           data.forEach(({ url, dynamicPathIndex, crossorigin }) => {
             let fullURL = url
@@ -61,7 +61,9 @@ module.exports = pages => `
               Object.assign(document.createElement('link'), { rel: 'preload', href: fullURL, as: 'fetch', crossOrigin: crossorigin })
             )
           })
-        })
+
+          break
+        }
       </script>
     </head>
     <body>
