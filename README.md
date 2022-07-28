@@ -327,7 +327,7 @@ Now we can see that the data is being fetched right away:
 
 ![With Data Preload](images/with-data-preload.png)
 
-With the above script, we can even preload dynamic routes data (such as [pokemon/:id](https://client-side-rendering.pages.dev/pokemon/6)).
+With the above script, we can even preload dynamic routes data (such as _[pokemon/:id](https://client-side-rendering.pages.dev/pokemon/6)_).
 
 The only limitation is that we can only preload GET resources, but this would not be a problem when the backend is well-architected.
 
@@ -820,8 +820,9 @@ This, after going through prerendering, gives us the correct preview for every p
 
 Here's a list of some SSR cons that should not be taken lightly:
 
-- SSR page responses do not include an ETag header and therefore can never return a _[304 Not Modified](https://blog.hubspot.com/marketing/http-304-not-modified#:~:text=An%20HTTP%20304%20not%20modified%20status%20code%20means%20that%20the,to%20speed%20up%20page%20delivery)_ status.
+- SSR page responses mostly don't return a _[304 Not Modified](https://blog.hubspot.com/marketing/http-304-not-modified#:~:text=An%20HTTP%20304%20not%20modified%20status%20code%20means%20that%20the,to%20speed%20up%20page%20delivery)_ status.
 - When performing client-side data fetching, SSR will **always** be slower than CSR, since its document is always bigger and takes longer to download.
+- Since all images are initially included in the document, scripts and images will compete for bandwidth, causing delayed interactivity on slow networks.
 - Since accessing browser-related objects during the server render phase throws an error, some very helpful tools become unusable, while others (such as [react-media](https://www.npmjs.com/package/react-media#server-side-rendering-ssr)) require SSR-specific customizations.
 
 ## The Cost of Hydration
