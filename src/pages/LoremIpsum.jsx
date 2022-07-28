@@ -8,7 +8,7 @@ import pagesManifest from 'pages-manifest.json'
 import Title from 'components/common/Title'
 import Info from 'components/common/Info'
 
-const { title, description, data } = pagesManifest.find(({ name }) => name === 'lorem-ipsum')
+const { title, description, data } = pagesManifest.find(({ chunk }) => chunk === 'lorem-ipsum')
 
 const LoremIpsum = () => {
   const [loremIpsum, setLoremIpsum] = useState(getPersistedState('loremIpsum'))

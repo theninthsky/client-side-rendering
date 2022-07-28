@@ -5,7 +5,7 @@ import pagesManifest from 'pages-manifest.json'
 import Title from 'components/common/Title'
 import Info from 'components/common/Info'
 
-const { description, heading } = pagesManifest.find(({ name }) => name === 'index')
+const { description, heading } = pagesManifest.find(({ chunk }) => chunk === 'index')
 
 const Home = () => {
   return (

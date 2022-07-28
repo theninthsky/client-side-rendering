@@ -139,9 +139,9 @@ plugins: [
   new HtmlPlugin({
     scriptLoading: 'module',
     templateContent: ({ compilation }) => {
-      const pages = pagesManifest.map(({ name, path }) => {
+      const pages = pagesManifest.map(({ chunk, path }) => {
         const assets = compilation.getAssets().map(({ name }) => name)
-        const script = assets.find(assetName => assetName.includes(`/${name}.`) && assetName.endsWith('.js'))
+        const script = assets.find(name => name.includes(`/${chunk}.`) && name.endsWith('.js'))
 
         return { path, script }
       })
@@ -247,10 +247,10 @@ plugins: [
   new HtmlPlugin({
     scriptLoading: 'module',
     templateContent: ({ compilation }) => {
--     const pages = pagesManifest.map(({ name, path }) => {
-+     const pages = pagesManifest.map(({ name, path, data }) => {
+-     const pages = pagesManifest.map(({ chunk, path }) => {
++     const pages = pagesManifest.map(({ chunk, path, data }) => {
         const assets = compilation.getAssets().map(({ name }) => name)
-        const script = assets.find(assetName => assetName.includes(`/${name}.`) && assetName.endsWith('.js'))
+        const script = assets.find(name => name.includes(`/${chunk}.`) && name.endsWith('.js'))
 
 +       if (data && !Array.isArray(data)) data = [data]
 
@@ -331,7 +331,7 @@ Now we can see that the data is being fetched right away:
 
 ![With Data Preload](images/with-data-preload.png)
 
-With the above script, we can even preload dynamic routes data (such as _[pokemon/:id](https://client-side-rendering.pages.dev/pokemon/6)_).
+With the above script, we can even preload dynamic routes data (such as _[pokemon/:name](https://client-side-rendering.pages.dev/pokemon/pikachu)_).
 
 The only limitation is that we can only preload GET resources, but this would not be a problem when the backend is well-architected.
 
@@ -381,10 +381,10 @@ plugins: [
   new HtmlPlugin({
     scriptLoading: 'module',
     templateContent: ({ compilation }) => {
--     const pages = pagesManifest.map(({ name, path, data }) => {
-+     const pages = pagesManifest.map(({ name, path, vendors, data }) => {
+-     const pages = pagesManifest.map(({ chunk, path, data }) => {
++     const pages = pagesManifest.map(({ chunk, path, vendors, data }) => {
         const assets = compilation.getAssets().map(({ name }) => name)
-        const script = assets.find(assetName => assetName.includes(`/${name}.`) && assetName.endsWith('.js'))
+        const script = assets.find(name => name.includes(`/${chunk}.`) && name.endsWith('.js'))
 +       const vendorScripts = vendors
 +         ? assets.filter(name => vendors.find(vendor => name.includes(`/${vendor}.`) && name.endsWith('.js')))
 +         : []
@@ -664,12 +664,12 @@ plugins: [
   new HtmlPlugin({
     scriptLoading: 'module',
     templateContent: ({ compilation }) => {
--     const pages = pagesManifest.map(({ name, path, vendors, data }) => {
-+     const pages = pagesManifest.map(({ name, path, scripts, vendors, data }) => {
+-     const pages = pagesManifest.map(({ chunk, path, vendors, data }) => {
++     const pages = pagesManifest.map(({ chunk, path, scripts, vendors, data }) => {
 +       if (scripts) return { path, scripts, data }
 
         const assets = compilation.getAssets().map(({ name }) => name)
-        const script = assets.find(assetName => assetName.includes(`/${name}.`) && assetName.endsWith('.js'))
+        const script = assets.find(name => name.includes(`/${chunk}.`) && name.endsWith('.js'))
         const vendorScripts = vendors
           ? assets.filter(name => vendors.find(vendor => name.includes(`/${vendor}.`) && name.endsWith('.js')))
           : []

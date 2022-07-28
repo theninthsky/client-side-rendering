@@ -89,9 +89,9 @@ module.exports = (_, { mode }) => {
       new HtmlPlugin({
         scriptLoading: 'module',
         templateContent: ({ compilation }) => {
-          const pages = pagesManifest.map(({ name, path, vendors, data }) => {
+          const pages = pagesManifest.map(({ chunk, path, vendors, data }) => {
             const assets = compilation.getAssets().map(({ name }) => name)
-            const script = assets.find(assetName => assetName.includes(`/${name}.`) && assetName.endsWith('.js'))
+            const script = assets.find(name => name.includes(`/${chunk}.`) && name.endsWith('.js'))
             const vendorScripts = vendors
               ? assets.filter(name => vendors.find(vendor => name.includes(`/${vendor}.`) && name.endsWith('.js')))
               : []

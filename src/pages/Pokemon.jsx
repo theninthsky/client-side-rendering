@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { NavLink } from 'react-router-dom'
 import { isDate } from 'moment'
 import { persistState, getPersistedState, useFetch } from 'frontend-essentials'
 import { css } from '@emotion/css'
@@ -9,28 +9,13 @@ import pagesManifest from 'pages-manifest.json'
 import Title from 'components/common/Title'
 import Info from 'components/common/Info'
 
+const { title, description, data } = pagesManifest.find(({ chunk }) => chunk === 'pokemon')
+
 const Pokemon = () => {
-  const { id } = useParams()
-
-  const { title, description, data } = pagesManifest.find(({ path }) => path === (id ? '/pokemon/:id' : '/pokemon'))
-
   const [pokemon, setPokemon] = useState(getPersistedState('pokemon') || [])
 
-  useFetch(data[0]?.url, {
-    manual: pokemon.length || id,
-    onSuccess: ({ data }) => setPokemon(prevPokemon => [...prevPokemon, ...data.pokemon])
-  })
-  useFetch(data[1]?.url, {
-    manual: pokemon.length || id,
-    onSuccess: ({ data }) => setPokemon(prevPokemon => [...prevPokemon, ...data.pokemon])
-  })
-  useFetch(data[2]?.url, {
-    manual: pokemon.length || id,
-    onSuccess: ({ data }) => setPokemon(prevPokemon => [...prevPokemon, ...data.pokemon])
-  })
-  useFetch(data.url?.replace('$', id), {
-    manual: pokemon.length || !id,
-    onSuccess: ({ data }) => setPokemon(prevPokemon => [...prevPokemon, ...data.pokemon])
+  useFetch(data[0].url, {
+    onSuccess: ({ data: { data } }) => setPokemon(data.pokemons.results.sort((a, b) => a.name.localeCompare(b.name)))
   })
 
   useEffect(() => {
@@ -48,10 +33,10 @@ const Pokemon = () => {
       <main className={style.main}>
         {pokemon.length ? (
           <ul className={style.list}>
-            {pokemon.map(({ pokemon }, ind) => (
-              <li className={style.pokemon} key={ind}>
-                {pokemon.name}
-              </li>
+            {pokemon.map(({ name }, ind) => (
+              <NavLink className={style.pokemon} key={ind} to={`/pokemon/${name}`}>
+                {name}
+              </NavLink>
             ))}
           </ul>
         ) : (
@@ -86,6 +71,8 @@ const style = {
   `,
   pokemon: css`
     display: block;
+    text-decoration: none;
+    color: inherit;
 
     :not(:first-child) {
       margin-top: 10px;
