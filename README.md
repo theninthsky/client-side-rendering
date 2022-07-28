@@ -160,9 +160,13 @@ module.exports = pages => `
       <title>CSR</title>
 
       <script>
-        const { pathname } = window.location
+        let { pathname } = window.location
 
-        ;${JSON.stringify(pages)}.forEach(({ path, scripts }) => {
+        if (pathname !== '/') pathname = pathname.replace(/\\/$/, '')
+
+        const pages = ${JSON.stringify(pages)}
+
+        pages.forEach(({ path, script }) => {
           if (pathname !== path) return
 
           document.head.appendChild(
@@ -182,7 +186,7 @@ module.exports = pages => `
 
 _Please note that other types of assets can be preloaded the same way (like stylesheets)._
 
-This way, the browser is able to fetch the page-related script **in parallel** with render-critical assets:
+This way, the browser is able to fetch the page-related script chunk **in parallel** with render-critical assets:
 
 ![With Async Preload](images/with-async-preload.png)
 
@@ -192,7 +196,7 @@ I like the idea of SSG: we create a cacheable HTML file and inject static data i
 <br>
 This can be useful for data that is not highly dynamic, such as content from CMS.
 
-So how can we create static data?
+But how can we create static data?
 <br>
 We will execute the following script during build time:
 
@@ -266,12 +270,27 @@ module.exports = pages => `
       <title>CSR</title>
 
       <script>
-        const { pathname } = window.location
++       const isStructureEqual = (pathname, path) => {
++         pathname = pathname.split('/')
++         path = path.split('/')
++
++         if (pathname.length !== path.length) return false
++
++         return pathname.every((segment, ind) => segment === path[ind] || path[ind].includes(':'))
++       }
 
--        ;${JSON.stringify(pages)}.forEach(({ path, scripts }) => {
-+        ;${JSON.stringify(pages)}.forEach(({ path, scripts, data }) => {
+        let { pathname } = window.location
+
+        if (pathname !== '/') pathname = pathname.replace(/\\/$/, '')
+
+        const pages = ${JSON.stringify(pages)}
+
+-       pages.forEach(({ path, script }) => {
++       pages.forEach(({ path, script, data }) => {
 -         if (pathname !== path) return
-+         if (pathname !== path && !pathname.startsWith(path.replace('/*', ''))) return
++         const match = pathname === path || (path.includes(':') && isStructureEqual(pathname, path))
++
++         if (!match) return
 
           document.head.appendChild(
             Object.assign(document.createElement('link'), { rel: 'preload', href: '/' + script, as: 'script' })
@@ -279,22 +298,21 @@ module.exports = pages => `
 
 +         if (!data) return
 +
-+         data.forEach(({ url, crossorigin }) => {
++          data.forEach(({ url, dynamicPathIndex, crossorigin }) => {
 +           let fullURL = url
 +
-+           if (url.includes('/:')) {
-+             const index = +url.match(/:(\\d+)/)[1]
-+             const [id] = pathname.split('/').slice(index, index + 1)
++           if (dynamicPathIndex) {
++             const [id] = pathname.split('/').slice(dynamicPathIndex, dynamicPathIndex + 1)
 +
 +             if (!id) return
 +
-+             fullURL = url.replace(/:\\d+/, id)
++             fullURL = url.replace('$', id)
 +           }
 +
 +           document.head.appendChild(
 +             Object.assign(document.createElement('link'), { rel: 'preload', href: fullURL, as: 'fetch', crossOrigin: crossorigin })
 +           )
-+         })
+          })
         })
       </script>
     </head>
@@ -309,13 +327,9 @@ Now we can see that the data is being fetched right away:
 
 ![With Data Preload](images/with-data-preload.png)
 
-Please note our ability to fetch dynamic route data (such as [pokemon/:id](https://client-side-rendering.pages.dev/pokemon/6)).
-<br>
-This implementation found here assumes that the dynamic route contains a number that represents the placeholder's index location relative to the URL.
+With the above script, we can even preload dynamic routes data (such as [pokemon/:id](https://client-side-rendering.pages.dev/pokemon/6)).
 
-For example: the route `v1/posts/:2` would match the URL `posts/472375` and therefore will prefetch `v1/posts/472375`.
-
-The only limitation of this approach is that we can only preload GET resources, but this would not be a problem if the backend is well-architected.
+The only limitation is that we can only preload GET resources, but this would not be a problem when the backend is well-architected.
 
 ## Tweaking Further
 
@@ -391,11 +405,26 @@ module.exports = pages => `
       <title>CSR</title>
 
       <script>
-        const { pathname } = window.location
+        const isStructureEqual = (pathname, path) => {
+          pathname = pathname.split('/')
+          path = path.split('/')
 
--       ;${JSON.stringify(pages)}.forEach(({ path, script, data }) => {
-+       ;${JSON.stringify(pages)}.forEach(({ path, scripts, data }) => {
-          if (pathname !== path && !pathname.startsWith(path.replace('/*', ''))) return
+          if (pathname.length !== path.length) return false
+
+          return pathname.every((segment, ind) => segment === path[ind] || path[ind].includes(':'))
+        }
+
+        let { pathname } = window.location
+
+        if (pathname !== '/') pathname = pathname.replace(/\\/$/, '')
+
+        const pages = ${JSON.stringify(pages)}
+
+-       pages.forEach(({ path, script, data }) => {
++       pages.forEach(({ path, scripts, data }) => {
+          const match = pathname === path || (path.includes(':') && isStructureEqual(pathname, path))
+
+          if (!match) return
 
 +         scripts.forEach(script => {
             document.head.appendChild(
@@ -405,16 +434,15 @@ module.exports = pages => `
 
           if (!data) return
 
-          data.forEach(({ url, crossorigin }) => {
+           data.forEach(({ url, dynamicPathIndex, crossorigin }) => {
             let fullURL = url
 
-            if (url.includes('/:')) {
-              const index = +url.match(/:(\\d+)/)[1]
-              const [id] = pathname.split('/').slice(index, index + 1)
+            if (dynamicPathIndex) {
+              const [id] = pathname.split('/').slice(dynamicPathIndex, dynamicPathIndex + 1)
 
               if (!id) return
 
-              fullURL = url.replace(/:\\d+/, id)
+              fullURL = url.replace('$', id)
             }
 
             document.head.appendChild(
