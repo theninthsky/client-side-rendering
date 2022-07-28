@@ -12,7 +12,7 @@ import Info from 'components/common/Info'
 const Pokemon = () => {
   const { id } = useParams()
 
-  const { title, description, data } = pagesManifest.find(({ name }) => name === (id ? 'pokemon-type' : 'pokemon'))
+  const { title, description, data } = pagesManifest.find(({ path }) => path === (id ? '/pokemon/:id' : '/pokemon'))
 
   const [pokemon, setPokemon] = useState(getPersistedState('pokemon') || [])
 

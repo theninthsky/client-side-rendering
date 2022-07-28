@@ -40,7 +40,7 @@
     ]
   },
   {
-    "name": "pokemon-type",
+    "name": "pokemon",
     "path": "/pokemon/:id",
     "title": "Pokémon Type",
     "description": "This page demonstrates a dynamic path data that is fetched in parallel with other assets.",
