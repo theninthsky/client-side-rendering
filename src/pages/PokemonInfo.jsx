@@ -2,9 +2,10 @@ import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import { persistState, getPersistedState, useFetch } from 'frontend-essentials'
 import { css } from '@emotion/css'
-import { Skeleton } from '@mui/material'
+import { capitalize, Skeleton } from '@mui/material'
 
 import pagesManifest from 'pages-manifest.json'
+import { setMetaTags } from 'utils/meta-tags'
 import Title from 'components/common/Title'
 import Info from 'components/common/Info'
 
@@ -22,8 +23,11 @@ const PokemonInfo = () => {
   })
 
   useEffect(() => {
-    if (pokemonInfo) persistState(`${nameParam}Info`, pokemonInfo)
-  }, [pokemonInfo])
+    if (!id) return
+
+    persistState(`${nameParam}Info`, pokemonInfo)
+    setMetaTags({ title: `${capitalize(name)} | Pokemon Info` })
+  }, [id])
 
   return (
     <div>

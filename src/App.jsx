@@ -23,10 +23,7 @@ const App = () => {
   const { pathname } = useLocation()
 
   useEffect(() => {
-    const page =
-      pagesManifest.find(
-        ({ path }) => pathname === path || (path !== '/' && pathname.startsWith(path.replace('/*', '')))
-      ) || {}
+    const page = pagesManifest.find(({ path }) => pathname === path || isStructureEqual(pathname, path)) || {}
 
     setMetaTags(page)
   }, [pathname])
