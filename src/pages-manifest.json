@@ -38,8 +38,8 @@
     "description": "This page demonstrates a dynamic path data that is fetched in parallel with other assets.",
     "vendors": ["moment"],
     "data": {
-        "url": "https://graphql-pokeapi.graphcdn.app?query={pokemon(name:\"$\"){id, name}}",
-        "dynamicPathIndex": 2,
+        "url": "https://graphql-pokeapi.graphcdn.app?query={pokemon(name:\"$\"){id,name,types{type{name}}}}",
+        "dynamicPathIndexes": [2],
         "crossorigin": "anonymous"
       },
     "menuItem": false

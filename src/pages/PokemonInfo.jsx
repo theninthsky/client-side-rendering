@@ -11,16 +11,18 @@ import Info from 'components/common/Info'
 const { title, description, data } = pagesManifest.find(({ chunk }) => chunk === 'pokemon-info')
 
 const PokemonInfo = () => {
-  const { name } = useParams()
+  const { name: nameParam } = useParams()
 
-  const [pokemonInfo, setPokemonInfo] = useState(getPersistedState(`${name}Info`))
+  const [pokemonInfo, setPokemonInfo] = useState(getPersistedState(`${nameParam}Info`) || {})
 
-  useFetch(data.url.replace('$', name), {
+  const { id, name, types } = pokemonInfo
+
+  useFetch(data.url.replace('$', nameParam), {
     onSuccess: ({ data: { data } }) => setPokemonInfo(data.pokemon)
   })
 
   useEffect(() => {
-    if (pokemonInfo) persistState(`${name}Info`, pokemonInfo)
+    if (pokemonInfo) persistState(`${nameParam}Info`, pokemonInfo)
   }, [pokemonInfo])
 
   return (
@@ -30,24 +32,16 @@ const PokemonInfo = () => {
       <Info className={style.info}>{description}</Info>
 
       <main className={style.main}>
-        {pokemonInfo ? (
+        {id ? (
           <div>
-            {pokemonInfo.id} - {pokemonInfo.name}
+            {id} - {name} - {types.map(({ type: { name } }) => name).join(', ')}
           </div>
         ) : (
-          <MainSkeleton />
+          <Skeleton className={style.skeleton} variant="text" width={100} height={20} animation={false} />
         )}
       </main>
     </div>
   )
-}
-
-const MainSkeleton = () => {
-  return new Array(30)
-    .fill()
-    .map((_, ind) => (
-      <Skeleton className={style.skeleton} key={ind} variant="text" width={60} height={20} animation={false} />
-    ))
 }
 
 const style = {
