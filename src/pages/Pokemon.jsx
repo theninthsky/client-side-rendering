@@ -6,6 +6,7 @@ import { css } from '@emotion/css'
 import { Skeleton } from '@mui/material'
 
 import pagesManifest from 'pages-manifest.json'
+import { setMetaTags } from 'utils/meta-tags'
 import Title from 'components/common/Title'
 import Info from 'components/common/Info'
 
@@ -20,6 +21,8 @@ const Pokemon = () => {
 
   useEffect(() => {
     if (pokemon) persistState('pokemon', pokemon)
+
+    setMetaTags({ image: `${window.location.origin}/icons/og-pokemon.png` })
   }, [pokemon])
 
   console.log(isDate(new Date()))

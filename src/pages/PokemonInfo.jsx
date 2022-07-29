@@ -10,6 +10,8 @@ import Title from 'components/common/Title'
 import Info from 'components/common/Info'
 
 const { title, description, data } = pagesManifest.find(({ chunk }) => chunk === 'pokemon-info')
+const POKEMON_IMAGE_URL_PREFIX =
+  'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/'
 
 const PokemonInfo = () => {
   const { name: nameParam } = useParams()
@@ -26,7 +28,7 @@ const PokemonInfo = () => {
     if (!id) return
 
     persistState(`${nameParam}Info`, pokemonInfo)
-    setMetaTags({ title: `${capitalize(name)} | Pokemon Info` })
+    setMetaTags({ title: `${capitalize(name)} | Pokémon Info`, image: `${POKEMON_IMAGE_URL_PREFIX}${id}.png` })
   }, [id])
 
   return (

@@ -5,17 +5,17 @@ module.exports = pages => `
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1">
       <meta name="theme-color" content="#1e90ff">
-      <meta name="description" content="A demonstration of CSR">
+      <meta name="description" content="">
       <meta property="og:title" content="">
       <meta property="og:type" content="website">
       <meta property="og:url" content="">
-      <meta property="og:image" content="https://client-side-rendering.pages.dev/icons/og-icon.png">
+      <meta property="og:image" content="">
 
       <link rel="shortcut icon" href="/icons/favicon.ico">
       <link rel="manifest" href="/manifest.json">
       <link rel="preload" href="https://fonts.gstatic.com/s/montserrat/v21/JTUSjIg1_i6t8kCHKm459Wlhyw.woff2" as="font" type="font/woff2" crossorigin>
 
-      <title>Client-side Rendering</title>
+      <title></title>
 
       <script>
         const isStructureEqual = (pathname, path) => {
