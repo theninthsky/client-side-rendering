@@ -797,20 +797,23 @@ This happens because most CSR apps have only one HTML file, and social share pre
 This is where prerendering comes to our aid once again, we only need to make sure to set the correct meta tags dynamically:
 
 ```
-export const setMetaTags = ({ title, description }) => {
-  document.title = title
-  document.head.querySelector('meta[name="description"]').setAttribute('content', description)
-  document.head.querySelector('meta[property="og:title"]').setAttribute('content', title)
+export const setMetaTags = ({ title, description, image }) => {
+  if (title) {
+    document.title = title
+    document.head.querySelector('meta[property="og:title"]').setAttribute('content', title)
+  }
+  if (description) document.head.querySelector('meta[name="description"]').setAttribute('content', description)
+
   document.head.querySelector('meta[property="og:url"]').setAttribute('content', window.location.href)
+  document.head
+    .querySelector('meta[property="og:image"]')
+    .setAttribute('content', image || `${window.location.origin}/icons/og-icon.png`)
 }
 ```
 
 ```
 useEffect(() => {
-  const page =
-    pagesManifest.find(
-      ({ path }) => pathname === path || (path !== '/' && pathname.startsWith(path.replace('/*', '')))
-    ) || {}
+  const page = pagesManifest.find(({ path }) => pathname === path || isStructureEqual(pathname, path)) || {}
 
   setMetaTags(page)
 }, [pathname])
@@ -818,7 +821,9 @@ useEffect(() => {
 
 This, after going through prerendering, gives us the correct preview for every page:
 
-![Facebook Share Preview](images/facebook-share-preview.png)
+![Facebook Preview Home](images/facebook-preview-home.png)
+![Facebook Preview Pokemon](images/facebook-preview-pokemon.png)
+![Facebook Preview Pokemon Info](images/facebook-preview-pokemon-info.png)
 
 # CSR vs. SSR
 
