@@ -40,6 +40,7 @@ This project is a case study of CSR, it aims to explore the potential of client-
   * [Social Media Share Previews](#social-media-share-previews)
 - [CSR vs. SSR](#csr-vs-ssr)
   - [SSR Disadvantages](#ssr-disadvantages)
+  - [Inlining CSS](#inlining-css)
   - [Why Not SSG?](#why-not-ssg)
   - [The Cost of Hydration](#the-cost-of-hydration)
 - [Conclusion](#conclusion)
@@ -803,7 +804,7 @@ Prerendering, also called _Dynamic Rendering_, is encouraged by [Google](https:/
 
 Using prerendering produces the **exact same** SEO results as using SSR in all search engines.
 
-_Note that if you only care about Google indexing, there's little sense to prerendering your website, since Googlebot crawls JS apps flawlessly._
+_Note that if you only care about Google indexing and you don't need share previews, there's little sense to prerendering your website, since Googlebot crawls JS apps flawlessly._
 
 ### Social Media Share Previews
 
@@ -853,6 +854,36 @@ Here's a list of some SSR cons that should not be taken lightly:
 - Since all images are initially included in the document, scripts and images will compete for bandwidth, causing delayed interactivity on slow networks.
 - Since accessing browser-related objects during the server render phase throws an error, some very helpful tools become unusable, while others (such as [react-media](https://www.npmjs.com/package/react-media#server-side-rendering-ssr)) require SSR-specific customizations.
 
+Pay attention that we never mentioned the ability of SSR to fetch data on the server.
+<br>
+The reason is that server-side fetching is a very bad idea in most cases, since some queries can take up to several hundreds of milliseconds to return (and even more), and while this happens, the user will see **absolutely nothing** in their browser.
+<br>
+I never understood why developes decide to couple the server performance with the initial page load, it seems like a poor choice.
+<br>
+And what happens when the server response takes a really long time? developers just move that specific request to the client side, but then fall short behind a normal CSR app (as seen above).
+
+A quick reminder that since we preload the data in our CSR app, we benefit in both first painting and data arrival.
+
+## Inlining CSS
+
+When we talk about SSR render flow, we paint the following picture in our minds:
+
+Browser request ---> initial HTML arrives (_page is visible_) ---> JS arrives (_page is interactive_).
+
+But in reality, most SSR websites **do not inline critical CSS**.
+<br>
+So the real flow becomes:
+
+Broswer request ---> initial HTML arrives ---> CSS arrives (_page is visible_) ---> JS arrives (_page is interactive_).
+
+This makes the SSR flow **nearly identical** to the CSR flow, the only difference is that the CSR will have to wait for the JS to finish loading aswell, in order to paint the screen.
+<br>
+That's why the _[FCP](https://web.dev/fcp)_ differences between the two are marginal and even **don't exist** (especially under fast internet connections).
+
+We have both _[Next.js](https://nextjs.org)_ and _[Remix](https://remix.run)_ websites to demonstrate the absence of critical CSS inlining.
+
+The main reasons for not extracting critical CSS are that the HTML becomes larger (delaying interactivity) and that the CSS becomes uncacheable.
+
 ## Why Not SSG?
 
 We have seen the advantages of static files: they are cacheable; a _304 Not Modified_ status can be returned for them; they can be served from a nearby CDN and serving them doesn't require a Node.js server.
@@ -862,7 +893,7 @@ This may lead us to believe that SSG combines both CSR and SSR advantages: we ca
 However, in reality, SSG has some severe limitations:
 
 - The app is "prerendered", meaning every user has to initially see the **exact** same content, forcing every user-specific features to be loaded later and thus making both _[LCP](https://web.dev/lcp)_ and _[CLS](https://web.dev/cls)_ metrices worse.
-- Since JS isn't active during the first moments, everything that relies on JS to be presented simply won't be visible, or it will be visible in its incorrect state (like components which rely to the _window.matchMedia_ function to be displayed).
+- Since JS isn't active during the first moments, everything that relies on JS to be presented simply won't be visible, or it will be visible in its incorrect state (like components which rely on the _window.matchMedia_ function to be displayed).
 
 These issues are too severe to ignore, they might worsen the UX of most of our pages.
 
