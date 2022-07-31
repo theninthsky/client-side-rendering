@@ -50,6 +50,10 @@ _Note: while this project is implemented using React, the majority of it's tweak
 
 # Performance
 
+We will assume a standard Webpack 5 setup and add the required customizations as we progress.
+<br>
+The vast majority of code changes that we'll go throught will be inside the _[webpack.config.js](webpack.config.js)_ configuration file and the _[index.js](public/index.js)_ HTML template.
+
 ### Bundle Size
 
 The first rule of thumb is to use as fewer dependencies as possible, and among those, to select the ones with smaller filesize.
@@ -184,7 +188,7 @@ module.exports = pages => `
 `
 ```
 
-`pages-manifest.json` can be found [here](src/pages-manifest.json).
+The imported `pages-manifest.json` file can be found [here](src/pages-manifest.json).
 
 _Please note that other types of assets can be preloaded the same way (like stylesheets)._
 
