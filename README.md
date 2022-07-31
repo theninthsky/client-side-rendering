@@ -646,15 +646,15 @@ https://pages.cloudflare.com
 
 ## Benchmark
 
-To conclude this section, we will perform a benchmark of our app compared to [Next.js](https://nextjs.org/docs/getting-started)'s documentation site (which is **entirely SSG**).
+To conclude this section, we will perform a benchmark of our app compared to _[Next.js](https://nextjs.org/docs/getting-started)_'s documentation site (which is **entirely SSG**).
 <br>
 We will choose a minimalistic page (Fast Refresh) and compare it to our Lorem Ipsum page.
 <br>
 You can click on each link to perform a live benchmark.
 
-[Fast Refresh | Next.js](https://pagespeed.web.dev/report?url=https%3A%2F%2Fnextjs.org%2Fdocs%2Fbasic-features%2Ffast-refresh)
+_[Fast Refresh | Next.js](https://pagespeed.web.dev/report?url=https%3A%2F%2Fnextjs.org%2Fdocs%2Fbasic-features%2Ffast-refresh)_
 <br>
-[Lorem Ipsum | Client-side Rendering](https://pagespeed.web.dev/report?url=https%3A%2F%2Fclient-side-rendering.pages.dev%2Florem-ipsum)
+_[Lorem Ipsum | Client-side Rendering](https://pagespeed.web.dev/report?url=https%3A%2F%2Fclient-side-rendering.pages.dev%2Florem-ipsum)_
 
 The benchmark is performed through Google's _PageSpeed Insights_, simulating a slow 4G network.
 
@@ -666,9 +666,9 @@ As it turns out, performance is **not** a default in Next.js.
 ## Areas for Improvement
 
 - Automatically detect async vendor chunks during build time (refer to _Splitting Vendors From Async Chunks_ section).
-- Switch to [Preact](https://preactjs.com) when Suspense becomes stable (for a much smaller bundle size).
-- Compress assets using [Brotli level 11](https://d33wubrfki0l68.cloudfront.net/3434fd222424236d1f0f5b4596de1480b5378156/1a5ec/assets/wp-content/uploads/2018/07/compression_estimator_jquery.jpg) (Cloudflare only uses level 4 to save on computing resources).
-- Use the paid [Cloudflare Argo](https://blog.cloudflare.com/argo) service for even better response times.
+- Switch to _[Preact](https://preactjs.com)_ when Suspense becomes stable (for a much smaller bundle size).
+- Compress assets using _[Brotli level 11](https://d33wubrfki0l68.cloudfront.net/3434fd222424236d1f0f5b4596de1480b5378156/1a5ec/assets/wp-content/uploads/2018/07/compression_estimator_jquery.jpg)_ (Cloudflare only uses level 4 to save on computing resources).
+- Use the paid _[Cloudflare Argo](https://blog.cloudflare.com/argo)_ service for even better response times.
 
 ## Module Federation
 
@@ -761,7 +761,7 @@ This will emit the following sitemap:
 </urlset>
 ```
 
-We can manually submit our sitemap to [Google Search Console](https://search.google.com/search-console) and [Bing Webmaster Tools](https://www.bing.com/webmasters).
+We can manually submit our sitemap to _[Google Search Console](https://search.google.com/search-console)_ and _[Bing Webmaster Tools](https://www.bing.com/webmasters)_.
 
 ## Indexing
 
@@ -790,17 +790,15 @@ Prerendering is the act of crawling web apps in production (using headless Chrom
 
 We have two options for generating prerendered pages:
 
-1. We can use a dedicated service such as [Prerender.io](https://prerender.io/).
+1. We can use a dedicated service such as _[Prerender.io](https://prerender.io)_.
 
 ![Prerender.io Table](images/prerender-io-table.png)
 
-2. We can make our own prerender server using free open-source tools such as [Rendertron](https://github.com/GoogleChrome/rendertron).
+2. We can build our own prerender server using free open-source tools such as _[Rendertron](https://github.com/GoogleChrome/rendertron)_.
 
-Then we redirect web crawlers (identified by their User-Agent header string) to our prerendered pages using Cloudflare Workers:
-<br>
-[public/\_worker.js](public/_worker.js)
+Then we redirect web crawlers (identified by their User-Agent header string) to our prerendered pages using Cloudflare Workers: _[public/\_worker.js](public/_worker.js)_
 
-Prerendering, also called _Dynamic Rendering_, is encouraged by [Google](https://developers.google.com/search/docs/advanced/javascript/dynamic-rendering) and [Microsoft](https://blogs.bing.com/webmaster/october-2018/bingbot-Series-JavaScript,-Dynamic-Rendering,-and-Cloaking-Oh-My).
+Prerendering, also called _Dynamic Rendering_, is encouraged by _[Google](https://developers.google.com/search/docs/advanced/javascript/dynamic-rendering)_ and _[Microsoft](https://blogs.bing.com/webmaster/october-2018/bingbot-Series-JavaScript,-Dynamic-Rendering,-and-Cloaking-Oh-My)_.
 
 Using prerendering produces the **exact same** SEO results as using SSR in all search engines.
 
@@ -852,7 +850,7 @@ Here's a list of some SSR cons that should not be taken lightly:
 - SSR page responses mostly don't return a _[304 Not Modified](https://blog.hubspot.com/marketing/http-304-not-modified#:~:text=An%20HTTP%20304%20not%20modified%20status%20code%20means%20that%20the,to%20speed%20up%20page%20delivery)_ status.
 - When performing client-side data fetching, SSR will **always** be slower than CSR, since its document is always bigger and takes longer to download.
 - Since all images are initially included in the document, scripts and images will compete for bandwidth, causing delayed interactivity on slow networks.
-- Since accessing browser-related objects during the server render phase throws an error, some very helpful tools become unusable, while others (such as [react-media](https://www.npmjs.com/package/react-media#server-side-rendering-ssr)) require SSR-specific customizations.
+- Since accessing browser-related objects during the server render phase throws an error, some very helpful tools become unusable, while others (such as _[react-media](https://www.npmjs.com/package/react-media#server-side-rendering-ssr)_) require SSR-specific customizations.
 
 Pay attention that we never mentioned the ability of SSR to fetch data on the server.
 <br>
@@ -940,6 +938,6 @@ We saw that client-side rendering performance is on par and sometimes even bette
 <br>
 We also learned that using prerendering gives perfect SEO results, and that we don't even need to think about it once it is set up.
 <br>
-And above all - we have achieved all this mainly by modifiying 2 files (Webpack config and HTML template) and using a prerender service, so every existing CSR app should be able to qucikly and easily implement these modifications and benefit from them.
+And above all - we have achieved all this mainly by modifiying 2 files (Webpack config and HTML template) and using a prerender service, so every existing CSR app should be able to quickly and easily implement these modifications and benefit from them.
 
 These facts lead to the conclusion that there is just no reason to use SSR anymore, it would only add a lot of complexity and limitations to our project and degrade the developer experience.
