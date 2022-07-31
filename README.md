@@ -937,7 +937,9 @@ It is impossible for this issue to occur in CSR apps, since the moment they rend
 # Conclusion
 
 We saw that client-side rendering performance is on par and sometimes even better than SSR in terms of loading times.
+<br>
 We also learned that using prerendering gives perfect SEO results, and that we don't even need to think about it once it is set up.
+<br>
 And above all - we have achieved all this mainly by modifiying 2 files (Webpack config and HTML template) and using a prerender service, so every existing CSR app should be able to qucikly and easily implement these modifications and benefit from them.
 
-The above takings lead to the conclusion that there is just no reason to use SSR anymore, it would only add a lot of complexity and limitations to our project and degrade the DX.
+These facts lead to the conclusion that there is just no reason to use SSR anymore, it would only add a lot of complexity and limitations to our project and degrade the developer experience.
