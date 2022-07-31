@@ -22,7 +22,7 @@ This project is a case study of CSR, it aims to explore the potential of client-
   - [Preloading Async Chunks](#preloading-async-chunks)
   - [Generating Static Data](#generating-static-data)
   - [Preloading Data](#preloading-data)
-  * [Tweaking Further](#tweaking-further)
+  - [Tweaking Further](#tweaking-further)
     - [Splitting Vendors From Async Chunks](#splitting-vendors-from-async-chunks)
     - [Preloading Other Pages Data](#preloading-other-pages-data)
     - [Preventing Sequenced Rendering](#preventing-sequenced-rendering)
@@ -37,7 +37,7 @@ This project is a case study of CSR, it aims to explore the potential of client-
   - [Indexing](#indexing)
     - [Google](#google)
     - [Other Search Engines](#other-search-engines)
-  * [Social Media Share Previews](#social-media-share-previews)
+  - [Social Media Share Previews](#social-media-share-previews)
 - [CSR vs. SSR](#csr-vs-ssr)
   - [SSR Disadvantages](#ssr-disadvantages)
   - [Inlining CSS](#inlining-css)
@@ -49,18 +49,18 @@ This project is a case study of CSR, it aims to explore the potential of client-
 
 Over the last few years, server-side rendering frameworks such as Next.js and Remix started to gain popularity in an increasing pace.
 <br>
-While SSR has some advantages, those frameworks are bragging about how fast they are ("Performance as a default"), implying client-side rendering is slow.
+While SSR has some advantages, these frameworks keep emphasizing how fast they are ("Performance as a default"), implying client-side rendering is slow.
 <br>
-In addition, it is a common misconception that great SEO can only be achieved by using SSR, and that CSR apps will give worse results.
+In addition, it is a common misconception that great SEO can only be achieved by using SSR, search engines can't index CSR apps correctly.
 
-This project implements CSR best practices with some tricks that can make it infinitely scalable in terms of performance.
-The goal is to simulate a production grade app in terms of number of packages used and try to speed up its loading times as much as possible.
+This project implements a basic CSR app with some tweaks such as code-splitting, with the ambition that as the app scales, the loading time of a single page would mostly remain unaffected.
+The objective is to simulate the number of packages used in a production grade app and try to decrease its loading time as much as possible, mostly by parallelizing requests.
 
-It is important to note that improving performance should not come at the expense of developer experience, so the way this project is architected should vary only slightly compared to "normal" react projects, and it won't be extremely opinionated as Next.js is.
+It is important to note that improving performance should not come at the expense of the developer experience, so the way this project is architected should vary only slightly compared to "normal" react projects, and it won't be as extremely opinionated as Next.js.
 
-This case study will cover two major aspects: performance and SEO. We will try to inspect how we can achieve great scores in either of them, both compared to SSR and on their own.
+This case study will cover two major aspects: performance and SEO. We will try to achieve high scores in both of them, compared to SSR and by themselves.
 
-_Note: while this project is implemented using React, the majority of it's tweaks are not tied to any framework and are purely browser-based._
+_Note: while this project is implemented with React, the majority of it's tweaks are not tied to any framework and are purely browser-based._
 
 # Performance
 
@@ -796,7 +796,7 @@ We have two options for generating prerendered pages:
 
 2. We can build our own prerender server using free open-source tools such as _[Rendertron](https://github.com/GoogleChrome/rendertron)_.
 
-Then we redirect web crawlers (identified by their User-Agent header string) to our prerendered pages using Cloudflare Workers: _[public/\_worker.js](public/_worker.js)_
+Then we redirect web crawlers (identified by their User-Agent header string) to our prerendered pages using Cloudflare Workers: _[public/\_worker.js](public/_worker.js)_.
 
 Prerendering, also called _Dynamic Rendering_, is encouraged by _[Google](https://developers.google.com/search/docs/advanced/javascript/dynamic-rendering)_ and _[Microsoft](https://blogs.bing.com/webmaster/october-2018/bingbot-Series-JavaScript,-Dynamic-Rendering,-and-Cloaking-Oh-My)_.
 
@@ -847,18 +847,22 @@ This, after going through prerendering, gives us the correct preview for every p
 
 Here's a list of some SSR cons that should not be taken lightly:
 
-- SSR page responses mostly don't return a _[304 Not Modified](https://blog.hubspot.com/marketing/http-304-not-modified#:~:text=An%20HTTP%20304%20not%20modified%20status%20code%20means%20that%20the,to%20speed%20up%20page%20delivery)_ status.
-- When performing client-side data fetching, SSR will **always** be slower than CSR, since its document is always bigger and takes longer to download.
+- When moving to client-side data fetching, SSR will **always** be slower than CSR, since its document is always bigger and takes longer to download.
 - Since all images are initially included in the document, scripts and images will compete for bandwidth, causing delayed interactivity on slow networks.
 - Since accessing browser-related objects during the server render phase throws an error, some very helpful tools become unusable, while others (such as _[react-media](https://www.npmjs.com/package/react-media#server-side-rendering-ssr)_) require SSR-specific customizations.
+- SSR page responses mostly don't return a _[304 Not Modified](https://blog.hubspot.com/marketing/http-304-not-modified#:~:text=An%20HTTP%20304%20not%20modified%20status%20code%20means%20that%20the,to%20speed%20up%20page%20delivery)_ status.
 
-Pay attention that we never mentioned the ability of SSR to fetch data on the server.
+Let's elaborate on the first one in the list:
 <br>
-The reason is that server-side fetching is a very bad idea in most cases, since some queries can take up to several hundreds of milliseconds to return (and even more), and while this happens, the user will see **absolutely nothing** in their browser.
+Fetching data on the server is usually a bad idea, since some queries may take several hundreds of milliseconds to return (many will exceed that), and while pending, the user will see **absolutely nothing** in their browser.
 <br>
-I never understood why developes decide to couple the server performance with the initial page load, it seems like a poor choice.
+It's hard to understand why developes decide to couple the server performance with the initial page load time, it seems like a poor choice.
 <br>
-And what happens when the server response takes a really long time? developers just move that specific request to the client side, but then fall short behind a normal CSR app (as seen above).
+We can even see that Next.js's own documentation _[push you away](https://nextjs.org/docs/basic-features/data-fetching/get-server-side-props#when-should-i-use-getserversideprops)_ from server-side fetching and into client-side fetching.
+<br>
+And by doing so, we will fall short behind a CSR app's performance (as mentioned above).
+
+That's why choosing SSR for its "server-side data fetching" ability is a mistake - you may never know how much of the data fetching will end up in the client because of poor server performance.
 
 A quick reminder that since we preload the data in our CSR app, we benefit in both first painting and data arrival.
 
