@@ -96,9 +96,7 @@ module.exports = (_, { mode }) => {
         templateContent: ({ compilation }) => {
           const pages = pagesManifest.map(({ chunk, path, data }) => {
             const assets = compilation.getAssets().map(({ name }) => name)
-            const scripts = assets.filter(
-              name => (name.includes(`.${chunk}.`) || name.includes(`${chunk}.`)) && name.endsWith('.js')
-            )
+            const scripts = assets.filter(name => new RegExp(`[/.]${chunk}\\.(.+)\\.js$`).test(name))
 
             if (data && !Array.isArray(data)) data = [data]
 
