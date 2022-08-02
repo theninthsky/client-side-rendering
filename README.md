@@ -547,7 +547,7 @@ This method has a lot of sense to it:
 <br>
 We would prefer the app to be visually complete in a single render, but we would never want to stall the page render until the async chunk finishes downloading.
 
-However, since we preload all async chunks (and their vendors), this won't be a problem for us. So we should suspense the entire app until the async chunk finishes downloading (which, in our case, happens in parallel with all the render-critical assets):
+However, since we preload all async chunks (and their vendors), this won't be a problem for us. So we **should** suspense the entire app until the async chunk finishes downloading (which, in our case, happens in parallel with all the render-critical assets):
 
 ```
 createRoot(document.getElementById('root')).render(
@@ -569,7 +569,7 @@ We will see a similar effect when we move to another async page: a blank space t
 
 React 18 introduced us to the useTransition hook, which allows us to delay a render until some criteria are met.
 <br>
-We will use this hook in to delay the page navigation until it is ready:
+We will use this hook to delay the page's navigation until it is ready:
 
 ```
 import { useTransition } from 'react'
@@ -680,7 +680,7 @@ As it turns out, performance is **not** a default in Next.js.
 
 ## Areas for Improvement
 
-- Switch to _[Preact](https://preactjs.com)_ when Suspense becomes stable (for a much smaller bundle size).
+- Switch to _[Preact](https://preactjs.com)_ when _[Suspense issue is fixed](https://github.com/preactjs/preact/issues/3642)_ for a much smaller bundle size.
 - Compress assets using _[Brotli level 11](https://d33wubrfki0l68.cloudfront.net/3434fd222424236d1f0f5b4596de1480b5378156/1a5ec/assets/wp-content/uploads/2018/07/compression_estimator_jquery.jpg)_ (Cloudflare only uses level 4 to save on computing resources).
 - Use the paid _[Cloudflare Argo](https://blog.cloudflare.com/argo)_ service for even better response times.
 
