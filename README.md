@@ -665,17 +665,17 @@ https://pages.cloudflare.com
 
 To conclude this section, we will perform a benchmark of our app compared to _[Next.js](https://nextjs.org/docs/getting-started)_'s documentation site (which is **entirely SSG**).
 <br>
-We will choose a minimalistic page (Fast Refresh) and compare it to our Lorem Ipsum page.
+We will choose a minimalistic page (Accessibility) and compare it to our Lorem Ipsum page.
 <br>
 You can click on each link to perform a live benchmark.
 
-_[Fast Refresh | Next.js](https://pagespeed.web.dev/report?url=https%3A%2F%2Fnextjs.org%2Fdocs%2Fbasic-features%2Ffast-refresh)_
+_[Accessibility | Next.js](https://pagespeed.web.dev/report?url=https%3A%2F%2Fnextjs.org%2Fdocs%2Faccessibility)_
 <br>
 _[Lorem Ipsum | Client-side Rendering](https://pagespeed.web.dev/report?url=https%3A%2F%2Fclient-side-rendering.pages.dev%2Florem-ipsum)_
 
-The benchmark is performed through Google's _PageSpeed Insights_, simulating a slow 4G network.
+I performed Google's _PageSpeed Insights_ benchmark (simulating a slow 4G network) several times and picked the height score of each page:
 
-![Next.js Benchmark](images/next-js-benchmark.png)
+![Next.js Benchmark](images/nextjs-benchmark.png)
 ![Client-side Rendering Benchmark](images/client-side-rendering-benchmark.png)
 
 As it turns out, performance is **not** a default in Next.js.
