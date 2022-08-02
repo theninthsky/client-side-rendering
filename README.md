@@ -673,7 +673,7 @@ _[Accessibility | Next.js](https://pagespeed.web.dev/report?url=https%3A%2F%2Fne
 <br>
 _[Lorem Ipsum | Client-side Rendering](https://pagespeed.web.dev/report?url=https%3A%2F%2Fclient-side-rendering.pages.dev%2Florem-ipsum)_
 
-I performed Google's _PageSpeed Insights_ benchmark (simulating a slow 4G network) several times and picked the height score of each page:
+I performed Google's _PageSpeed Insights_ benchmark (simulating a slow 4G network) several times and picked the highest score of each page:
 
 ![Next.js Benchmark](images/nextjs-benchmark.png)
 ![Client-side Rendering Benchmark](images/client-side-rendering-benchmark.png)
