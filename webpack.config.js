@@ -77,7 +77,12 @@ module.exports = (_, { mode }) => {
           vendor: {
             test: /[\\/]node_modules[\\/]/,
             chunks: 'all',
-            name: ({ context }) => (context.match(/[\\/]node_modules[\\/](.*?)([\\/]|$)/) || [])[1]
+            name: (module, chunks) => {
+              const allChunksNames = chunks.map(({ name }) => name).join('.')
+              const moduleName = (module.context.match(/[\\/]node_modules[\\/](.*?)([\\/]|$)/) || [])[1]
+
+              return `${moduleName}.${allChunksNames}`
+            }
           }
         }
       }
@@ -89,16 +94,15 @@ module.exports = (_, { mode }) => {
       new HtmlPlugin({
         scriptLoading: 'module',
         templateContent: ({ compilation }) => {
-          const pages = pagesManifest.map(({ chunk, path, vendors, data }) => {
+          const pages = pagesManifest.map(({ chunk, path, data }) => {
             const assets = compilation.getAssets().map(({ name }) => name)
-            const script = assets.find(name => name.includes(`/${chunk}.`) && name.endsWith('.js'))
-            const vendorScripts = vendors
-              ? assets.filter(name => vendors.find(vendor => name.includes(`/${vendor}.`) && name.endsWith('.js')))
-              : []
+            const scripts = assets.filter(
+              name => (name.includes(`.${chunk}.`) || name.includes(`${chunk}.`)) && name.endsWith('.js')
+            )
 
             if (data && !Array.isArray(data)) data = [data]
 
-            return { path, scripts: [script, ...vendorScripts], data }
+            return { path, scripts, data }
           })
 
           return htmlTemplate(pages)

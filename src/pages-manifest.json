@@ -11,7 +11,6 @@
     "path": "/lorem-ipsum",
     "title": "Lorem Ipsum",
     "description": "This page demonstrates a large amount of static text that is pre-generated and fetched in parallel with other assets.",
-    "vendors": ["moment"],
     "data": {
       "url": "/json/lorem-ipsum.json",
       "menuPreload": true
@@ -22,7 +21,6 @@
     "path": "/pokemon",
     "title": "Pokémon",
     "description": "This page demonstrates dynamic data that is fetched in parallel with other assets.",
-    "vendors": ["moment"],
     "data": [
       {
         "url": "https://graphql-pokeapi.graphcdn.app?query={pokemons(limit:1000){results{name}}}",
@@ -36,7 +34,6 @@
     "path": "/pokemon/:name",
     "title": "Pokémon Info",
     "description": "This page demonstrates a dynamic path data that is fetched in parallel with other assets.",
-    "vendors": ["moment"],
     "data": {
         "url": "https://graphql-pokeapi.graphcdn.app?query={pokemon(name:\"$\"){id,name,types{type{name}}}}",
         "dynamicPathIndexes": [2],

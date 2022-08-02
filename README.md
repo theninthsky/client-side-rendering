@@ -386,31 +386,48 @@ Now both `lorem-ipsum.[hash].js` and `pokemon.[hash].js` will use the extracted 
 
 However, we have no way of telling which async vendor chunks will be split before we build the application, so we wouldn't know which async vendor chunks we need to preload (refer to the "Preloading Async Chunks" section).
 
-Unfortunately, I did not find a way to automatically match an async chunk to its dependencies (through Webpack's compilation object), so we'll have to manually specify these dependencies until an automatic solution will be found.
-
-We can easily find these async dependencies by looking at the waterfall:
-
 ![Without Async Vendor Preload](images/without-async-vendor-preload.png)
 
-Then we will have them being added to the page's HTML:
+That's why we will append the chunks names to the async vendor's name:
+
+```diff
+optimization: {
+  runtimeChunk: 'single',
+  splitChunks: {
+    chunks: 'initial',
+    cacheGroups: {
+      vendor: {
+        test: /[\\/]node_modules[\\/]/,
+        chunks: 'all',
+-       name: ({ context }) => (context.match(/[\\/]node_modules[\\/](.*?)([\\/]|$)/) || [])[1]
++       name: (module, chunks) => {
++         const allChunksNames = chunks.map(({ name }) => name).join('.')
++         const moduleName = (module.context.match(/[\\/]node_modules[\\/](.*?)([\\/]|$)/) || [])[1]
+
++         return `${moduleName}.${allChunksNames}`
+        }
+      }
+    }
+  }
+}
+```
 
 ```diff
 plugins: [
   new HtmlPlugin({
     scriptLoading: 'module',
     templateContent: ({ compilation }) => {
--     const pages = pagesManifest.map(({ chunk, path, data }) => {
-+     const pages = pagesManifest.map(({ chunk, path, vendors, data }) => {
+      const pages = pagesManifest.map(({ chunk, path, data }) => {
         const assets = compilation.getAssets().map(({ name }) => name)
-        const script = assets.find(name => name.includes(`/${chunk}.`) && name.endsWith('.js'))
-+       const vendorScripts = vendors
-+         ? assets.filter(name => vendors.find(vendor => name.includes(`/${vendor}.`) && name.endsWith('.js')))
-+         : []
+-       const script = assets.find(name => name.includes(`/${chunk}.`) && name.endsWith('.js'))
++       const scripts = assets.filter(
++         name => (name.includes(`.${chunk}.`) || name.includes(`${chunk}.`)) && name.endsWith('.js')
++       )
 
         if (data && !Array.isArray(data)) data = [data]
 
 -       return { path, script, data }
-+       return { path, scripts: [script, ...vendorScripts], data }
++       return { path, scripts, data }
       })
 
       return htmlTemplate(pages)
@@ -665,7 +682,6 @@ As it turns out, performance is **not** a default in Next.js.
 
 ## Areas for Improvement
 
-- Automatically detect async vendor chunks during build time (refer to _Splitting Vendors From Async Chunks_ section).
 - Switch to _[Preact](https://preactjs.com)_ when Suspense becomes stable (for a much smaller bundle size).
 - Compress assets using _[Brotli level 11](https://d33wubrfki0l68.cloudfront.net/3434fd222424236d1f0f5b4596de1480b5378156/1a5ec/assets/wp-content/uploads/2018/07/compression_estimator_jquery.jpg)_ (Cloudflare only uses level 4 to save on computing resources).
 - Use the paid _[Cloudflare Argo](https://blog.cloudflare.com/argo)_ service for even better response times.
