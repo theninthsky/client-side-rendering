@@ -51,7 +51,7 @@ Over the last few years, server-side rendering frameworks such as Next.js and Re
 <br>
 While SSR has some advantages, these frameworks keep emphasizing how fast they are ("Performance as a default"), implying client-side rendering is slow.
 <br>
-In addition, it is a common misconception that great SEO can only be achieved by using SSR, search engines can't index CSR apps correctly.
+In addition, it is a common misconception that great SEO can only be achieved by using SSR, and that search engines can't index CSR apps correctly.
 
 This project implements a basic CSR app with some tweaks such as code-splitting, with the ambition that as the app scales, the loading time of a single page would mostly remain unaffected.
 The objective is to simulate the number of packages used in a production grade app and try to decrease its loading time as much as possible, mostly by parallelizing requests.
@@ -547,7 +547,7 @@ This method has a lot of sense to it:
 <br>
 We would prefer the app to be visually complete in a single render, but we would never want to stall the page render until the async chunk finishes downloading.
 
-However, since we preload all async chunks (and their vendors), this won't be a problem for us. So we **should** suspense the entire app until the async chunk finishes downloading (which, in our case, happens in parallel with all the render-critical assets):
+However, since we preload all async chunks (and their vendors), this won't be a problem for us. So we **should** suspend the entire app until the async chunk finishes downloading (which, in our case, happens in parallel with all the render-critical assets):
 
 ```
 createRoot(document.getElementById('root')).render(
