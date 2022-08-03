@@ -47,11 +47,11 @@ This project is a case study of CSR, it aims to explore the potential of client-
 
 # Motivation
 
-Over the last few years, server-side rendering frameworks such as Next.js and Remix started to gain popularity in an increasing pace.
+Over the last few years, server-side rendering has started to (re)gain popularity in the form of frameworks such as [Next.js](https://nextjs.org) and [Remix](https://remix.run).
 <br>
 While SSR has some advantages, these frameworks keep emphasizing how fast they are ("Performance as a default"), implying client-side rendering is slow.
 <br>
-In addition, it is a common misconception that great SEO can only be achieved by using SSR, and that search engines can't index CSR apps correctly.
+In addition, it is a common misconception that great SEO can only be achieved by using SSR, and that search engines can't crawl CSR apps properly.
 
 This project implements a basic CSR app with some tweaks such as code-splitting, with the ambition that as the app scales, the loading time of a single page would mostly remain unaffected.
 The objective is to simulate the number of packages used in a production grade app and try to decrease its loading time as much as possible, mostly by parallelizing requests.
