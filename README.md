@@ -47,7 +47,7 @@ This project is a case study of CSR, it aims to explore the potential of client-
 
 # Motivation
 
-Over the last few years, server-side rendering has started to (re)gain popularity in the form of frameworks such as [Next.js](https://nextjs.org) and [Remix](https://remix.run).
+Over the last few years, server-side rendering has started to (re)gain popularity in the form of frameworks such as _[Next.js](https://nextjs.org)_ and _[Remix](https://remix.run)_.
 <br>
 While SSR has some advantages, these frameworks keep emphasizing how fast they are ("Performance as a default"), implying client-side rendering is slow.
 <br>
@@ -88,9 +88,11 @@ However, since `main.js` includes the entire bundle, the slightest change in cod
 <br>
 Now, what part of our bundle comprises most of its weight? The answer is the **dependencies**, also called **vendors**.
 
-So if we could split the vendors to their own hashed chunk, that would allow a separation between our code and the vendors code, leading to less cache invalidations:
+So if we could split the vendors to their own hashed chunk, that would allow a separation between our code and the vendors code, leading to less cache invalidations.
 
-```
+Let's add the following part to our `webpack.config.js` file:
+
+```js
 optimization: {
   runtimeChunk: 'single',
   splitChunks: {
@@ -132,7 +134,7 @@ For Example, we wouldn't want users to download the _[react-big-calendar](https:
 
 The way we achieve this is (preferably) by route-based code splitting:
 
-```
+```js
 const Home = lazy(() => import(/* webpackChunkName: "index" */ 'pages/Home'))
 const LoremIpsum = lazy(() => import(/* webpackChunkName: "lorem-ipsum" */ 'pages/LoremIpsum'))
 const Pokemon = lazy(() => import(/* webpackChunkName: "pokemon" */ 'pages/Pokemon'))
@@ -152,7 +154,7 @@ Code splitting has one major flaw - the runtime doesn't know these async chunks 
 
 The way we can solve this issue is by implementing a script in the document that will be responsible of preloading assets:
 
-```
+```js
 plugins: [
   new HtmlPlugin({
     scriptLoading: 'module',
@@ -170,7 +172,7 @@ plugins: [
 ]
 ```
 
-```
+```js
 module.exports = pages => `
   <!DOCTYPE html>
   <html lang="en">
@@ -220,7 +222,7 @@ But how can we create static data?
 <br>
 We will execute the following script during build time:
 
-```
+```js
 import { mkdir, writeFile } from 'fs/promises'
 import axios from 'axios'
 
@@ -230,9 +232,9 @@ const axiosOptions = { transformResponse: res => res }
 mkdir(path, { recursive: true })
 
 const fetchLoremIpsum = async () => {
-const { data } = await axios.get('https://loripsum.net/api/200/long/plaintext', axiosOptions)
+  const { data } = await axios.get('https://loripsum.net/api/200/long/plaintext', axiosOptions)
 
-writeFile(`${path}/lorem-ipsum.json`, JSON.stringify(data))
+  writeFile(`${path}/lorem-ipsum.json`, JSON.stringify(data))
 }
 
 fetchLoremIpsum()
@@ -242,7 +244,9 @@ That would create a `json/lorem-ipsum.json` file to be stored in the CDN.
 
 And now we simply fetch our static data:
 
-`fetch('json/lorem-ipsum.json')`
+```js
+fetch('json/lorem-ipsum.json')
+```
 
 There are numerous advantages to this approach:
 
@@ -506,7 +510,7 @@ Now all async vendor chunks will be fetched in parallel with their parent async 
 
 We can preload data when hovering over links (desktop) or when links enter the viewport (mobile):
 
-```
+```js
 const createPreload = url => {
   if (document.head.querySelector(`link[href="${url}"]`)) return
 
@@ -529,7 +533,7 @@ When we split a page from the main app, we separate its render phase, meaning th
 
 This happens due to the common approach of wrapping routes with Suspense:
 
-```
+```js
 const App = () => {
   return (
     <>
@@ -549,11 +553,11 @@ We would prefer the app to be visually complete in a single render, but we would
 
 However, since we preload all async chunks (and their vendors), this won't be a problem for us. So we **should** suspend the entire app until the async chunk finishes downloading (which, in our case, happens in parallel with all the render-critical assets):
 
-```
+```js
 createRoot(document.getElementById('root')).render(
   <BrowserRouter>
     <Suspense>
-        <App />
+      <App />
     </Suspense>
   </BrowserRouter>
 )
@@ -571,7 +575,7 @@ React 18 introduced us to the useTransition hook, which allows us to delay a ren
 <br>
 We will use this hook to delay the page's navigation until it is ready:
 
-```
+```js
 import { useTransition } from 'react'
 import { useNavigate } from 'react-router-dom'
 
@@ -585,7 +589,7 @@ const useDelayedNavigate = () => {
 export default useDelayedNavigate
 ```
 
-```
+```js
 const NavigationLink = ({ to, onClick, children }) => {
   const navigate = useDelayedNavigate()
 
@@ -617,7 +621,7 @@ That's why I think all pages should be prefetched ahead of time.
 
 We can do this by writing a wrapper function around React's _lazy_ function:
 
-```
+```js
 import { lazy } from 'react'
 
 const lazyPrefetch = chunk => {
@@ -738,7 +742,7 @@ In order to make all of our app pages discoverable to search engines, we need to
 
 Since we already have a centralized `pages-manifest.json` file, we can easily generate a sitemap during build time:
 
-```
+```js
 import { Readable } from 'stream'
 import { writeFile } from 'fs/promises'
 import { SitemapStream, streamToPromise } from 'sitemap'
@@ -752,12 +756,11 @@ streamToPromise(Readable.from(links).pipe(stream))
   .then(data => data.toString())
   .then(res => writeFile('public/sitemap.xml', res))
   .catch(console.log)
-
 ```
 
 This will emit the following sitemap:
 
-```
+```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1" xmlns:news="http://www.google.com/schemas/sitemap-news/0.9" xmlns:video="http://www.google.com/schemas/sitemap-video/1.1" xmlns:xhtml="http://www.w3.org/1999/xhtml">
    <url>
@@ -826,7 +829,7 @@ This happens because most CSR apps have only one HTML file, and social share pre
 <br>
 This is where prerendering comes to our aid once again, we only need to make sure to set the correct meta tags dynamically:
 
-```
+```js
 export const setMetaTags = ({ title, description, image }) => {
   if (title) {
     document.title = title
@@ -841,7 +844,7 @@ export const setMetaTags = ({ title, description, image }) => {
 }
 ```
 
-```
+```js
 useEffect(() => {
   const page = pagesManifest.find(({ path }) => pathname === path || isStructureEqual(pathname, path)) || {}
 
@@ -852,7 +855,9 @@ useEffect(() => {
 This, after going through prerendering, gives us the correct preview for every page:
 
 ![Facebook Preview Home](images/facebook-preview-home.png)
+<br>
 ![Facebook Preview Pokemon](images/facebook-preview-pokemon.png)
+<br>
 ![Facebook Preview Pokemon Info](images/facebook-preview-pokemon-info.png)
 
 # CSR vs. SSR
