@@ -94,8 +94,9 @@ module.exports = (_, { mode }) => {
       new HtmlPlugin({
         scriptLoading: 'module',
         templateContent: ({ compilation }) => {
+          const assets = compilation.getAssets().map(({ name }) => name)
+
           const pages = pagesManifest.map(({ chunk, path, data }) => {
-            const assets = compilation.getAssets().map(({ name }) => name)
             const scripts = assets.filter(name => new RegExp(`[/.]${chunk}\\.(.+)\\.js$`).test(name))
 
             if (data && !Array.isArray(data)) data = [data]

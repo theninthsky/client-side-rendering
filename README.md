@@ -159,8 +159,9 @@ plugins: [
   new HtmlPlugin({
     scriptLoading: 'module',
     templateContent: ({ compilation }) => {
+      const assets = compilation.getAssets().map(({ name }) => name)
+
       const pages = pagesManifest.map(({ chunk, path }) => {
-        const assets = compilation.getAssets().map(({ name }) => name)
         const script = assets.find(name => name.includes(`/${chunk}.`) && name.endsWith('.js'))
 
         return { path, script }
@@ -269,9 +270,10 @@ plugins: [
   new HtmlPlugin({
     scriptLoading: 'module',
     templateContent: ({ compilation }) => {
+      const assets = compilation.getAssets().map(({ name }) => name)
+
 -     const pages = pagesManifest.map(({ chunk, path }) => {
 +     const pages = pagesManifest.map(({ chunk, path, data }) => {
-        const assets = compilation.getAssets().map(({ name }) => name)
         const script = assets.find(name => name.includes(`/${chunk}.`) && name.endsWith('.js'))
 
 +       if (data && !Array.isArray(data)) data = [data]
@@ -421,8 +423,9 @@ plugins: [
   new HtmlPlugin({
     scriptLoading: 'module',
     templateContent: ({ compilation }) => {
+      const assets = compilation.getAssets().map(({ name }) => name)
+
       const pages = pagesManifest.map(({ chunk, path, data }) => {
-        const assets = compilation.getAssets().map(({ name }) => name)
 -       const script = assets.find(name => name.includes(`/${chunk}.`) && name.endsWith('.js'))
 +       const scripts = assets.filter(name => new RegExp(`[/.]${chunk}\\.(.+)\\.js$`).test(name))
 
@@ -700,11 +703,12 @@ plugins: [
   new HtmlPlugin({
     scriptLoading: 'module',
     templateContent: ({ compilation }) => {
+      const assets = compilation.getAssets().map(({ name }) => name)
+
 -     const pages = pagesManifest.map(({ chunk, path, vendors, data }) => {
 +     const pages = pagesManifest.map(({ chunk, path, scripts, vendors, data }) => {
 +       if (scripts) return { path, scripts, data }
 
-        const assets = compilation.getAssets().map(({ name }) => name)
         const script = assets.find(name => name.includes(`/${chunk}.`) && name.endsWith('.js'))
         const vendorScripts = vendors
           ? assets.filter(name => vendors.find(vendor => name.includes(`/${vendor}.`) && name.endsWith('.js')))
