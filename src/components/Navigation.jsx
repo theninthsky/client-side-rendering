@@ -5,18 +5,16 @@ import { Drawer } from '@mui/material'
 
 import { MOBILE_VIEWPORT, DESKTOP_VIEWPORT } from 'styles/constants'
 import pagesManifest from 'pages-manifest.json'
+import useStore, { THEME_LIGHT, THEME_DARK } from 'hooks/useStore'
 import NavigationLink from './NavigationLink'
 import MenuIcon from 'images/menu.svg'
 import SunIcon from 'images/sun.svg'
 import MoonIcon from 'images/moon.svg'
 
-const [THEME_LIGHT, THEME_DARK] = ['light', 'dark']
-
-document.documentElement.setAttribute('data-theme', localStorage.theme || THEME_LIGHT)
-
 const Navigation = () => {
+  const { theme, setTheme } = useStore(({ theme, setTheme }) => ({ theme, setTheme }))
+
   const [drawerOpen, setDrawerOpen] = useState(false)
-  const [theme, setTheme] = useState(localStorage.theme || THEME_LIGHT)
 
   const links = useMemo(
     () =>
@@ -29,12 +27,6 @@ const Navigation = () => {
         )),
     [pagesManifest]
   )
-
-  const toggleTheme = newTheme => {
-    setTheme(newTheme)
-    document.documentElement.setAttribute('data-theme', newTheme)
-    localStorage.setItem('theme', newTheme)
-  }
 
   return (
     <div className={style.wrapper}>
@@ -50,9 +42,9 @@ const Navigation = () => {
 
       <button className={style.theme}>
         {theme === THEME_LIGHT ? (
-          <SunIcon width="22px" onClick={() => toggleTheme(THEME_DARK)} />
+          <SunIcon width="22px" onClick={() => setTheme(THEME_DARK)} />
         ) : (
-          <MoonIcon width="22px" onClick={() => toggleTheme(THEME_LIGHT)} />
+          <MoonIcon width="22px" onClick={() => setTheme(THEME_LIGHT)} />
         )}
       </button>
     </div>
