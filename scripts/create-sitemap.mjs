@@ -13,11 +13,13 @@ const dynamicPaths = Object.keys(dynamicMaps).reduce(
   (acc, path) => [...acc, ...dynamicMaps[path].map(value => path.replace(':', value))],
   []
 )
+const paths = [...staticPaths, ...dynamicPaths]
 
 const stream = new SitemapStream({ hostname: 'https://client-side-rendering.pages.dev' })
-const links = [...staticPaths, ...dynamicPaths].map(path => ({ url: path, changefreq: 'daily' }))
+const links = paths.map(path => ({ url: path, changefreq: 'daily' }))
 
 streamToPromise(Readable.from(links).pipe(stream))
   .then(data => data.toString())
   .then(res => writeFile('public/sitemap.xml', res))
+  .then(() => console.log(`Sitemap created with the following paths: \n${paths.join('\n')}\n`))
   .catch(console.log)
