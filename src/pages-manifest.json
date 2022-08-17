@@ -37,7 +37,8 @@
     "data": {
         "url": "https://pokeapi.co/api/v2/pokemon/$",
         "dynamicPathIndexes": [2],
-        "crossorigin": "anonymous"
+        "crossorigin": "anonymous",
+        "preconnectURL": "https://raw.githubusercontent.com"
       },
     "menuItem": false
   }

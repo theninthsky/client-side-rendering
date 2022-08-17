@@ -46,7 +46,7 @@ module.exports = pages => `
 
           if (!data) break
           
-          data.forEach(({ url, dynamicPathIndexes, crossorigin }) => {
+          data.forEach(({ url, dynamicPathIndexes, crossorigin, preconnectURL }) => {
             let fullURL = url
             
             if (dynamicPathIndexes) {
@@ -61,6 +61,12 @@ module.exports = pages => `
             document.head.appendChild(
               Object.assign(document.createElement('link'), { rel: 'preload', href: fullURL, as: 'fetch', crossOrigin: crossorigin })
             )
+
+            if (preconnectURL) {
+              document.head.appendChild(
+                Object.assign(document.createElement('link'), { rel: 'preconnect', href: preconnectURL })
+              )
+            }
           })
 
           break
