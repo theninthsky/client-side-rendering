@@ -2,11 +2,14 @@ import { useState, useEffect } from 'react'
 import { NavLink } from 'react-router-dom'
 import { isDate } from 'moment'
 import { persistState, getPersistedState, useFetch } from 'frontend-essentials'
+import startCase from 'lodash/startCase'
+import toLower from 'lodash/toLower'
 import { css } from '@emotion/css'
 import { Skeleton } from '@mui/material'
 
 import pagesManifest from 'pages-manifest.json'
 import { setMetaTags } from 'utils/meta-tags'
+import { DESKTOP_VIEWPORT } from 'styles/constants'
 import Title from 'components/common/Title'
 import Info from 'components/common/Info'
 
@@ -38,7 +41,7 @@ const Pokemon = () => {
           <ul className={style.list}>
             {pokemon.map(({ name }, ind) => (
               <NavLink className={style.pokemon} key={ind} to={`/pokemon/${name}`}>
-                {name}
+                {startCase(toLower(name))}
               </NavLink>
             ))}
           </ul>
@@ -64,9 +67,17 @@ const style = {
   `,
   main: css`
     margin-top: 20px;
+    font-size: 18px;
   `,
   list: css`
+    display: grid;
+    grid-template-columns: 1fr;
+    column-gap: 7.5px;
     list-style: none;
+
+    @media ${DESKTOP_VIEWPORT} {
+      grid-template-columns: 1fr 1fr 1fr 1fr;
+    }
   `,
   skeleton: css`
     margin-top: 5px;

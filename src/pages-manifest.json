@@ -35,7 +35,7 @@
     "title": "Pokémon Info",
     "description": "This page demonstrates a dynamic path data that is fetched in parallel with other assets.",
     "data": {
-        "url": "https://graphql-pokeapi.graphcdn.app?query={pokemon(name:\"$\"){id,name,types{type{name}}}}",
+        "url": "https://pokeapi.co/api/v2/pokemon/$",
         "dynamicPathIndexes": [2],
         "crossorigin": "anonymous"
       },
