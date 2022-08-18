@@ -7,6 +7,7 @@ import { css } from '@emotion/css'
 import { capitalize, Skeleton } from '@mui/material'
 
 import pagesManifest from 'pages-manifest.json'
+import { preconnect } from 'utils/preconnect'
 import { setMetaTags } from 'utils/meta-tags'
 import Title from 'components/common/Title'
 import Info from 'components/common/Info'
@@ -24,6 +25,10 @@ const PokemonInfo = () => {
     camelCasedKeys: true,
     onSuccess: ({ data }) => setPokemonInfo(data)
   })
+
+  useEffect(() => {
+    preconnect(data.preconnectURL)
+  }, [])
 
   useEffect(() => {
     if (!id) return
