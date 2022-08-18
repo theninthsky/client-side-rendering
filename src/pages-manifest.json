@@ -32,7 +32,6 @@
   {
     "chunk": "pokemon-info",
     "path": "/pokemon/:name",
-    "title": "Pokémon Info",
     "description": "This page demonstrates a dynamic path data that is fetched in parallel with other assets.",
     "data": {
         "url": "https://pokeapi.co/api/v2/pokemon/$",

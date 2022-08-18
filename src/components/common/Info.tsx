@@ -1,6 +1,7 @@
+import type { FC, HTMLAttributes } from 'react'
 import { css, cx } from '@emotion/css'
 
-const Info = ({ className, children, ...otherProps }) => {
+const Info: FC<HTMLAttributes<HTMLDivElement>> = ({ className, children, ...otherProps }) => {
   return (
     <div className={cx(style.wrapper, className)} {...otherProps}>
       {children}
