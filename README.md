@@ -689,7 +689,7 @@ As it turns out, performance is **not** a default in Next.js.
 
 ## Areas for Improvement
 
-- Switch to _[Preact](https://preactjs.com)_ when _[Suspense issue is fixed](https://github.com/preactjs/preact/issues/3642)_ for a much smaller bundle size.
+- Switch to _[Preact](https://preactjs.com)_ for a much smaller bundle size.
 - Compress assets using _[Brotli level 11](https://d33wubrfki0l68.cloudfront.net/3434fd222424236d1f0f5b4596de1480b5378156/1a5ec/assets/wp-content/uploads/2018/07/compression_estimator_jquery.jpg)_ (Cloudflare only uses level 4 to save on computing resources).
 - Use the paid _[Cloudflare Argo](https://blog.cloudflare.com/argo)_ service for even better response times.
 
