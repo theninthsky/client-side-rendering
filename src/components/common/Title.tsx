@@ -10,14 +10,12 @@ export type TitleProps = HTMLAttributes<HTMLDivElement> & {
 
 const Title: FC<TitleProps> = ({ className, backButton, children, ...otherProps }) => {
   return (
-    <div className="items-center">
+    <div className="items-center" {...otherProps}>
       <If condition={backButton}>
         <Back className={style.back} />
       </If>
 
-      <h1 className={cx(style.wrapper, className)} {...otherProps}>
-        {children}
-      </h1>
+      <h1 className={cx(style.wrapper, className)}>{children}</h1>
     </div>
   )
 }
@@ -28,7 +26,7 @@ const style = {
     color: var(--primary-color);
   `,
   back: css`
-    margin-right: 14px;
+    margin-right: 20px;
   `
 }
 

@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
-import { persistState, getPersistedState, useFetch } from 'frontend-essentials'
+import { If, useFetch, persistState, getPersistedState } from 'frontend-essentials'
 import startCase from 'lodash/startCase'
 import toLower from 'lodash/toLower'
-import { css } from '@emotion/css'
+import { css, cx } from '@emotion/css'
 import { Skeleton } from '@mui/material'
 
 import pagesManifest from 'pages-manifest.json'
@@ -18,6 +18,7 @@ const PokemonInfo = () => {
   const { name: nameParam } = useParams()
 
   const [pokemonInfo, setPokemonInfo] = useState(getPersistedState(`${nameParam}Info`) || {})
+  const [imageLoading, setImageLoading] = useState(true)
 
   const { id, name, sprites } = pokemonInfo
 
@@ -48,16 +49,24 @@ const PokemonInfo = () => {
 
       <main className={style.main}>
         {id ? (
-          <div>
+          <>
             <p>
               {id}. <strong>{startCase(toLower(name))}</strong>
             </p>
 
-            <img className={style.image} src={sprites.other.officialArtwork.frontDefault} />
-          </div>
+            <img
+              className={cx(style.image, { hidden: imageLoading })}
+              src={sprites.other.officialArtwork.frontDefault}
+              onLoad={() => setImageLoading(false)}
+            />
+          </>
         ) : (
           <Skeleton className={style.skeleton} variant="text" width={100} height={20} animation={false} />
         )}
+
+        <If condition={imageLoading}>
+          <Skeleton className={cx(style.skeleton, style.image)} variant="rectangular" width={475} height={475} />
+        </If>
       </main>
     </div>
   )

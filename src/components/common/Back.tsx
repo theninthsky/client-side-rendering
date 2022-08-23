@@ -8,8 +8,8 @@ const Back: FC<ButtonHTMLAttributes<HTMLButtonElement>> = ({ className, ...other
   const navigate = useNavigate()
 
   return (
-    <button className="flex">
-      <BackIcon className={cx(style.backIcon, className)} onClick={() => navigate(-1)} {...otherProps} />
+    <button className="flex" {...otherProps}>
+      <BackIcon className={cx(style.backIcon, className)} onClick={() => navigate(-1)} />
     </button>
   )
 }

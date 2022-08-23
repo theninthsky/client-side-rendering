@@ -1,11 +1,23 @@
-import { useRef, useEffect } from 'react'
-import { NavLink } from 'react-router-dom'
+import { useRef, useEffect, FC } from 'react'
+import { NavLink, NavLinkProps } from 'react-router-dom'
 import { useDelayedNavigate, useMedia } from 'frontend-essentials'
 import { css, cx } from '@emotion/css'
 
 import { MOBILE_VIEWPORT } from 'styles/constants'
 
-const createPreload = ({ url, crossorigin, menuPreload }) => {
+export type Data = {
+  url: string
+  crossorigin?: string
+  menuPreload?: boolean
+}
+
+export type NavigationLinkProps = NavLinkProps & {
+  to: string
+  data?: Data | Data[]
+  onClick?: () => void
+}
+
+const createPreload = ({ url, crossorigin, menuPreload }: Data) => {
   if (!menuPreload || document.head.querySelector(`link[href="${url}"]`)) return
 
   document.head.appendChild(
@@ -18,14 +30,14 @@ const createPreload = ({ url, crossorigin, menuPreload }) => {
   )
 }
 
-const onLinkEvent = data => {
+const onLinkEvent = (data: Data | Data[]) => {
   if (Array.isArray(data)) return data.forEach(createPreload)
 
   createPreload(data)
 }
 
-const NavigationLink = ({ className, to, data, onClick, children, ...otherProps }) => {
-  const ref = useRef()
+const NavigationLink: FC<NavigationLinkProps> = ({ className, to, data, onClick, children, ...otherProps }) => {
+  const ref = useRef<HTMLAnchorElement>(null)
 
   const navigate = useDelayedNavigate()
 
@@ -44,7 +56,7 @@ const NavigationLink = ({ className, to, data, onClick, children, ...otherProps 
       { root: document.body }
     )
 
-    observer.observe(ref.current)
+    observer.observe(ref.current as HTMLAnchorElement)
   }, [hoverable])
 
   const onLinkClick = event => {
@@ -55,7 +67,7 @@ const NavigationLink = ({ className, to, data, onClick, children, ...otherProps 
 
   return (
     <NavLink
-      className={({ isActive }) => cx(style.item, { [style.activeItem]: isActive }, className)}
+      className={({ isActive }) => cx(style.item, { [style.activeItem]: isActive }, className as string)}
       ref={ref}
       to={baseURL}
       onClick={onLinkClick}

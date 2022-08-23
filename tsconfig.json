@@ -7,7 +7,7 @@
     "baseUrl": "src",
     "allowJs": true,
     "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
     "strict": true,
     "noImplicitAny": false,
     "skipLibCheck": true

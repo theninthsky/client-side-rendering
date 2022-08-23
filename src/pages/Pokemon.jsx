@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { NavLink } from 'react-router-dom'
 import { isDate } from 'moment'
-import { persistState, getPersistedState, useFetch } from 'frontend-essentials'
+import { useFetch, persistState, getPersistedState } from 'frontend-essentials'
 import startCase from 'lodash/startCase'
 import toLower from 'lodash/toLower'
 import { css } from '@emotion/css'
