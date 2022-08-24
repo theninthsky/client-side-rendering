@@ -23,7 +23,7 @@ const PokemonInfo = () => {
   const { id, name, sprites } = pokemonInfo
 
   useFetch(data.url.replace('$', nameParam), {
-    camelCasedKeys: true,
+    camelCasedResponse: true,
     onSuccess: ({ data }) => setPokemonInfo(data)
   })
 
@@ -61,7 +61,7 @@ const PokemonInfo = () => {
             />
           </>
         ) : (
-          <Skeleton className={style.skeleton} variant="text" width={100} height={20} animation={false} />
+          <Skeleton className={style.skeleton} variant="text" width={100} height={24} animation={false} />
         )}
 
         <If condition={imageLoading}>
