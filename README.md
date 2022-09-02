@@ -791,11 +791,11 @@ We can manually submit our sitemap to _[Google Search Console](https://search.go
 
 It is often said that Google is having trouble correctly indexing CSR (JS) apps.
 <br>
-That might have been the case in 2018, but as of 2022, Google can index JS apps just fine.
+That might have been the case in 2018, but as of 2022, Google prefectly indexes every JS app.
 <br>
 The indexed pages will have a title, description and even content, as long as we remember to dynamically set them (either manually or using something like _[react-helmet](https://www.npmjs.com/package/react-helmet)_).
 
-In other words, it shouldn't matter if we used SSR or not in terms of Google indexing.
+In other words, it won't matter if we used SSR or not in terms of Google indexing.
 
 ![Google Search Results](images/google-search-results.png)
 ![Google Lorem Ipsum Search Results](images/google-lorem-ipsum-search-results.png)
@@ -806,7 +806,7 @@ https://www.youtube.com/watch?v=Ey0N1Ry0BPM
 
 ### Other Search Engines
 
-Other search engines such as Bing cannot render JS (despite claiming they can). So in order to have them index our app correctly, we will serve them a **prerendered** version of our pages.
+Other inferior search engines such as Bing cannot render JS (despite claiming they can). So in order to have them index our app correctly, we will serve them a **prerendered** version of our pages.
 <br>
 Prerendering is the act of crawling web apps in production (using headless Chromium) and generating a complete HTML file for each page.
 
@@ -818,11 +818,13 @@ We have two options for generating prerendered pages:
 
 2. We can build our own prerender server using free open-source tools such as _[Rendertron](https://github.com/GoogleChrome/rendertron)_.
 
-Then we redirect web crawlers (identified by their User-Agent header string) to our prerendered pages using a Cloudflare worker: _[public/\_worker.js](public/_worker.js)_.
+Then we redirect web crawlers (identified by their User-Agent header string) to our prerendered pages using Cloudflare Workers: _[public/\_worker.js](public/_worker.js)_.
 
 Prerendering, also called _Dynamic Rendering_, is encouraged by _[Google](https://developers.google.com/search/docs/advanced/javascript/dynamic-rendering)_ and _[Microsoft](https://blogs.bing.com/webmaster/october-2018/bingbot-Series-JavaScript,-Dynamic-Rendering,-and-Cloaking-Oh-My)_.
 
-Prerendering produces the **exact same** SEO results as using SSR in all search engines.
+Using prerendering produces the **exact same** SEO results as using SSR in all search engines.
+
+_Note that if you only care about Google indexing and you don't need social share previews - there's no reason to prerender your website. Nevertheless, you should *never* serve a prerendered version to Googlebot, since the styleless prerendered version will not pass Google's quality checks._
 
 ### Social Media Share Previews
 
