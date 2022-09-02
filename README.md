@@ -824,7 +824,7 @@ Prerendering, also called _Dynamic Rendering_, is encouraged by _[Google](https:
 
 Using prerendering produces the **exact same** SEO results as using SSR in all search engines.
 
-_Note that if you only care about Google indexing and you don't need social share previews - there's no reason to prerender your website. Nevertheless, you should *never* serve a prerendered version to Googlebot, since the styleless prerendered version will not pass Google's quality checks._
+_Note that if you only care about Google indexing and you don't need social share previews - there's no reason to prerender your website. Nevertheless, you should **never** serve a prerendered page to Googlebot, since the styleless prerendered version of the page will not pass Google's quality checks._
 
 ### Social Media Share Previews
 
