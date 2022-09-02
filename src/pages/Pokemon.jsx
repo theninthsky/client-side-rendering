@@ -19,7 +19,7 @@ const Pokemon = () => {
   const [pokemon, setPokemon] = useState(getPersistedState('pokemon') || [])
 
   useFetch(data[0].url, {
-    onSuccess: ({ data: { data } }) => setPokemon(data.pokemons.results.sort((a, b) => a.name.localeCompare(b.name)))
+    onSuccess: ({ data: { results } }) => setPokemon(results.map(({ name }) => name))
   })
 
   useEffect(() => {
@@ -39,10 +39,12 @@ const Pokemon = () => {
       <main className={style.main}>
         {pokemon.length ? (
           <ul className={style.list}>
-            {pokemon.map(({ name }, ind) => (
-              <NavLink className={style.pokemon} key={ind} to={`/pokemon/${name}`}>
-                {startCase(toLower(name))}
-              </NavLink>
+            {pokemon.map(name => (
+              <li key={name}>
+                <NavLink className={style.pokemon} to={`/pokemon/${name}`}>
+                  {startCase(toLower(name))}
+                </NavLink>
+              </li>
             ))}
           </ul>
         ) : (
@@ -84,13 +86,10 @@ const style = {
     background-color: rgba(0, 0, 0, 0.05);
   `,
   pokemon: css`
-    display: block;
+    display: inline-block;
+    margin-top: 10px;
     text-decoration: none;
     color: inherit;
-
-    :not(:first-child) {
-      margin-top: 10px;
-    }
   `
 }
 

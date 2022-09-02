@@ -23,7 +23,7 @@
     "description": "This page demonstrates dynamic data that is fetched in parallel with other assets.",
     "data": [
       {
-        "url": "https://graphql-pokeapi.graphcdn.app?query={pokemons(limit:1000){results{name}}}",
+        "url": "https://pokeapi.co/api/v2/pokemon?limit=10000",
         "crossorigin": "anonymous",
         "menuPreload": true
       }
