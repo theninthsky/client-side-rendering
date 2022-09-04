@@ -895,19 +895,19 @@ A quick reminder that since we preload the data in our CSR app, we benefit in bo
 
 ## Inlining CSS
 
-When we talk about SSR render flow, we paint the following picture in our minds:
+When we talk about SSR's render flow, we paint the following picture in our minds:
 
-Browser request ---> initial HTML arrives (_page is visible_) ---> JS arrives (_page is interactive_).
+_**Browser request** ===> **initial HTML arrives (page is visible)** ===> **JS arrives (page is interactive)**_.
 
-But in reality, most SSR websites **do not inline critical CSS**.
+But in reality, **most SSR websites do not inline critical CSS**.
 <br>
-So the real flow becomes:
+So the actual render flow is as follows:
 
-Broswer request ---> initial HTML arrives ---> CSS arrives (_page is visible_) ---> JS arrives (_page is interactive_).
+_**Broswer request** ===> **initial HTML arrives** ===> **CSS arrives (page is visible)** ===> **JS arrives (page is interactive)**_.
 
-This makes the SSR flow **nearly identical** to the CSR flow, the only difference is that the CSR will have to wait for the JS to finish loading aswell, in order to paint the screen.
+This makes the SSR flow **nearly identical** to the CSR flow, the only difference is that in CSR the browser will have to wait for the JS to finish loading aswell, in order to paint the screen.
 <br>
-That's why the _[FCP](https://web.dev/fcp)_ differences between the two are marginal and even **don't exist** (especially under fast internet connections).
+That's why the _[FCP](https://web.dev/fcp)_ differences between the two are marginal and sometimes even **nonexistent** (especially under fast internet connections).
 
 We have both _[Next.js](https://nextjs.org)_ and _[Remix](https://remix.run)_ websites to demonstrate the absence of critical CSS inlining.
 
