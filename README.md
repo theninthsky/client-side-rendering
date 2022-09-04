@@ -920,7 +920,8 @@ We have seen the advantages of static files: they are cacheable; a _304 Not Modi
 This may lead us to believe that SSG combines both CSR and SSR advantages: we can make our app visually appear very fast (_[FCP](https://web.dev/fcp)_) and it will even be interactive very quickly.
 
 However, in reality, SSG has a major limitation:
-Since JS isn't active during the first moments, everything that relies on JS to be presented simply won't be visible, or it will be visible in its incorrect state (like components which rely on the _window.matchMedia_ function to be displayed).
+<br>
+Since JS isn't active during the first moments, everything that relies on JS to be presented simply won't be visible, or it will be visible in its incorrect state (like components which rely on the `window.matchMedia` function to be displayed).
 
 A classic example of this problems is demonstrated by the following website:
 <br>
