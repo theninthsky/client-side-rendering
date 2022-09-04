@@ -1,4 +1,6 @@
-This project is a case study of CSR, it aims to explore the potential of client-side rendered apps in comparison to server-side rendering.
+<h1 align="center">Client-side Rendering</h1>
+
+This project is a case study of CSR, it aims to explore the potential of client-side rendered apps compared to server-side rendering.
 
 ### Legend
 
@@ -648,7 +650,7 @@ export default lazyPrefetch
 + const Pokemon = lazyPrefetch(() => import(/* webpackChunkName: "pokemon" */ 'pages/Pokemon'))
 ```
 
-Now every page will be prefetched (but not executed) 200ms after the browser's _load_ event.
+Now all pages will be prefetched (but not executed) 200ms after the browser's _load_ event.
 
 ## Deploying
 
@@ -737,7 +739,7 @@ We will also have to write additional code to preload the `remoteEntry.js` files
 
 Using this method, every time a micro-frontend is deployed, the shell has to be deployed aswell.
 <br>
-However, if we have more control over the build files in production, we could spare the shell's deployment by manually editing its `index.html` file and merging the micro-frontend's _pages_ array with the _pages_ constant.
+However, if we have more control over the build files in production, we could spare the shell's rebuild and deployment by manually editing its `index.html` file and merging the micro-frontend's `pages` array with the `pages` constant.
 
 # SEO
 
@@ -872,6 +874,7 @@ This, after going through prerendering, gives us the correct preview for every p
 Here's a list of some SSR cons that should not be taken lightly:
 
 - When moving to client-side data fetching, SSR will **always** be slower than CSR, since its document is always bigger and takes longer to download.
+- SSR apps are always heavier than CSR apps, since every page is composed of both a fully-constructed HTML document and its scripts (used for hydration).
 - Since all images are initially included in the document, scripts and images will compete for bandwidth, causing delayed interactivity on slow networks.
 - Since accessing browser-related objects during the server render phase throws an error, some very helpful tools become unusable, while others (such as _[react-media](https://www.npmjs.com/package/react-media#server-side-rendering-ssr)_) require SSR-specific customizations.
 - SSR page responses mostly don't return a _[304 Not Modified](https://blog.hubspot.com/marketing/http-304-not-modified#:~:text=An%20HTTP%20304%20not%20modified%20status%20code%20means%20that%20the,to%20speed%20up%20page%20delivery)_ status.
