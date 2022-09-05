@@ -816,21 +816,17 @@ Prerendering is the act of crawling web apps in production (using headless Chrom
 
 We have two options for generating prerendered pages:
 
-1. We can use a dedicated service such as _[Prerender.io](https://prerender.io)_ and _[seo4ajax](https://www.seo4ajax.com/)_.
+1. We can use a dedicated service such as _[prerender.io](https://prerender.io)_ and _[seo4ajax](https://www.seo4ajax.com/)_.
 
 ![Prerender.io Table](images/prerender-io-table.png)
 
-2. We can build our own prerender server using free open-source tools such as _[Rendertron](https://github.com/GoogleChrome/rendertron)_.
+2. We can build our own prerender server using free open-source tools such as _[Prerender](https://github.com/prerender/prerender)_ and _[Rendertron](https://github.com/GoogleChrome/rendertron)_.
 
 Then we redirect web crawlers (identified by their User-Agent header string) to our prerendered pages using Cloudflare Workers: _[public/\_worker.js](public/_worker.js)_.
 
 Prerendering, also called _Dynamic Rendering_, is encouraged by _[Google](https://developers.google.com/search/docs/advanced/javascript/dynamic-rendering)_ and _[Microsoft](https://blogs.bing.com/webmaster/october-2018/bingbot-Series-JavaScript,-Dynamic-Rendering,-and-Cloaking-Oh-My)_.
 
 Using prerendering produces the **exact same** SEO results as using SSR in all search engines.
-
-_Note that if you want to serve prerendered pages to Googlebot aswell, _prerender.io_ would be a bad choice, since the styleless prerendered pages it creates will not pass Google's quality checks._
-<br>
-_In the future, I will inspect how to set up a Rendertron server since it looks like the most promising solution._
 
 ### Social Media Share Previews
 
