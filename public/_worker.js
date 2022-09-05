@@ -1,4 +1,5 @@
 const BOT_AGENTS = [
+  'googlebot',
   'bingbot',
   'yahoo! slurp',
   'yandex',
