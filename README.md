@@ -38,7 +38,7 @@ This project is a case study of CSR, it aims to explore the potential of client-
   - [Sitemaps](#sitemaps)
   - [Indexing](#indexing)
     - [Google](#google)
-    - [Other Search Engines](#other-search-engines)
+    - [Prerendering](#prerendering)
   - [Social Media Share Previews](#social-media-share-previews)
 - [CSR vs. SSR](#csr-vs-ssr)
   - [SSR Disadvantages](#ssr-disadvantages)
@@ -53,16 +53,16 @@ Over the last few years, server-side rendering has started to (re)gain popularit
 <br>
 While SSR has some advantages, these frameworks keep emphasizing how fast they are ("Performance as a default"), implying client-side rendering is slow.
 <br>
-In addition, it is a common misconception that great SEO can only be achieved by using SSR, and that search engines can't crawl CSR apps properly.
+In addition, it is a common misconception that great SEO can only be achieved by using SSR, and that there's nothing we can do to improve the way search engines crawl CSR apps.
 
 This project implements a basic CSR app with some tweaks such as code-splitting, with the ambition that as the app scales, the loading time of a single page would mostly remain unaffected.
 The objective is to simulate the number of packages used in a production grade app and try to decrease its loading time as much as possible, mostly by parallelizing requests.
 
-It is important to note that improving performance should not come at the expense of the developer experience, so the way this project is architected should vary only slightly compared to "normal" react projects, and it won't be as extremely opinionated as Next.js.
+It is important to note that improving performance should not come at the expense of the developer experience, so the way this project is architected should vary only slightly compared to "normal" react projects, and it won't be as extremely opinionated as Next.js (or as limiting as SSR is in general).
 
-This case study will cover two major aspects: performance and SEO. We will try to achieve high scores in both of them, compared to SSR and by themselves.
+This case study will cover two major aspects: performance and SEO. We will see how we can achieve great scores in both of them.
 
-_Note: while this project is implemented with React, the majority of it's tweaks are not tied to any framework and are purely browser-based._
+_Note: while this project is implemented with React, the majority of its tweaks are not tied to any framework and are purely browser-based._
 
 # Performance
 
@@ -793,11 +793,9 @@ We can manually submit our sitemap to _[Google Search Console](https://search.go
 
 It is often said that Google is having trouble correctly indexing CSR (JS) apps.
 <br>
-That might have been the case in 2018, but as of 2022, Google prefectly indexes every JS app.
+That might have been the case in 2018, but as of 2022, Google can index JS app in a very good manner.
 <br>
 The indexed pages will have a title, description and even content, as long as we remember to dynamically set them (either manually or using something like _[react-helmet](https://www.npmjs.com/package/react-helmet)_).
-
-In other words, it won't matter if we used SSR or not in terms of Google indexing.
 
 ![Google Search Results](images/google-search-results.png)
 ![Google Lorem Ipsum Search Results](images/google-lorem-ipsum-search-results.png)
@@ -806,15 +804,19 @@ The following video explains how the new Googlebot renders JS apps:
 <br>
 https://www.youtube.com/watch?v=Ey0N1Ry0BPM
 
-### Other Search Engines
-
-Other inferior search engines such as Bing cannot render JS (despite claiming they can). So in order to have them index our app correctly, we will serve them a **prerendered** version of our pages.
+However, since Googlebot tries to save on computing power, there might be cases where it would abandon the page before it completes loading.
 <br>
-Prerendering is the act of crawling web apps in production (using headless Chromium) and generating a complete HTML file for each page.
+So we better not rely on its ability to crawl JS apps and just serve it prerendered versions of our pages.
+
+### Prerendering
+
+Other search engines such as Bing cannot render JS (despite claiming they can). So in order to have them index our app correctly, we will serve them a **prerendered** version of our pages.
+<br>
+Prerendering is the act of crawling web apps in production (using headless Chromium) and generating a complete HTML file (with data) for each page.
 
 We have two options for generating prerendered pages:
 
-1. We can use a dedicated service such as _[Prerender.io](https://prerender.io)_.
+1. We can use a dedicated service such as _[Prerender.io](https://prerender.io)_ and _[seo4ajax](https://www.seo4ajax.com/)_.
 
 ![Prerender.io Table](images/prerender-io-table.png)
 
@@ -826,7 +828,9 @@ Prerendering, also called _Dynamic Rendering_, is encouraged by _[Google](https:
 
 Using prerendering produces the **exact same** SEO results as using SSR in all search engines.
 
-_Note that if you only care about Google indexing and you don't need social share previews - there's no reason to prerender your website. Nevertheless, you should **never** serve a prerendered page to Googlebot, since the styleless prerendered version of the page will not pass Google's quality checks._
+_Note that if you want to serve prerendered pages to Googlebot aswell, _prerender.io_ would be a bad choice, since the styleless prerendered pages it creates will not pass Google's quality checks._
+<br>
+_In the future, I will inspect how to set up a Rendertron server since it looks like the most promising solution._
 
 ### Social Media Share Previews
 
@@ -889,7 +893,7 @@ We can even see that Next.js's own documentation _[push you away](https://nextjs
 <br>
 And by doing so, we will fall short behind a CSR app's performance (as mentioned above).
 
-That's why choosing SSR for its "server-side data fetching" ability is a mistake - you may never know how much of the data fetching will end up in the client because of poor server performance.
+That's why choosing SSR for its "server-side data fetching" ability is a mistake - you may never know how much of the data fetching will end up in the client because of poor server performance (or inevitably large queries).
 
 A quick reminder that since we preload the data in our CSR app, we benefit in both first painting and data arrival.
 
