@@ -793,7 +793,7 @@ We can manually submit our sitemap to _[Google Search Console](https://search.go
 
 It is often said that Google is having trouble correctly indexing CSR (JS) apps.
 <br>
-That might have been the case in 2018, but as of 2022, Google can index JS app in a very good manner.
+That might have been the case in 2018, but as of 2022, Google can index CSR apps very well.
 <br>
 The indexed pages will have a title, description and even content, as long as we remember to dynamically set them (either manually or using something like _[react-helmet](https://www.npmjs.com/package/react-helmet)_).
 
@@ -804,17 +804,17 @@ The following video explains how the new Googlebot renders JS apps:
 <br>
 https://www.youtube.com/watch?v=Ey0N1Ry0BPM
 
-However, since Googlebot tries to save on computing power, there might be cases where it would abandon the page before it completes loading.
+However, since Googlebot tries to save on computing power, there might be cases where it would crawl the page before it finishes loading.
 <br>
-So we better not rely on its ability to crawl JS apps and just serve it prerendered versions of our pages.
+So we better not rely on its ability to crawl JS apps and just serve it prerendered pages.
 
 ### Prerendering
 
-Other search engines such as Bing cannot render JS (despite claiming they can). So in order to have them index our app correctly, we will serve them a **prerendered** version of our pages.
+Other search engines such as Bing cannot render JS (despite claiming they can). So in order to have them index our app correctly, we will serve them **prerendered** versions of our pages.
 <br>
 Prerendering is the act of crawling web apps in production (using headless Chromium) and generating a complete HTML file (with data) for each page.
 
-We have two options for generating prerendered pages:
+We have two options for prerendering our app:
 
 1. We can use a dedicated service such as _[prerender.io](https://prerender.io)_ and _[seo4ajax](https://www.seo4ajax.com/)_.
 
@@ -822,9 +822,9 @@ We have two options for generating prerendered pages:
 
 2. We can build our own prerender server using free open-source tools such as _[Prerender](https://github.com/prerender/prerender)_ and _[Rendertron](https://github.com/GoogleChrome/rendertron)_.
 
-Then we redirect web crawlers (identified by their User-Agent header string) to our prerendered pages using Cloudflare Workers: _[public/\_worker.js](public/_worker.js)_.
+Then we redirect web crawlers (identified by their `User-Agent` header string) to our prerendered pages using Cloudflare Workers: _[public/\_worker.js](public/_worker.js)_.
 
-Prerendering, also called _Dynamic Rendering_, is encouraged by _[Google](https://developers.google.com/search/docs/advanced/javascript/dynamic-rendering)_ and _[Microsoft](https://blogs.bing.com/webmaster/october-2018/bingbot-Series-JavaScript,-Dynamic-Rendering,-and-Cloaking-Oh-My)_.
+_Prerendering_, also called _Dynamic Rendering_, is encouraged by _[Google](https://developers.google.com/search/docs/advanced/javascript/dynamic-rendering)_ and _[Microsoft](https://blogs.bing.com/webmaster/october-2018/bingbot-Series-JavaScript,-Dynamic-Rendering,-and-Cloaking-Oh-My)_.
 
 Using prerendering produces the **exact same** SEO results as using SSR in all search engines.
 
