@@ -14,7 +14,7 @@ module.exports = pages => `
 
       <link rel="shortcut icon" href="/icons/favicon.ico">
       <link rel="manifest" href="/manifest.json">
-      <link rel="preload" href="https://fonts.gstatic.com/s/montserrat/v21/JTUSjIg1_i6t8kCHKm459Wlhyw.woff2" as="font" type="font/woff2" crossorigin>
+      <link rel="preload" href="https://fonts.gstatic.com/s/montserrat/v21/JTUSjIg1_i6t8kCHKm459Wlhyw.woff2" as="font" type="font/woff2" crossorigin="anonymous">
 
       <title></title>
 
