@@ -1,9 +1,7 @@
-import { useEffect } from 'react'
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import { lazyPrefetch } from 'frontend-essentials'
 
 import pagesManifest from 'pages-manifest.json'
-import { setMetaTags } from 'utils/meta-tags'
 import Navigation from 'components/Navigation'
 import Layout from 'components/Layout'
 
@@ -20,14 +18,6 @@ const routes = pagesManifest.map(({ path }, ind) => {
 })
 
 const App = () => {
-  const { pathname } = useLocation()
-
-  useEffect(() => {
-    const page = pagesManifest.find(({ path }) => pathname === path || isStructureEqual(pathname, path)) || {}
-
-    setMetaTags(page)
-  }, [pathname])
-
   return (
     <>
       <Navigation />

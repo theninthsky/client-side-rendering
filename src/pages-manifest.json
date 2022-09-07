@@ -2,9 +2,8 @@
   {
     "chunk": "index",
     "path": "/",
-    "title": "Client-side Rendering",
-    "description": "This page demonstrates a large amount of components that are rendered on the screen.",
-    "heading": "Home"
+    "title": "Home",
+    "description": "This page demonstrates a large amount of components that are rendered on the screen."
   },
   {
     "chunk": "lorem-ipsum",

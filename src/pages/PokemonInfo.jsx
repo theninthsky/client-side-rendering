@@ -8,7 +8,7 @@ import { Skeleton } from '@mui/material'
 
 import pagesManifest from 'pages-manifest.json'
 import { preconnect } from 'utils/preconnect'
-import { setMetaTags } from 'utils/meta-tags'
+import Meta from 'components/common/Meta'
 import Title from 'components/common/Title'
 import Info from 'components/common/Info'
 
@@ -32,17 +32,16 @@ const PokemonInfo = () => {
   }, [])
 
   useEffect(() => {
-    if (!name) return
-
-    persistState(`${nameParam}Info`, pokemonInfo)
-    setMetaTags({
-      title: `${startCase(toLower(name))} | Pokémon Info`,
-      image: sprites.other.officialArtwork.frontDefault
-    })
+    if (name) persistState(`${nameParam}Info`, pokemonInfo)
   }, [name])
 
   return (
     <div>
+      <Meta
+        title={`${startCase(toLower(name || 'loading'))} | Pokémon Info`}
+        image={sprites?.other.officialArtwork.frontDefault}
+      />
+
       <Title backButton>Pokémon Info</Title>
 
       <Info className={style.info}>{description}</Info>

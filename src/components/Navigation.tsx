@@ -20,9 +20,9 @@ const Navigation = () => {
     () =>
       pagesManifest
         .filter(({ menuItem = true }) => menuItem)
-        .map(({ path, title, heading, data }) => (
+        .map(({ path, title, data }) => (
           <NavigationLink key={path} to={path} data={data} onClick={() => setDrawerOpen(false)}>
-            {heading || title}
+            {title}
           </NavigationLink>
         )),
     [pagesManifest]

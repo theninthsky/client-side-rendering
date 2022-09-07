@@ -5,7 +5,7 @@ import { css, cx } from '@emotion/css'
 import { Skeleton } from '@mui/material'
 
 import pagesManifest from 'pages-manifest.json'
-import { setMetaTags } from 'utils/meta-tags'
+import Meta from 'components/common/Meta'
 import Title from 'components/common/Title'
 import Info from 'components/common/Info'
 
@@ -23,14 +23,14 @@ const LoremIpsum = () => {
 
   useEffect(() => {
     if (loremIpsum) persistState('loremIpsum', loremIpsum)
-
-    setMetaTags({ image: `${window.location.origin}/icons/og-lorem-ipsum.png` })
   }, [loremIpsum])
 
   console.log(isDate(new Date()))
 
   return (
     <div>
+      <Meta title={title} description={description} image={`${window.location.origin}/icons/og-lorem-ipsum.png`} />
+
       <Title>{title}</Title>
 
       <Info className={style.info}>{description}</Info>
