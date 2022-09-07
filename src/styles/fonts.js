@@ -6,7 +6,7 @@ injectGlobal`
     font-style: normal;
     font-weight: 300;
     font-display: swap;
-    src: url(https://fonts.gstatic.com/s/montserrat/v21/JTUSjIg1_i6t8kCHKm459Wlhyw.woff2) format('woff2');
+    src: url(/fonts/montserrat.woff2) format('woff2');
   }
 
   @font-face {
@@ -14,7 +14,7 @@ injectGlobal`
     font-style: normal;
     font-weight: 400;
     font-display: swap;
-    src: url(https://fonts.gstatic.com/s/montserrat/v21/JTUSjIg1_i6t8kCHKm459Wlhyw.woff2) format('woff2');
+    src: url(/fonts/montserrat.woff2) format('woff2');
   }
 
   @font-face {
@@ -22,7 +22,7 @@ injectGlobal`
     font-style: normal;
     font-weight: 500;
     font-display: swap;
-    src: url(https://fonts.gstatic.com/s/montserrat/v21/JTUSjIg1_i6t8kCHKm459Wlhyw.woff2) format('woff2');
+    src: url(/fonts/montserrat.woff2) format('woff2');
   }
 
   @font-face {
@@ -30,7 +30,7 @@ injectGlobal`
     font-style: normal;
     font-weight: 600;
     font-display: swap;
-    src: url(https://fonts.gstatic.com/s/montserrat/v21/JTUSjIg1_i6t8kCHKm459Wlhyw.woff2) format('woff2');
+    src: url(/fonts/montserrat.woff2) format('woff2');
   }
 
   @font-face {
@@ -38,6 +38,6 @@ injectGlobal`
     font-style: normal;
     font-weight: 700;
     font-display: swap;
-    src: url(https://fonts.gstatic.com/s/montserrat/v21/JTUSjIg1_i6t8kCHKm459Wlhyw.woff2) format('woff2');
+    src: url(/fonts/montserrat.woff2) format('woff2');
   }
 `
