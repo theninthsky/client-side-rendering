@@ -11,7 +11,11 @@ const { title, description } = pagesManifest.find(({ chunk }) => chunk === 'inde
 const Home = () => {
   return (
     <div>
-      <Meta title="Client-side Rendering" description={description} />
+      <Meta
+        title="Client-side Rendering"
+        description={description}
+        image={`${window.location.origin}/icons/og-icon.png`}
+      />
 
       <Title>{title}</Title>
 
