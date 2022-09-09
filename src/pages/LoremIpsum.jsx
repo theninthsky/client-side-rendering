@@ -1,11 +1,10 @@
 import { useState, useEffect } from 'react'
 import { isDate } from 'moment'
-import { useFetch, persistState, getPersistedState } from 'frontend-essentials'
+import { Meta, useFetch, persistState, getPersistedState } from 'frontend-essentials'
 import { css, cx } from '@emotion/css'
 import { Skeleton } from '@mui/material'
 
 import pagesManifest from 'pages-manifest.json'
-import Meta from 'components/common/Meta'
 import Title from 'components/common/Title'
 import Info from 'components/common/Info'
 
@@ -29,7 +28,11 @@ const LoremIpsum = () => {
 
   return (
     <div>
-      <Meta title={title} description={description} image={`${window.location.origin}/icons/og-lorem-ipsum.png`} />
+      <Meta
+        title={`${title} | Client-side Rendering`}
+        description={description}
+        image={`${window.location.origin}/icons/og-lorem-ipsum.png`}
+      />
 
       <Title>{title}</Title>
 

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
-import { If, useFetch, persistState, getPersistedState } from 'frontend-essentials'
+import { If, Meta, useFetch, persistState, getPersistedState } from 'frontend-essentials'
 import startCase from 'lodash/startCase'
 import toLower from 'lodash/toLower'
 import { css, cx } from '@emotion/css'
@@ -8,7 +8,6 @@ import { Skeleton } from '@mui/material'
 
 import pagesManifest from 'pages-manifest.json'
 import { preconnect } from 'utils/preconnect'
-import Meta from 'components/common/Meta'
 import Title from 'components/common/Title'
 import Info from 'components/common/Info'
 

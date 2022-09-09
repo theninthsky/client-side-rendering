@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { NavLink } from 'react-router-dom'
 import { isDate } from 'moment'
-import { useFetch, persistState, getPersistedState } from 'frontend-essentials'
+import { Meta, useFetch, persistState, getPersistedState } from 'frontend-essentials'
 import startCase from 'lodash/startCase'
 import toLower from 'lodash/toLower'
 import { css } from '@emotion/css'
@@ -9,7 +9,6 @@ import { Skeleton } from '@mui/material'
 
 import pagesManifest from 'pages-manifest.json'
 import { DESKTOP_VIEWPORT } from 'styles/constants'
-import Meta from 'components/common/Meta'
 import Title from 'components/common/Title'
 import Info from 'components/common/Info'
 
@@ -30,7 +29,11 @@ const Pokemon = () => {
 
   return (
     <div>
-      <Meta title={title} description={description} image={`${window.location.origin}/icons/og-pokemon.png`} />
+      <Meta
+        title={`${title} | Client-side Rendering`}
+        description={description}
+        image={`${window.location.origin}/icons/og-pokemon.png`}
+      />
 
       <Title>{title}</Title>
 
