@@ -28,6 +28,7 @@ This project is a case study of CSR, it aims to explore the potential of client-
     - [Prefetching Async Pages](#prefetching-async-pages)
   - [Deploying](#deploying)
   - [Benchmark](#benchmark)
+    - [Preact](#preact)
   - [Areas for Improvement](#areas-for-improvement)
   - [Module Federation](#module-federation)
 - [SEO](#seo)
@@ -685,6 +686,14 @@ I performed Google's _PageSpeed Insights_ benchmark (simulating a slow 4G networ
 
 As it turns out, performance is **not** a default in Next.js.
 
+### Preact
+
+_[Lorem Ipsum | Client-side Rendering](https://pagespeed.web.dev/report?url=https%3A%2F%2Fc01ecf00.client-side-rendering.pages.dev%2Florem-ipsum)_
+
+![Preact Benchmark](images/client-side-rendering-preact-benchmark.png)
+
+The [Preact](https://preactjs.com) branch can be found [here](https://github.com/theninthsky/client-side-rendering/tree/preact).
+
 ## Areas for Improvement
 
 - Compress assets using _[Brotli level 11](https://d33wubrfki0l68.cloudfront.net/3434fd222424236d1f0f5b4596de1480b5378156/1a5ec/assets/wp-content/uploads/2018/07/compression_estimator_jquery.jpg)_ (Cloudflare only uses level 4 to save on computing resources).
@@ -841,8 +850,8 @@ This is where prerendering comes to our aid once again, we only need to make sur
 ```js
 const Home = props => {
   return (
-    <Meta 
-      title="Client-side Rendering" 
+    <Meta
+      title="Client-side Rendering"
       description="This page demonstrates a large amount of components that are rendered on the screen."
       image={`${window.location.origin}/icons/og-icon.png`}
     />
@@ -852,6 +861,7 @@ const Home = props => {
   )
 }
 ```
+
 The `Meta` component can be found [here](https://github.com/theninthsky/frontend-essentials/blob/main/src/components/Meta.tsx).
 
 This, after going through prerendering, gives us the correct preview for every page:
