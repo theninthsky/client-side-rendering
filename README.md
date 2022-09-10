@@ -852,7 +852,7 @@ const Home = props => {
   )
 }
 ```
-The `Meta` component can be found [here](src/components/common/Meta.ts).
+The `Meta` component can be found [here](https://github.com/theninthsky/frontend-essentials/blob/main/src/components/Meta.tsx).
 
 This, after going through prerendering, gives us the correct preview for every page:
 
