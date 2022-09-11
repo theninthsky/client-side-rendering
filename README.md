@@ -688,7 +688,7 @@ As it turns out, performance is **not** a default in Next.js.
 
 ### Preact
 
-_[Lorem Ipsum | Client-side Rendering](https://pagespeed.web.dev/report?url=https%3A%2F%2Fc01ecf00.client-side-rendering.pages.dev%2Florem-ipsum)_
+_[Lorem Ipsum | Client-side Rendering](https://pagespeed.web.dev/report?url=https%3A%2F%2F1c6df098.client-side-rendering.pages.dev%2Florem-ipsum)_
 
 ![Preact Benchmark](images/client-side-rendering-preact-benchmark.png)
 
