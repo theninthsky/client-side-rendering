@@ -688,11 +688,13 @@ As it turns out, performance is **not** a default in Next.js.
 
 ### Preact
 
-_[Lorem Ipsum | Client-side Rendering](https://pagespeed.web.dev/report?url=https%3A%2F%2F1c6df098.client-side-rendering.pages.dev%2Florem-ipsum)_
+Replacing React with [Preact](https://preactjs.com) helps us achieve an even better FCP score since it weights only 4kb minzipped.
+
+_[Lorem Ipsum | Client-side Rendering (Preact)](https://pagespeed.web.dev/report?url=https%3A%2F%2F1c6df098.client-side-rendering.pages.dev%2Florem-ipsum)_
 
 ![Preact Benchmark](images/client-side-rendering-preact-benchmark.png)
 
-The [Preact](https://preactjs.com) branch can be found [here](https://github.com/theninthsky/client-side-rendering/tree/preact).
+The Preact branch can be found [here](https://github.com/theninthsky/client-side-rendering/tree/preact).
 
 ## Areas for Improvement
 
