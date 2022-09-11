@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { isDate } from 'moment'
+import moment from 'moment'
+import { isDate } from 'lodash'
 import { Meta, useFetch, persistState, getPersistedState } from 'frontend-essentials'
 import { css, cx } from '@emotion/css'
 import { Skeleton } from '@mui/material'
@@ -24,7 +25,8 @@ const LoremIpsum = () => {
     if (loremIpsum) persistState('loremIpsum', loremIpsum)
   }, [loremIpsum])
 
-  console.log(isDate(new Date()))
+  // Does nothing, is meant to bloat the page's bundle size to simulate real-life app weight
+  isDate(moment().toDate())
 
   return (
     <div>

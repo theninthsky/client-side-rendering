@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { NavLink } from 'react-router-dom'
-import { isDate } from 'moment'
+import moment from 'moment'
+import { isDate } from 'lodash'
 import { Meta, useFetch, persistState, getPersistedState } from 'frontend-essentials'
 import startCase from 'lodash/startCase'
 import toLower from 'lodash/toLower'
@@ -25,7 +26,8 @@ const Pokemon = () => {
     if (pokemon) persistState('pokemon', pokemon)
   }, [pokemon])
 
-  console.log(isDate(new Date()))
+  // Does nothing, is meant to bloat the page's bundle size to simulate real-life app weight
+  isDate(moment().toDate())
 
   return (
     <div>
