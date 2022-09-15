@@ -806,9 +806,6 @@ That might have been the case in 2018, but as of 2022, Google can index CSR apps
 <br>
 The indexed pages will have a title, description and even content, as long as we remember to dynamically set them (either manually or using something like _[react-helmet](https://www.npmjs.com/package/react-helmet)_).
 
-![Google Search Results](images/google-search-results.png)
-![Google Lorem Ipsum Search Results](images/google-lorem-ipsum-search-results.png)
-
 The following video explains how the new Googlebot renders JS apps:
 <br>
 https://www.youtube.com/watch?v=Ey0N1Ry0BPM
@@ -840,6 +837,11 @@ Using prerendering produces the **exact same** SEO results as using SSR in all s
 In fact, when using SSR with client-side data fetching, Googlebot might not wait for the data to arrive and just take a snapshot of the page. Other search engines will simply take the snapshot right away since they cannot render JS.
 <br>
 However, using prerendering, we can instruct our prerenderer to _[wait for the last request](https://github.com/prerender/prerender#waitafterlastrequest)_ before taking a snapshot, ensuring the page is crawled with its data.
+
+https://www.google.com/search?q=site:https://client-side-rendering.pages.dev
+
+![Google Search Results](images/google-search-results.png)
+![Google Lorem Ipsum Search Results](images/google-lorem-ipsum-search-results.png)
 
 _Note that if you are using CSS-in-JS, you should [disable the speedy optimization](src/utils/disable-speedy.ts) during prerendering in order to have your styles omitted to the DOM._
 
