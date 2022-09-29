@@ -42,7 +42,9 @@ This project is a case study of CSR, it aims to explore the potential of client-
   - [Inlining CSS](#inlining-css)
   - [Why Not SSG?](#why-not-ssg)
   - [The Cost of Hydration](#the-cost-of-hydration)
+  - [SSR Streaming](#ssr-streaming)
 - [Conclusion](#conclusion)
+  - [What Might Change in the Future](#what-might-change-in-the-future)
 
 # Motivation
 
@@ -973,6 +975,24 @@ In other words, where SSR should have had a performance edge over CSR, we see a 
 
 It is impossible for this issue to occur in CSR apps, since the moment they render - JS has already been fully loaded.
 
+## SSR Streaming
+
+The recently (re)emerging concept of SSR streaming is very appealing.
+
+The biggest disadvantage of server-side data fetching is that the user will not see anything until the data has returned on the server side, thus coupling the server performance with the browser's _[TTFB](https://web.dev/ttfb)_.
+
+The interesting way of dealing with this issue is to stream the initial HTML (with placeholders) to the browser once it has rendered on the server, and then stream the rest of the page when the data is fetched.
+
+We can see that in action in the following example:
+
+![SSR Streaming](images/ssr-streaming.gif)
+
+The full article can be found here: https://dev.to/ryansolid/server-rendering-in-javascript-optimizing-performance-1jnk
+
+SSR streaming cannot yet be easily implemented in React, but it is a work-in-progress in _[Next.js](https://nextjs.org/docs/advanced-features/react-18/streaming)_ and _[Remix](https://remix.run/blog/react-server-components)_.
+<br>
+There is no doubt that this feature is very crucial for dealing with one of SSR's biggest cons.
+
 # Conclusion
 
 We saw that client-side rendering performance is on par and sometimes even better than SSR in terms of loading times.
@@ -982,3 +1002,11 @@ We also learned that prerendering produces perfect SEO results, and that we don'
 And above all - we have achieved all this mainly by modifiying 2 files (Webpack config and HTML template) and using a prerender service, so every existing CSR app should be able to quickly and easily implement these modifications and benefit from them.
 
 These facts lead to the conclusion that there is no particular reason to use SSR, it would only add a lot of complexity and limitations to our project and degrade the developer experience.
+
+## What Might Change in the Future
+
+As time passes, connection speed gets better and end-user devices get stronger. So the performance differences between all mentioned rendering methods are guarenteed to be mitigated even further.
+<br>
+However, it is worth noting that there are two interesting changes that happen in the SSR realm: _[Streaming](https://shopify.dev/custom-storefronts/hydrogen/framework/streaming-ssr)_ and _[Resumability](https://qwik.builder.io)_.
+
+These approaches aim to greatly improve SSR loading times, and they should be heavily tested in order to see if the performance differences will be so dramatic that it will be worth the hassel of rendering apps on the server.
