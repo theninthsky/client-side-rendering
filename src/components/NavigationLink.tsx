@@ -70,6 +70,7 @@ const NavigationLink: FC<NavigationLinkProps> = ({ className, to, data, onClick,
       className={({ isActive }) => cx(style.item, { [style.activeItem]: isActive }, className as string)}
       ref={ref}
       to={baseURL}
+      end
       onClick={onLinkClick}
       {...(hoverable &&
         data && {

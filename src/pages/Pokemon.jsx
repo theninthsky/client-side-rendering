@@ -1,6 +1,5 @@
-import { useState, useEffect } from 'react'
 import { NavLink } from 'react-router-dom'
-import { Meta, useFetch, persistState, getPersistedState } from 'frontend-essentials'
+import { Meta, usePersistedState, useFetch } from 'frontend-essentials'
 import startCase from 'lodash/startCase'
 import toLower from 'lodash/toLower'
 import { css } from '@emotion/css'
@@ -19,15 +18,11 @@ import { isDate } from 'lodash'
 const { title, description, data } = pagesManifest.find(({ chunk }) => chunk === 'pokemon')
 
 const Pokemon = () => {
-  const [pokemon, setPokemon] = useState(getPersistedState('pokemon') || [])
+  const [pokemon, setPokemon] = usePersistedState('pokemon', [])
 
   useFetch(data[0].url, {
     onSuccess: ({ data: { results } }) => setPokemon(results.map(({ name }) => name))
   })
-
-  useEffect(() => {
-    if (pokemon) persistState('pokemon', pokemon)
-  }, [pokemon])
 
   // Does nothing, is meant to bloat the page's bundle size to simulate real-life app weight
   new ApolloClient({ uri: '', cache: new InMemoryCache() })

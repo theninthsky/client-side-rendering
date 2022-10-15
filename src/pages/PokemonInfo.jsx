@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
-import { If, Meta, useFetch, persistState, getPersistedState } from 'frontend-essentials'
+import { If, Meta, usePersistedState, useFetch } from 'frontend-essentials'
 import startCase from 'lodash/startCase'
 import toLower from 'lodash/toLower'
 import { css, cx } from '@emotion/css'
@@ -16,7 +16,7 @@ const { description, data } = pagesManifest.find(({ chunk }) => chunk === 'pokem
 const PokemonInfo = () => {
   const { name: nameParam } = useParams()
 
-  const [pokemonInfo, setPokemonInfo] = useState(getPersistedState(`${nameParam}Info`) || {})
+  const [pokemonInfo, setPokemonInfo] = usePersistedState(`${nameParam}Info`, {})
   const [imageLoading, setImageLoading] = useState(true)
 
   const { id, name, sprites } = pokemonInfo
@@ -29,10 +29,6 @@ const PokemonInfo = () => {
   useEffect(() => {
     preconnect(data.preconnectURL)
   }, [])
-
-  useEffect(() => {
-    if (name) persistState(`${nameParam}Info`, pokemonInfo)
-  }, [name])
 
   return (
     <div>
