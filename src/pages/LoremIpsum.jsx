@@ -1,4 +1,4 @@
-import { Meta, usePersistedState, useFetch } from 'frontend-essentials'
+import { Meta, useFetch } from 'frontend-essentials'
 import { css, cx } from '@emotion/css'
 import { Skeleton } from '@mui/material'
 
@@ -14,13 +14,10 @@ import { isDate } from 'lodash'
 const { title, description, data } = pagesManifest.find(({ chunk }) => chunk === 'lorem-ipsum')
 
 const LoremIpsum = () => {
-  const [loremIpsum, setLoremIpsum] = usePersistedState('loremIpsum')
-
-  useFetch(data.url, {
+  const { data: loremIpsum } = useFetch(data.url, {
     credentials: 'include',
     mode: 'no-cors',
-    manual: !!loremIpsum,
-    onSuccess: ({ data }) => setLoremIpsum(data)
+    uuid: 'loremIpsum'
   })
 
   // Does nothing, is meant to bloat the page's bundle size to simulate real-life app weight

@@ -16,15 +16,14 @@ const { description, data } = pagesManifest.find(({ chunk }) => chunk === 'pokem
 const PokemonInfo = () => {
   const { name: nameParam } = useParams()
 
-  const [pokemonInfo, setPokemonInfo] = usePersistedState(`${nameParam}Info`, {})
   const [imageLoading, setImageLoading] = useState(true)
 
-  const { id, name, sprites } = pokemonInfo
-
-  useFetch(data.url.replace('$', nameParam), {
-    camelCasedResponse: true,
-    onSuccess: ({ data }) => setPokemonInfo(data)
+  const { data: pokemonInfo = {} } = useFetch(data.url.replace('$', nameParam), {
+    uuid: `${nameParam}Info`,
+    camelCased: true
   })
+
+  const { id, name, sprites } = pokemonInfo
 
   useEffect(() => {
     preconnect(data.preconnectURL)

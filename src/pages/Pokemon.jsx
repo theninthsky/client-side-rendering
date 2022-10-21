@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import { Meta, usePersistedState, useFetch } from 'frontend-essentials'
+import { Meta, useFetch } from 'frontend-essentials'
 import startCase from 'lodash/startCase'
 import toLower from 'lodash/toLower'
 import { css } from '@emotion/css'
@@ -18,10 +18,8 @@ import { isDate } from 'lodash'
 const { title, description, data } = pagesManifest.find(({ chunk }) => chunk === 'pokemon')
 
 const Pokemon = () => {
-  const [pokemon, setPokemon] = usePersistedState('pokemon', [])
-
-  useFetch(data[0].url, {
-    onSuccess: ({ data: { results } }) => setPokemon(results.map(({ name }) => name))
+  const { data: pokemon } = useFetch(data[0].url, {
+    uuid: 'pokemon'
   })
 
   // Does nothing, is meant to bloat the page's bundle size to simulate real-life app weight
@@ -41,9 +39,9 @@ const Pokemon = () => {
       <Info className={style.info}>{description}</Info>
 
       <main className={style.main}>
-        {pokemon.length ? (
+        {pokemon ? (
           <ul className={style.list}>
-            {pokemon.map(name => (
+            {pokemon.results.map(({ name }) => (
               <li key={name}>
                 <NavLink className={style.pokemon} to={`/pokemon/${name}`}>
                   {startCase(toLower(name))}
