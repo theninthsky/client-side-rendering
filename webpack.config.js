@@ -20,6 +20,7 @@ module.exports = (_, { mode }) => {
       devMiddleware: { stats: 'errors-warnings' }
     },
     cache: { type: 'filesystem' },
+    devtool: production ? 'source-map' : 'inline-source-map',
     resolve: {
       modules: [path.resolve(__dirname, 'src'), 'node_modules'],
       extensions: ['.ts', '.tsx', '.js', '.jsx']

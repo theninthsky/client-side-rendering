@@ -10,7 +10,8 @@
     "resolveJsonModule": true,
     "strict": true,
     "noImplicitAny": false,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "sourceMap": true
   },
   "include": ["src"]
 }
