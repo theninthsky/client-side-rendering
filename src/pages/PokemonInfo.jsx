@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
-import { If, Meta, usePersistedState, useFetch } from 'frontend-essentials'
+import { Meta, useFetch } from 'frontend-essentials'
 import startCase from 'lodash/startCase'
 import toLower from 'lodash/toLower'
 import { css, cx } from '@emotion/css'
@@ -36,7 +36,7 @@ const PokemonInfo = () => {
         image={sprites?.other.officialArtwork.frontDefault}
       />
 
-      <Title backButton>Pokémon Info</Title>
+      <Title redirectTo="/pokemon">Pokémon Info</Title>
 
       <Info className={style.info}>{description}</Info>
 
@@ -57,9 +57,9 @@ const PokemonInfo = () => {
           <Skeleton className={style.skeleton} variant="text" width={100} height={24} animation={false} />
         )}
 
-        <If condition={imageLoading}>
+        {imageLoading && (
           <Skeleton className={cx(style.skeleton, style.image)} variant="rectangular" width={475} height={475} />
-        </If>
+        )}
       </main>
     </div>
   )

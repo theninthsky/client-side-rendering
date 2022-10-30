@@ -1,16 +1,14 @@
-import type { FC, ButtonHTMLAttributes } from 'react'
-import { useNavigate } from 'react-router-dom'
+import type { FC } from 'react'
+import { Link, LinkProps } from 'react-router-dom'
 import { css, cx } from '@emotion/css'
 
 import BackIcon from 'images/back.svg'
 
-const Back: FC<ButtonHTMLAttributes<HTMLButtonElement>> = ({ className, ...otherProps }) => {
-  const navigate = useNavigate()
-
+const Back: FC<LinkProps> = ({ className, ...otherProps }) => {
   return (
-    <button className="flex" {...otherProps}>
-      <BackIcon className={cx(style.backIcon, className)} onClick={() => navigate(-1)} />
-    </button>
+    <Link className="flex" {...otherProps}>
+      <BackIcon className={cx(style.backIcon, className)} />
+    </Link>
   )
 }
 
