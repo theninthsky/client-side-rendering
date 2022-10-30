@@ -9,6 +9,7 @@ module.exports = pages => `
 
       <link rel="shortcut icon" href="/icons/favicon.ico">
       <link rel="manifest" href="/manifest.json">
+      <link rel="preload" href="/fonts/montserrat.woff2" as="font" type="font/woff2" crossorigin>
 
       <title>Client-side Rendering</title>
 
