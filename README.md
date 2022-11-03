@@ -42,7 +42,7 @@ This project is a case study of CSR, it aims to explore the potential of client-
   - [Inlining CSS](#inlining-css)
   - [Why Not SSG?](#why-not-ssg)
   - [The Cost of Hydration](#the-cost-of-hydration)
-  - [SSR Streaming](#ssr-streaming)
+  - [The Problem With Streaming SSR](#the-problem-with-streaming-ssr)
 - [Conclusion](#conclusion)
   - [What Might Change in the Future](#what-might-change-in-the-future)
 
@@ -896,15 +896,13 @@ Let's elaborate on the first one in the list:
 <br>
 Fetching data on the server is usually a bad idea, since some queries may take several hundreds of milliseconds to return (many will exceed that), and while pending, the user will see **absolutely nothing** in their browser.
 <br>
-It's hard to understand why developes decide to couple the server performance with the initial page load time, it seems like a poor choice.
-<br>
 We can even see that Next.js's own documentation _[push you away](https://nextjs.org/docs/basic-features/data-fetching/get-server-side-props#when-should-i-use-getserversideprops)_ from server-side fetching and into client-side fetching.
 <br>
 And by doing so, we will fall short behind a CSR app's performance (as mentioned above).
 
 That's why choosing SSR for its "server-side data fetching" ability is a mistake - you may never know how much of the data fetching will end up in the client because of poor server performance (or inevitably large queries).
 
-A quick reminder that since we preload the data in our CSR app, we benefit in both first painting and data arrival.
+A quick reminder that since we preload the data in our CSR app, we benefit in both first paint and data arrival.
 
 ## Inlining CSS
 
@@ -932,7 +930,7 @@ We have seen the advantages of static files: they are cacheable; a _304 Not Modi
 
 This may lead us to believe that SSG combines both CSR and SSR advantages: we can make our app visually appear very fast (_[FCP](https://web.dev/fcp)_) and it will even be interactive very quickly.
 
-However, in reality, SSG has a major limitation:
+However, in reality, SSG has one major limitation:
 <br>
 Since JS isn't active during the first moments, everything that relies on JS to be presented simply won't be visible, or it will be visible in its incorrect state (like components which rely on the `window.matchMedia` function to be displayed).
 
@@ -975,23 +973,27 @@ In other words, where SSR should have had a performance edge over CSR, we see a 
 
 It is impossible for this issue to occur in CSR apps, since the moment they render - JS has already been fully loaded.
 
-## SSR Streaming
+## The Problem With Streaming SSR
 
-The recently (re)emerging concept of SSR streaming is very appealing.
+As mentioned before, fetching data on the server is generally a bad idea, since the page won’t be visible to the user until the HTML document is returned from the server. In other words, server-side fetching couples the API server’s (or database) performance with the _[TTFB](https://web.dev/ttfb)_.
 
-The biggest disadvantage of server-side data fetching is that the user will not see anything until the data has returned on the server side, thus coupling the server performance with the browser's _[TTFB](https://web.dev/ttfb)_.
+However, when moving to client-side fetching, we encounter a different issue: the data request will be sent by the browser only after it finishes downloading, parsing and executing the scripts. So while we get a low TTFB metric, we also get a high _[LCP](https://web.dev/lcp)_ metric.
 
-The interesting way of dealing with this issue is to stream the initial HTML (with placeholders) to the browser once it has rendered on the server, and then stream the rest of the page when the data is fetched.
-
-We can see that in action in the following example:
+The recently (re)emerging and anticipated solution for these issues is called _[Streaming SSR](https://shopify.dev/custom-storefronts/hydrogen/framework/streaming-ssr)_.
+<br>
+Streaming SSR solves both of the above issues by sending a partially rendered HTML to the browser (so the user sees the entire app without the data) and when the data is fetched server-side - it is sent to the client so the user can see the complete page.
 
 ![SSR Streaming](images/ssr-streaming.gif)
 
-The full article can be found here: https://dev.to/ryansolid/server-rendering-in-javascript-optimizing-performance-1jnk
+A detailed explanation can be found here: https://dev.to/ryansolid/server-rendering-in-javascript-optimizing-performance-1jnk
 
-SSR streaming cannot yet be easily implemented in React, but it is a work-in-progress in _[Next.js](https://nextjs.org/docs/advanced-features/react-18/streaming)_ and _[Remix](https://remix.run/blog/react-server-components)_.
+This approach combines both sever-side fetching’s and client-side fetching’s advantages by giving the user low TTFB and LCP metrics.
+
+However, both client-side fetching and streaming SSR completely contradict the most important reason for using SSR: the SEO.
 <br>
-There is no doubt that this feature is very crucial for dealing with one of SSR's biggest cons.
+Basically, when using these approaches we inherit the exact same disadvantages of CSR in term of SEO: the data does not exist in the initial HTML document and so it will not be indexed by web crawlers who cannot render JS (all except Googlebot). And so we are forced to use prerendering just like in normal CSR apps.
+
+https://github.com/reactwg/react-18/discussions/37#discussioncomment-842671
 
 # Conclusion
 
