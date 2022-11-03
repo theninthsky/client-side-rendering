@@ -991,9 +991,9 @@ This approach combines both sever-side fetching’s and client-side fetching’s
 
 However, both client-side fetching and streaming SSR completely contradict the most important reason for using SSR: the SEO.
 <br>
-Basically, when using these approaches we inherit the exact same disadvantages of CSR in term of SEO: the data does not exist in the initial HTML document and so it will not be indexed by web crawlers who cannot render JS (all except Googlebot). And so we are forced to use prerendering just like in normal CSR apps.
+Basically, when using these approaches we inherit the exact same disadvantages of CSR in terms of SEO: the data does not exist in the initial HTML document and so it will not be indexed by web crawlers who cannot render JS (all except Googlebot). And so we are forced to use prerendering just like in normal CSR apps.
 
-https://github.com/reactwg/react-18/discussions/37#discussioncomment-842671
+Further reading: https://github.com/reactwg/react-18/discussions/37#discussioncomment-842671
 
 # Conclusion
 
@@ -1009,6 +1009,6 @@ These facts lead to the conclusion that there is no particular reason to use SSR
 
 As time passes, connection speed gets better and end-user devices get stronger. So the performance differences between all mentioned rendering methods are guarenteed to be mitigated even further.
 <br>
-However, it is worth noting that there are two interesting changes that happen in the SSR realm: _[Streaming](https://shopify.dev/custom-storefronts/hydrogen/framework/streaming-ssr)_ and _[Resumability](https://qwik.builder.io)_.
+However, it is worth mentioning that _[Qwik](https://qwik.builder.io)_ is an interesting change that comes from the SSR world.
 
-These approaches aim to greatly improve SSR loading times, and they should be heavily tested in order to see if the performance differences will be so dramatic that it will be worth the hassel of rendering apps on the server.
+This "resumability" approache aims to greatly improve SSR loading times, and it should be thoroughly tested in order to see if the performance differences will be so dramatic that it will be worth the hassel to render apps on the server.
