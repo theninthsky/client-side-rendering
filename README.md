@@ -28,7 +28,6 @@ This project is a case study of CSR, it aims to explore the potential of client-
     - [Prefetching Async Pages](#prefetching-async-pages)
   - [Deploying](#deploying)
   - [Benchmark](#benchmark)
-    - [Preact](#preact)
   - [Areas for Improvement](#areas-for-improvement)
   - [Module Federation](#module-federation)
 - [SEO](#seo)
@@ -689,16 +688,6 @@ These are the results:
 ![Client-side Rendering Benchmark](images/client-side-rendering-benchmark.png)
 
 As it turns out, performance is **not** a default in Next.js.
-
-### Preact
-
-Replacing React with [Preact](https://preactjs.com) helps us achieve an even better FCP score since it weighs only 4kb minzipped.
-
-_[Lorem Ipsum | Client-side Rendering (Preact)](https://pagespeed.web.dev/report?url=https%3A%2F%2F7d4af923.client-side-rendering.pages.dev%2Florem-ipsum)_
-
-![Preact Benchmark](images/client-side-rendering-preact-benchmark.png)
-
-The Preact branch can be found [here](https://github.com/theninthsky/client-side-rendering/tree/preact).
 
 ## Areas for Improvement
 
