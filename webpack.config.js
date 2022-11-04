@@ -14,7 +14,6 @@ module.exports = (_, { mode }) => {
 
   return {
     devServer: {
-      hot: true,
       historyApiFallback: true,
       port: 3000,
       devMiddleware: { stats: 'errors-warnings' }
