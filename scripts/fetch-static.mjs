@@ -6,10 +6,10 @@ const path = 'public/json'
 const axiosOptions = { transformResponse: res => res }
 
 mkdir(path, { recursive: true })
-process.on('beforeExit', () => console.log('Fetched all static assets.'))
+process.on('beforeExit', () => console.log('Fetched all static assets'))
 
 const fetchLoremIpsum = async () => {
-  const { data } = await axios.get('https://loripsum.net/api/200/long/plaintext', axiosOptions)
+  const { data } = await axios.get('https://loripsum.net/api/100/long/plaintext', axiosOptions)
 
   writeFile(`${path}/lorem-ipsum.json`, JSON.stringify(data))
 }
