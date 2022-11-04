@@ -719,22 +719,16 @@ plugins: [
     templateContent: ({ compilation }) => {
       const assets = compilation.getAssets().map(({ name }) => name)
 
--     const pages = pagesManifest.map(({ chunk, path, vendors, data }) => {
-+     const pages = pagesManifest.map(({ chunk, path, scripts, vendors, data }) => {
-+       if (scripts) return { path, scripts, data }
-
-        const script = assets.find(name => name.includes(`/${chunk}.`) && name.endsWith('.js'))
-        const vendorScripts = vendors
-          ? assets.filter(name => vendors.find(vendor => name.includes(`/${vendor}.`) && name.endsWith('.js')))
-          : []
+      const pages = pagesManifest.map(({ chunk, path, data }) => {
+        const scripts = assets.filter(name => new RegExp(`[/.]${chunk}\\.(.+)\\.js$`).test(name))
 
         if (data && !Array.isArray(data)) data = [data]
 
-        return { path, scripts: [script, ...vendorScripts], data }
+        return { path, scripts, data }
       })
 
 +     axios.post({ url: 'https://...', data: pages })
-+     // OR
+      // OR
 +     fs.writeFileSync('.../some-path', pages)
 
       return htmlTemplate(pages)
