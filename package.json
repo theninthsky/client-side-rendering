@@ -1,6 +1,9 @@
 {
   "name": "client-side-rendering",
   "version": "1.0.0",
+  "engines": {
+    "node": "^16"
+  },
   "scripts": {
     "start": "webpack serve --mode development",
     "prebuild": "npm-run-all -p fetch-static create-sitemap",
