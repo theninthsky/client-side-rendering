@@ -1,4 +1,4 @@
-module.exports = pages => `
+module.exports = ({ path, scripts, data }) => `
   <!DOCTYPE html>
   <html lang="en">
     <head>
@@ -14,60 +14,40 @@ module.exports = pages => `
       <title>Client-side Rendering</title>
 
       <script>
-        const isStructureEqual = (pathname, path) => {
-          pathname = pathname.split('/')
-          path = path.split('/')
-
-          if (pathname.length !== path.length) return false
-
-          return pathname.every((segment, ind) => segment === path[ind] || path[ind].includes(':'))
-        }
-
         let { pathname } = window.location
 
         if (pathname !== '/') pathname = pathname.replace(/\\/$/, '')
 
-        const pages = ${JSON.stringify(pages)}
+        const path = '${path}'
+        const data = ${JSON.stringify(data)}
 
-        for (const { path, scripts, data } of pages) {
-          const match = pathname === path || (path.includes(':') && isStructureEqual(pathname, path))
-      
-          if (!match) continue
-          
-          scripts.forEach(script => {
-            document.head.appendChild(
-              Object.assign(document.createElement('link'), { rel: 'preload', href: '/' + script, as: 'script' })
-            )
-          })
-
-          if (!data) break
-          
+        if (data) {
           data.forEach(({ url, dynamicPathIndexes, crossorigin, preconnectURL }) => {
             let fullURL = url
             
             if (dynamicPathIndexes) {
               const pathnameArr = pathname.split('/')
               const dynamics = dynamicPathIndexes.map(index => pathnameArr[index])
-
+  
               let counter = 0
               
               fullURL = url.replace(/\\$/g, match => dynamics[counter++])
             }
-
+  
             document.head.appendChild(
               Object.assign(document.createElement('link'), { rel: 'preload', href: fullURL, as: 'fetch', crossOrigin: crossorigin })
             )
-
+  
             if (preconnectURL) {
               document.head.appendChild(
                 Object.assign(document.createElement('link'), { rel: 'preconnect', href: preconnectURL })
               )
             }
           })
-
-          break
         }
       </script>
+
+      ${scripts.map(({ name, source }) => `<script id="${name}" type="module">${source}</script>`).join('\n')}
     </head>
     <body>
       <noscript>You need to enable JavaScript to run this app.</noscript>
