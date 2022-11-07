@@ -18,7 +18,7 @@
     "@emotion/react": "^11.9.0",
     "@emotion/styled": "^11.9.0",
     "@mui/material": "^5.6.2",
-    "frontend-essentials": "^5.0.1",
+    "frontend-essentials": "^6.0.0",
     "lodash": "^4.17.20",
     "moment": "^2.29.3",
     "react": "^18.0.0",
