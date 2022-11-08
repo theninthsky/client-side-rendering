@@ -90,25 +90,27 @@ module.exports = (_, { mode }) => {
       ...(production ? [] : [new ReactRefreshPlugin()]),
       ...(production ? [] : [new ForkTsCheckerPlugin()]),
       new ESLintPlugin(),
-      ...pagesManifest.map(
-        ({ chunk, path, data }) =>
-          new HtmlPlugin({
-            filename: `${path.slice(1).replace(':', '') || 'index'}.html`,
-            inject: false,
-            templateContent: ({ htmlWebpackPlugin, compilation }) => {
-              const assets = compilation.getAssets()
-              const mainAssets = htmlWebpackPlugin.files.js.map(file => decodeURIComponent(file).slice(1))
-              const scripts = [
-                ...mainAssets.map(asset => assets.find(({ name }) => asset === name)),
-                ...assets.filter(({ name }) => new RegExp(`[/.]${chunk}\\.(.+)\\.js$`).test(name))
-              ].map(({ name, source }) => ({ name, source: source._children[0]._value }))
+      new HtmlPlugin({
+        inject: false,
+        templateContent: ({ htmlWebpackPlugin, compilation }) => {
+          const assets = compilation.getAssets()
+          const mainScripts = htmlWebpackPlugin.files.js
+            .map(script => assets.find(({ name }) => decodeURIComponent(script).slice(1) === name))
+            .map(({ name, source }) => ({ name, source: source._children[0]._value }))
 
-              if (data && !Array.isArray(data)) data = [data]
+          const pages = pagesManifest.map(({ chunk, path, data }) => {
+            const scripts = assets
+              .filter(({ name }) => new RegExp(`[/.]${chunk}\\.(.+)\\.js$`).test(name))
+              .map(({ name }) => name)
 
-              return htmlTemplate({ path, scripts, data })
-            }
+            if (data && !Array.isArray(data)) data = [data]
+
+            return { path, scripts, data }
           })
-      ),
+
+          return htmlTemplate(mainScripts, pages)
+        }
+      }),
       new CopyPlugin({
         patterns: [
           {
