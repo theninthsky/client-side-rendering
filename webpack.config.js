@@ -99,7 +99,7 @@ module.exports = (_, { mode }) => {
               const assets = compilation.getAssets()
               const mainAssets = htmlWebpackPlugin.files.js.map(file => decodeURIComponent(file).slice(1))
               const scripts = [
-                ...assets.filter(({ name }) => mainAssets.includes(name)),
+                ...mainAssets.map(asset => assets.find(({ name }) => asset === name)),
                 ...assets.filter(({ name }) => new RegExp(`[/.]${chunk}\\.(.+)\\.js$`).test(name))
               ].map(({ name, source }) => ({ name, source: source._children[0]._value }))
 
