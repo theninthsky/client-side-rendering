@@ -26,6 +26,8 @@ This project is a case study of CSR, it aims to explore the potential of client-
     - [Preventing Sequenced Rendering](#preventing-sequenced-rendering)
     - [Transitioning Async Pages](#transitioning-async-pages)
     - [Prefetching Async Pages](#prefetching-async-pages)
+    - [Interim Summary](#interim-summary)
+    - [Achieving Perfection](#achieving-perfection)
   - [Deploying](#deploying)
   - [Benchmark](#benchmark)
   - [Areas for Improvement](#areas-for-improvement)
@@ -38,7 +40,6 @@ This project is a case study of CSR, it aims to explore the potential of client-
   - [Social Media Share Previews](#social-media-share-previews)
 - [CSR vs. SSR](#csr-vs-ssr)
   - [SSR Disadvantages](#ssr-disadvantages)
-  - [Inlining CSS](#inlining-css)
   - [Why Not SSG?](#why-not-ssg)
   - [The Cost of Hydration](#the-cost-of-hydration)
   - [The Problem With Streaming SSR](#the-problem-with-streaming-ssr)
@@ -630,7 +631,8 @@ We can do this by writing a wrapper function around React's _lazy_ function:
 import { lazy } from 'react'
 
 const lazyPrefetch = chunk => {
-  window.addEventListener('load', () => setTimeout(chunk, 200), { once: true })
+  if (window.requestIdleCallback) window.requestIdleCallback(chunk)
+  else window.addEventListener('load', () => setTimeout(chunk, 500), { once: true })
 
   return lazy(chunk)
 }
@@ -648,7 +650,112 @@ export default lazyPrefetch
 + const Pokemon = lazyPrefetch(() => import(/* webpackChunkName: "pokemon" */ 'pages/Pokemon'))
 ```
 
-Now all pages will be prefetched (but not executed) 200ms after the browser's _load_ event.
+Now all pages will be prefetched (but not executed) before the user is even trying to interact with them.
+
+### Interim Summary
+
+Up until now we've managed the make our app well-splitted, extremely cachable, with fluid navigations between async pages and with page and data preloads.
+<br>
+From this point forward we are going to level it up one last time, with a method that is a little less conservative but with great benefit in terms of performance.
+
+The code so far can be found in the _[before-script-inlining](https://github.com/theninthsky/client-side-rendering/tree/before-script-inlining)_ branch.
+
+### Achieving Perfection
+
+When inspecting our 43kb `react-dom.js` file, we can see that the time it took for the request to return was 128ms while the time it took to download the file was 9ms:
+
+![RTT vs Download](images/rtt-vs-download.png)
+
+This proves to us the well-known fact that RTT (and not download speed) has the most impact on web pages load times, even when served from a nearby CDN edge.
+
+Additionally, we can see that after the `index.html` file is downloaded, we have a large timespan where the browser does nothing and just waits for the scripts to be download:
+
+![Browser Idle Period](images/browser-idle-period.png)
+
+This is a lot of precious time (marked in green) that the browser could use to execute scripts and speed up the page's visibility (and interactivity).
+
+The way we can eliminate both of these problems is by inlining the render-critical scripts right into the `index.html`:
+
+```diff
+optimization: {
+  runtimeChunk: 'single',
+  splitChunks: {
+-   chunks: 'initial',
++   chunks: 'async',
+    minSize: 40000,
+    cacheGroups: {
+      vendor: {
+        test: /[\\/]node_modules[\\/]/,
+        name: (module, chunks) => {
+          const allChunksNames = chunks.map(({ name }) => name).join('.')
+          const moduleName = (module.context.match(/[\\/]node_modules[\\/](.*?)([\\/]|$)/) || [])[1]
+
+          return `${moduleName}.${allChunksNames}`
+        }
+      }
+    }
+  }
+}
+```
+
+```diff
+new HtmlPlugin({
+- scriptLoading: 'module',
++ inject: false,
+- templateContent: ({ compilation }) => {
++ templateContent: ({ htmlWebpackPlugin, compilation }) => {
+-   const assets = compilation.getAssets().map(({ name }) => name)
++   const assets = compilation.getAssets()
++   const initialScripts = htmlWebpackPlugin.files.js
++           .map(script => assets.find(({ name }) => decodeURIComponent(script).slice(1) === name))
++           .map(({ name, source }) => ({ name, source: source._children[0]._value }))
+
+    const pages = pagesManifest.map(({ chunk, path, data }) => {
+      const scripts = assets.filter(name => new RegExp(`[/.]${chunk}\\.(.+)\\.js$`).test(name))
+
+      if (data && !Array.isArray(data)) data = [data]
+
+      return { path, scripts, data }
+    })
+
+-   return htmlTemplate(pages)
++   return htmlTemplate(initialScripts, pages)
+  }
+})
+```
+
+```diff
+- module.exports = pages => `
++ module.exports = (initialScripts, pages) => `
+    <!DOCTYPE html>
+    <html lang="en">
+      <head>
+        .
+        .
+        .
+
++       ${initialScripts.map(({ name, source }) => `<script id="${name}" type="module">${source}</script>`).join('\n')}
+      </head>
+      <body>
+        <div id="root"></div>
+      </body>
+    </html>
+`
+```
+
+Now the browser will get its initial scripts without having to send another request for the CDN.
+<br>
+And since the `index.html` is streamed, the browser will execute the scripts as soon as it gets them, without having to wait for the entire file to download.
+
+While might make a noticeable difference on fast networks, this is especially critical for slower networks, where the delay is much larger and so the RTT is much more impactful:
+
+![Inlined Scripts Fast 3G](images/inlined-scripts-fast-3g.png)
+
+We can see that the async chunks start to download (marked in blue) almost immidiately after the `index.html` finishes downloading (and even parsing, which saves a lot of time).
+
+Note that we do not inline the async chunks since that would force us to generate multiple HTML documents, one for each page (and so losing the _304 Not Modified_ status returned by a single HTML). In addition, this would negatively impact the Total Blocking Time of the page.
+
+This inlining method has only one disadvantage: the HTML file grows from about 2kb to about 100kb (depends on the implementation). However, that face that the CDN will return a _304 Not Modified_ status for later visits makes the size irrelevant.
 
 ## Deploying
 
@@ -885,27 +992,7 @@ And by doing so, we will fall short behind a CSR app's performance (as mentioned
 
 That's why choosing SSR for its "server-side data fetching" ability is a mistake - you may never know how much of the data fetching will end up in the client because of poor server performance (or inevitably large queries).
 
-A quick reminder that since we preload the data in our CSR app, we benefit in both first paint and data arrival.
-
-## Inlining CSS
-
-When we talk about SSR's render flow, we paint the following picture in our minds:
-
-_**Browser request** ===> **initial HTML arrives (page is visible)** ===> **JS arrives (page is interactive)**_.
-
-But in reality, **most SSR websites do not inline critical CSS**.
-<br>
-So the actual render flow is as follows:
-
-_**Broswer request** ===> **initial HTML arrives** ===> **CSS arrives (page is visible)** ===> **JS arrives (page is interactive)**_.
-
-This makes the SSR flow **nearly identical** to the CSR flow, the only difference is that in CSR the browser will have to wait for the JS to finish loading aswell, in order to paint the screen.
-<br>
-That's why the _[FCP](https://web.dev/fcp)_ differences between the two are marginal and sometimes even **nonexistent** (especially under fast internet connections).
-
-We have both _[Next.js](https://nextjs.org)_ and _[Remix](https://remix.run)_ websites to demonstrate the absence of critical CSS inlining.
-
-The main reasons for not extracting critical CSS are that the HTML becomes larger (delaying interactivity) and that the CSS becomes uncacheable.
+A quick reminder that since we preload the data in our CSR app, we benefit in both first paint and last paint (when the data arrives).
 
 ## Why Not SSG?
 
