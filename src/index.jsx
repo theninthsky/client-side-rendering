@@ -1,4 +1,5 @@
 import 'utils/disable-speedy'
+import 'utils/web-vitals'
 
 import { Suspense } from 'react'
 import { createRoot } from 'react-dom/client'
