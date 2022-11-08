@@ -70,12 +70,11 @@ module.exports = (_, { mode }) => {
     optimization: {
       runtimeChunk: 'single',
       splitChunks: {
-        chunks: 'initial',
+        chunks: 'async',
         minSize: 40000,
         cacheGroups: {
           vendor: {
             test: /[\\/]node_modules[\\/]/,
-            chunks: 'all',
             name: (module, chunks) => {
               const allChunksNames = chunks.map(({ name }) => name).join('.')
               const moduleName = (module.context.match(/[\\/]node_modules[\\/](.*?)([\\/]|$)/) || [])[1]
@@ -94,7 +93,7 @@ module.exports = (_, { mode }) => {
         inject: false,
         templateContent: ({ htmlWebpackPlugin, compilation }) => {
           const assets = compilation.getAssets()
-          const mainScripts = htmlWebpackPlugin.files.js
+          const initialScripts = htmlWebpackPlugin.files.js
             .map(script => assets.find(({ name }) => decodeURIComponent(script).slice(1) === name))
             .map(({ name, source }) => ({ name, source: source._children[0]._value }))
 
@@ -108,7 +107,7 @@ module.exports = (_, { mode }) => {
             return { path, scripts, data }
           })
 
-          return htmlTemplate(mainScripts, pages)
+          return htmlTemplate(initialScripts, pages)
         }
       }),
       new CopyPlugin({
