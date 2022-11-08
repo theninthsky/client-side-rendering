@@ -9,8 +9,9 @@ const Home = lazyPrefetch(() => import(/* webpackChunkName: "index" */ 'pages/Ho
 const LoremIpsum = lazyPrefetch(() => import(/* webpackChunkName: "lorem-ipsum" */ 'pages/LoremIpsum'))
 const Pokemon = lazyPrefetch(() => import(/* webpackChunkName: "pokemon" */ 'pages/Pokemon'))
 const PokemonInfo = lazyPrefetch(() => import(/* webpackChunkName: "pokemon-info" */ 'pages/PokemonInfo'))
+const WebVitals = lazyPrefetch(() => import(/* webpackChunkName: "core-web-vitals" */ 'pages/WebVitals'))
 
-const pages = [Home, LoremIpsum, Pokemon, PokemonInfo]
+const pages = [Home, LoremIpsum, Pokemon, PokemonInfo, WebVitals]
 const routes = pagesManifest.map(({ path }, ind) => {
   const Element = pages[ind]
 

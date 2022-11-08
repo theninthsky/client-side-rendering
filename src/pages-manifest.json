@@ -39,5 +39,11 @@
         "preconnectURL": "https://raw.githubusercontent.com"
       },
     "menuItem": false
+  },
+  {
+    "chunk": "core-web-vitals",
+    "path": "/web-vitals",
+    "title": "Web Vitals",
+    "description": "This page specifies the values of core web vitals."
   }
 ]
