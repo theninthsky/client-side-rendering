@@ -1,4 +1,4 @@
-module.exports = pages => `
+module.exports = (initialScripts, pages) => `
   <!DOCTYPE html>
   <html lang="en">
     <head>
@@ -68,6 +68,8 @@ module.exports = pages => `
           break
         }
       </script>
+
+      ${initialScripts.map(({ name, source }) => `<script id="${name}" type="module">${source}</script>`).join('\n')}
     </head>
     <body>
       <noscript>You need to enable JavaScript to run this app.</noscript>

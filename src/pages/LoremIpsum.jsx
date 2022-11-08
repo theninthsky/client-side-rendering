@@ -1,6 +1,5 @@
 import { Meta, useFetch } from 'frontend-essentials'
 import { css, cx } from '@emotion/css'
-import { Skeleton } from '@mui/material'
 
 import pagesManifest from 'pages-manifest.json'
 import Title from 'components/common/Title'
@@ -37,32 +36,15 @@ const LoremIpsum = () => {
       <Info className={style.info}>{description}</Info>
 
       <main className={style.main}>
-        {loremIpsum ? (
+        {loremIpsum &&
           loremIpsum.split('\n').map((paragraph, ind) => (
             <p key={ind} className={style.paragraph}>
               {paragraph}
             </p>
-          ))
-        ) : (
-          <MainSkeleton />
-        )}
+          ))}
       </main>
     </div>
   )
-}
-
-const MainSkeleton = () => {
-  return new Array(30)
-    .fill()
-    .map((_, ind) => (
-      <Skeleton
-        className={cx(style.skeleton, { [style.paragraph]: ind % 5 === 0 })}
-        key={ind}
-        variant="text"
-        height={20}
-        animation={false}
-      />
-    ))
 }
 
 const style = {

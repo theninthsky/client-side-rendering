@@ -18,7 +18,6 @@ module.exports = (_, { mode }) => {
       port: 3000,
       devMiddleware: { stats: 'errors-warnings' }
     },
-    cache: { type: 'filesystem' },
     devtool: production ? 'source-map' : 'inline-source-map',
     resolve: {
       modules: [path.resolve(__dirname, 'src'), 'node_modules'],
@@ -71,12 +70,11 @@ module.exports = (_, { mode }) => {
     optimization: {
       runtimeChunk: 'single',
       splitChunks: {
-        chunks: 'initial',
+        chunks: 'async',
         minSize: 40000,
         cacheGroups: {
           vendor: {
             test: /[\\/]node_modules[\\/]/,
-            chunks: 'all',
             name: (module, chunks) => {
               const allChunksNames = chunks.map(({ name }) => name).join('.')
               const moduleName = (module.context.match(/[\\/]node_modules[\\/](.*?)([\\/]|$)/) || [])[1]
@@ -92,19 +90,24 @@ module.exports = (_, { mode }) => {
       ...(production ? [] : [new ForkTsCheckerPlugin()]),
       new ESLintPlugin(),
       new HtmlPlugin({
-        scriptLoading: 'module',
-        templateContent: ({ compilation }) => {
-          const assets = compilation.getAssets().map(({ name }) => name)
+        inject: false,
+        templateContent: ({ htmlWebpackPlugin, compilation }) => {
+          const assets = compilation.getAssets()
+          const initialScripts = htmlWebpackPlugin.files.js
+            .map(script => assets.find(({ name }) => decodeURIComponent(script).slice(1) === name))
+            .map(({ name, source }) => ({ name, source: source._children[0]._value }))
 
           const pages = pagesManifest.map(({ chunk, path, data }) => {
-            const scripts = assets.filter(name => new RegExp(`[/.]${chunk}\\.(.+)\\.js$`).test(name))
+            const scripts = assets
+              .filter(({ name }) => new RegExp(`[/.]${chunk}\\.(.+)\\.js$`).test(name))
+              .map(({ name }) => name)
 
             if (data && !Array.isArray(data)) data = [data]
 
             return { path, scripts, data }
           })
 
-          return htmlTemplate(pages)
+          return htmlTemplate(initialScripts, pages)
         }
       }),
       new CopyPlugin({
