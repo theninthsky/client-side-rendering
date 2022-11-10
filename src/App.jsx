@@ -1,7 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
-import { lazyPrefetch } from 'frontend-essentials'
 
 import pagesManifest from 'pages-manifest.json'
+import lazyPrefetch from 'utils/lazy-prefetch'
 import Navigation from 'components/Navigation'
 import Layout from 'components/Layout'
 
