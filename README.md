@@ -650,7 +650,7 @@ export default lazyPrefetch
 + const Pokemon = lazyPrefetch(() => import(/* webpackChunkName: "pokemon" */ 'pages/Pokemon'))
 ```
 
-Now all pages will be prefetched (but not executed) before the user is even trying to interact with them.
+Now all pages will be prefetched and parsed (but not executed) before the user even tries to navigate to them.
 
 ### Interim Summary
 
