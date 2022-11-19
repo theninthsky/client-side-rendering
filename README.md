@@ -26,6 +26,7 @@ This project is a case study of CSR, it aims to explore the potential of client-
     - [Preventing Sequenced Rendering](#preventing-sequenced-rendering)
     - [Transitioning Async Pages](#transitioning-async-pages)
     - [Prefetching Async Pages](#prefetching-async-pages)
+    - [Leveraging the 304 Status Code](#leveraging-the-304-status-code)
     - [Interim Summary](#interim-summary)
     - [Achieving Perfection](#achieving-perfection)
   - [Deploying](#deploying)
@@ -652,6 +653,41 @@ export default lazyPrefetch
 
 Now all pages will be prefetched and parsed (but not executed) before the user even tries to navigate to them.
 
+### Leveraging the 304 Status Code
+
+When a static asset is returned from a CDN, it includes an `ETag` header. An ETag is the content hash of the resource.
+
+The next time the browser wants to fetch this asset, it first checks if it has stored an ETag for that asset. If it does, it sends that ETag inside an `If-None-Match` header along with the request.
+<br>
+The CDN then compares the received `If-None-Match` header with the assets' current ETag.
+<br>
+If they are different, the CDN will return a `200 Success` status code along with the new asset.
+<br>
+However, if they match, the CDN will return a `304 Not Modified` status code, notifying the browser that it can safely use its stored asset (without having to redownload it).
+
+So in a traditional CSR app, when loading a page and then reloading it, we can see that the HTML request gets a `304 Not Modified` status code (and all other assets are served from cache).
+
+The ETag is stored per route, so `/lorem-ipsum`'s and `/pokemon`'s HTML ETags will be stored under different cache entries in the browser (even if their ETags are equal).
+
+In a CSR SPA we have a single HTML file, and so the ETag that is returned from the CDN is the same for every page request.
+
+However, since the ETag is stored per route (page), the browser won't send the `If-None-Match` if no ETag exists in that route's cache entry.
+This means that for every unvisited page, the browser will get a 200 status code and will have to redownload the HTML, despite that fact that every page is the exact same HTML document.
+
+The way we can overcome this disadvantage is by redirecting every HTML request to the root route using a Service Worker:
+
+```js
+self.addEventListener('install', self.skipWaiting)
+
+self.addEventListener('fetch', event => {
+  if (event.request.destination === 'document') {
+    event.respondWith(fetch(new Request(self.registration.scope)))
+  }
+})
+```
+
+Now every page we land on will request the `/` HTML document from the CDN, making the browser send the `If-None-Match` header and get a 304 status code every single time.
+
 ### Interim Summary
 
 Up until now we've managed the make our app well-splitted, extremely cachable, with fluid navigations between async pages and with page and data preloads.
@@ -755,7 +791,7 @@ We can see that the async chunks start to download (marked in blue) almost immid
 
 Note that we do not inline the async chunks since that would force us to generate multiple HTML documents, one for each page (and so losing the _304 Not Modified_ status returned by a single HTML). In addition, this would negatively impact the Total Blocking Time of the page.
 
-This inlining method has only one disadvantage: the HTML file grows from about 2kb to about 100kb (depends on the implementation). However, that face that the CDN will return a _304 Not Modified_ status for later visits makes the size irrelevant.
+This inlining method has only one disadvantage: the HTML file grows from about 2kb to about 100kb (depends on the implementation). However, the fact that the CDN will return a _304 Not Modified_ status for later visits makes the HTML size mostly irrelevant.
 
 ## Deploying
 
@@ -1015,6 +1051,8 @@ We can also see that refreshing Next.js's [Accessibility page](https://nextjs.or
 Another example for this is JS animations - they would first appear static and start animating only when JS is loaded.
 
 There are various examples of how this delayed functionality negatively impacts the user experience, like the way some websites only show the navigation bar after JS has been loaded (since they cannot access the Local Storage to check if it has a user info entry).
+
+Another issue which can be especially critical for E-commere websites is that SSG pages might reflect outdated data (a product's price or availability for example).
 
 ## The Cost of Hydration
 
