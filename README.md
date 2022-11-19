@@ -659,7 +659,7 @@ When a static asset is returned from a CDN, it includes an `ETag` header. An ETa
 
 The next time the browser wants to fetch this asset, it first checks if it has stored an ETag for that asset. If it does, it sends that ETag inside an `If-None-Match` header along with the request.
 <br>
-The CDN then compares the received `If-None-Match` header with the assets' current ETag.
+The CDN then compares the received `If-None-Match` header with the asset's current ETag.
 <br>
 If they are different, the CDN will return a `200 Success` status code along with the new asset.
 <br>
