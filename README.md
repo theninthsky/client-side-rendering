@@ -26,9 +26,9 @@ This project is a case study of CSR, it aims to explore the potential of client-
     - [Preventing Sequenced Rendering](#preventing-sequenced-rendering)
     - [Transitioning Async Pages](#transitioning-async-pages)
     - [Prefetching Async Pages](#prefetching-async-pages)
-    - [Leveraging the 304 Status Code](#leveraging-the-304-status-code)
     - [Interim Summary](#interim-summary)
-    - [Achieving Perfection](#achieving-perfection)
+    - [Minimizing Idle Time](#minimizing-idle-time)
+    - [Leveraging the 304 Status Code](#leveraging-the-304-status-code)
   - [Deploying](#deploying)
   - [Benchmark](#benchmark)
   - [Areas for Improvement](#areas-for-improvement)
@@ -653,41 +653,6 @@ export default lazyPrefetch
 
 Now all pages will be prefetched and parsed (but not executed) before the user even tries to navigate to them.
 
-### Leveraging the 304 Status Code
-
-When a static asset is returned from a CDN, it includes an `ETag` header. An ETag is the content hash of the resource.
-
-The next time the browser wants to fetch this asset, it first checks if it has stored an ETag for that asset. If it does, it sends that ETag inside an `If-None-Match` header along with the request.
-<br>
-The CDN then compares the received `If-None-Match` header with the asset's current ETag.
-<br>
-If they are different, the CDN will return a `200 Success` status code along with the new asset.
-<br>
-However, if they match, the CDN will return a `304 Not Modified` status code, notifying the browser that it can safely use its stored asset (without having to redownload it).
-
-So in a traditional CSR app, when loading a page and then reloading it, we can see that the HTML request gets a `304 Not Modified` status code (and all other assets are served from cache).
-
-The ETag is stored per route, so `/lorem-ipsum`'s and `/pokemon`'s HTML ETags will be stored under different cache entries in the browser (even if their ETags are equal).
-
-In a CSR SPA we have a single HTML file, and so the ETag that is returned from the CDN is the same for every page request.
-
-However, since the ETag is stored per route (page), the browser won't send the `If-None-Match` if no ETag exists in that route's cache entry.
-This means that for every unvisited page, the browser will get a 200 status code and will have to redownload the HTML, despite that fact that every page is the exact same HTML document.
-
-The way we can overcome this disadvantage is by redirecting every HTML request to the root route using a Service Worker:
-
-```js
-self.addEventListener('install', self.skipWaiting)
-
-self.addEventListener('fetch', event => {
-  if (event.request.destination === 'document') {
-    event.respondWith(fetch(new Request(self.registration.scope)))
-  }
-})
-```
-
-Now every page we land on will request the `/` HTML document from the CDN, making the browser send the `If-None-Match` header and get a 304 status code every single time.
-
 ### Interim Summary
 
 Up until now we've managed the make our app well-splitted, extremely cachable, with fluid navigations between async pages and with page and data preloads.
@@ -696,7 +661,7 @@ From this point forward we are going to level it up one last time, with a method
 
 The code so far can be found in the _[before-script-inlining](https://github.com/theninthsky/client-side-rendering/tree/before-script-inlining)_ branch.
 
-### Achieving Perfection
+### Minimizing Idle Time
 
 When inspecting our 43kb `react-dom.js` file, we can see that the time it took for the request to return was 128ms while the time it took to download the file was 9ms:
 
@@ -704,13 +669,13 @@ When inspecting our 43kb `react-dom.js` file, we can see that the time it took f
 
 This proves to us the well-known fact that RTT (and not download speed) has the most impact on web pages load times, even when served from a nearby CDN edge.
 
-Additionally, we can see that after the `index.html` file is downloaded, we have a large timespan where the browser does nothing and just waits for the scripts to be download:
+Additionally, we can see that after the HTML file is downloaded, we have a large timespan where the browser does nothing and just waits for the scripts to be download:
 
 ![Browser Idle Period](images/browser-idle-period.png)
 
 This is a lot of precious time (marked in green) that the browser could use to execute scripts and speed up the page's visibility (and interactivity).
 
-The way we can eliminate both of these problems is by inlining the render-critical scripts right into the `index.html`:
+The way we can eliminate both of these problems is by inlining the render-critical scripts right into the HTML file:
 
 ```diff
 optimization: {
@@ -781,17 +746,54 @@ new HtmlPlugin({
 
 Now the browser will get its initial scripts without having to send another request for the CDN.
 <br>
-And since the `index.html` is streamed, the browser will execute the scripts as soon as it gets them, without having to wait for the entire file to download.
+And since the HTML file is streamed, the browser will execute the scripts as soon as it gets them, without having to wait for the entire file to download.
+<br>
+So the browser will first send requests for the async chunks and the preloaded data, and while they are pending, it will start downloading and executing the main scripts.
 
 While might make a noticeable difference on fast networks, this is especially critical for slower networks, where the delay is much larger and so the RTT is much more impactful:
 
 ![Inlined Scripts Fast 3G](images/inlined-scripts-fast-3g.png)
 
-We can see that the async chunks start to download (marked in blue) almost immidiately after the `index.html` finishes downloading (and even parsing, which saves a lot of time).
+We can see that the async chunks start to download (marked in blue) almost immidiately after the HTML file finishes downloading (and even parsing, which saves a lot of time).
 
-Note that we do not inline the async chunks since that would force us to generate multiple HTML documents, one for each page (and so losing the _304 Not Modified_ status returned by a single HTML). In addition, this would negatively impact the Total Blocking Time of the page.
+This inlining method has only one disadvantage: the HTML file grows from about 2kb to about 100kb (depends on the implementation). However, in the next section, we will be taking advantage of the `304 Not Modified` status code to make the HTML size mostly irrelevant.
 
-This inlining method has only one disadvantage: the HTML file grows from about 2kb to about 100kb (depends on the implementation). However, the fact that the CDN will return a _304 Not Modified_ status for later visits makes the HTML size mostly irrelevant.
+_Note that we do not inline the async chunks since that would force us to generate multiple HTML documents, one for each page (and so losing the `304 Not Modified` status returned by a single HTML). In addition, this would negatively impact the Total Blocking Time of the page._
+
+### Leveraging the 304 Status Code
+
+When a static asset is returned from a CDN, it includes an `ETag` header. An ETag is the content hash of the resource.
+
+The next time the browser wants to fetch this asset, it first checks if it has stored an ETag for that asset. If it does, it sends that ETag inside an `If-None-Match` header along with the request.
+<br>
+The CDN then compares the received `If-None-Match` header with the asset's current ETag.
+<br>
+If they are different, the CDN will return a `200 Success` status code along with the new asset.
+<br>
+However, if they match, the CDN will return a `304 Not Modified` status code, notifying the browser that it can safely use its stored asset (without having to redownload it).
+
+So in a traditional CSR app, when loading a page and then reloading it, we can see that the HTML request gets a `304 Not Modified` status code (and all other assets are served from cache).
+
+The ETag is stored per route, so `/lorem-ipsum`'s and `/pokemon`'s HTML ETags will be stored under different cache entries in the browser (even if their ETags are equal).
+
+In a CSR SPA we have a single HTML file, and so the ETag that is returned from the CDN is the same for every page request.
+
+However, since the ETag is stored per route (page), the browser won't send the `If-None-Match` if no ETag exists in that route's cache entry.
+This means that for every unvisited page, the browser will get a 200 status code and will have to redownload the HTML, despite that fact that every page is the exact same HTML document.
+
+The way we can overcome this disadvantage is by redirecting every HTML request to the root route using a Service Worker:
+
+```js
+self.addEventListener('install', self.skipWaiting)
+
+self.addEventListener('fetch', event => {
+  if (event.request.destination === 'document') {
+    event.respondWith(fetch(new Request(self.registration.scope)))
+  }
+})
+```
+
+Now every page we land on will request the `/` HTML document from the CDN, making the browser send the `If-None-Match` header and get a 304 status code every single time.
 
 ## Deploying
 
