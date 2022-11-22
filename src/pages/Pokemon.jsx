@@ -15,6 +15,10 @@ import { ApolloClient, InMemoryCache } from '@apollo/client'
 import moment from 'moment'
 import { isDate } from 'lodash'
 
+// Does nothing, is meant to bloat the page's bundle size to simulate real-life app weight
+new ApolloClient({ uri: '', cache: new InMemoryCache() })
+isDate(moment().toDate())
+
 const { title, description, data } = pagesManifest.find(({ chunk }) => chunk === 'pokemon')
 
 const Pokemon = () => {

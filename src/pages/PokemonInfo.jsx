@@ -20,6 +20,7 @@ const PokemonInfo = () => {
 
   const { data: pokemonInfo = {} } = useFetch(data.url.replace('$', nameParam), {
     uuid: `${nameParam}Info`,
+    immutable: true,
     camelCased: true
   })
 

@@ -1,5 +1,5 @@
 import { Meta, useFetch } from 'frontend-essentials'
-import { css, cx } from '@emotion/css'
+import { css } from '@emotion/css'
 
 import pagesManifest from 'pages-manifest.json'
 import Title from 'components/common/Title'
@@ -10,18 +10,19 @@ import { ApolloClient, InMemoryCache } from '@apollo/client'
 import moment from 'moment'
 import { isDate } from 'lodash'
 
+// Does nothing, is meant to bloat the page's bundle size to simulate real-life app weight
+new ApolloClient({ uri: '', cache: new InMemoryCache() })
+isDate(moment().toDate())
+
 const { title, description, data } = pagesManifest.find(({ chunk }) => chunk === 'lorem-ipsum')
 
 const LoremIpsum = () => {
   const { data: loremIpsum } = useFetch(data.url, {
     credentials: 'include',
     mode: 'no-cors',
-    uuid: 'loremIpsum'
+    uuid: 'loremIpsum',
+    immutable: true
   })
-
-  // Does nothing, is meant to bloat the page's bundle size to simulate real-life app weight
-  new ApolloClient({ uri: '', cache: new InMemoryCache() })
-  isDate(moment().toDate())
 
   return (
     <div>
