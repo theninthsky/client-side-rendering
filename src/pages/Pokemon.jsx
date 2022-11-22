@@ -23,7 +23,8 @@ const { title, description, data } = pagesManifest.find(({ chunk }) => chunk ===
 
 const Pokemon = () => {
   const { data: pokemon } = useFetch(data[0].url, {
-    uuid: 'pokemon'
+    uuid: 'pokemon',
+    immutable: true
   })
 
   // Does nothing, is meant to bloat the page's bundle size to simulate real-life app weight
