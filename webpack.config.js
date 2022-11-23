@@ -87,9 +87,15 @@ module.exports = (_, { mode }) => {
       }
     },
     plugins: [
-      ...(production ? [] : [new ReactRefreshPlugin()]),
-      ...(production ? [] : [new ForkTsCheckerPlugin()]),
-      new ESLintPlugin(),
+      ...(production
+        ? [
+            new InjectManifest({
+              include: [/scripts\/.+\.js$/],
+              exclude: [/scripts\/main\./, /scripts\/runtime\./],
+              swSrc: path.join(__dirname, 'public', 'service-worker.js')
+            })
+          ]
+        : [new ReactRefreshPlugin(), new ForkTsCheckerPlugin(), new ESLintPlugin()]),
       new HtmlPlugin({
         inject: false,
         templateContent: ({ htmlWebpackPlugin, compilation }) => {
@@ -110,11 +116,6 @@ module.exports = (_, { mode }) => {
 
           return htmlTemplate(initialScripts, pages)
         }
-      }),
-      new InjectManifest({
-        include: [/scripts\/.+\.js$/],
-        exclude: [/scripts\/main\./, /scripts\/runtime\./],
-        swSrc: path.join(__dirname, 'public', 'service-worker.js')
       }),
       new CopyPlugin({
         patterns: [
