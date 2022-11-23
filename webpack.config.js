@@ -4,6 +4,7 @@ const ReactRefreshTypeScript = require('react-refresh-typescript')
 const ForkTsCheckerPlugin = require('fork-ts-checker-webpack-plugin')
 const ESLintPlugin = require('eslint-webpack-plugin')
 const HtmlPlugin = require('html-webpack-plugin')
+const { InjectManifest } = require('workbox-webpack-plugin')
 const CopyPlugin = require('copy-webpack-plugin')
 
 const pagesManifest = require('./src/pages-manifest.json')
@@ -64,7 +65,7 @@ module.exports = (_, { mode }) => {
     output: {
       path: path.join(__dirname, 'build'),
       publicPath: '/',
-      filename: 'js/[name].[contenthash:6].js',
+      filename: 'scripts/[name].[contenthash:6].js',
       clean: true
     },
     optimization: {
@@ -109,6 +110,11 @@ module.exports = (_, { mode }) => {
 
           return htmlTemplate(initialScripts, pages)
         }
+      }),
+      new InjectManifest({
+        include: [/scripts\/.+\.js$/],
+        exclude: [/scripts\/main\./, /scripts\/runtime\./],
+        swSrc: path.join(__dirname, 'public', 'service-worker.js')
       }),
       new CopyPlugin({
         patterns: [

@@ -4,7 +4,7 @@
 /json/*
     Cache-Control: public, max-age=0, must-revalidate
 
-/js/*
+/scripts/*
     Cache-Control: public, max-age=31536000, immutable
 
 /images/*
