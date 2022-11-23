@@ -1,11 +1,11 @@
 /
-    Cache-Control: public, max-age=0, stale-while-revalidate=3600
-
-/js/*
-    Cache-Control: public, max-age=31536000, immutable
+    Cache-Control: public, max-age=0, stale-while-revalidate=86400
 
 /json/*
     Cache-Control: public, max-age=0, must-revalidate
+
+/js/*
+    Cache-Control: public, max-age=31536000, immutable
 
 /images/*
     Cache-Control: public, max-age=31536000, immutable
