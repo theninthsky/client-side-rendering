@@ -44,29 +44,29 @@ const Pokemon = () => {
       <Info className={style.info}>{description}</Info>
 
       <main className={style.main}>
-        {pokemon ? (
-          <ul className={style.list}>
-            {pokemon.results.map(({ name }) => (
+        <ul className={style.list}>
+          {pokemon ? (
+            pokemon.results.map(({ name }) => (
               <li key={name}>
                 <NavLink className={style.pokemon} to={`/pokemon/${name}`}>
                   {startCase(toLower(name))}
                 </NavLink>
               </li>
-            ))}
-          </ul>
-        ) : (
-          <MainSkeleton />
-        )}
+            ))
+          ) : (
+            <MainSkeleton />
+          )}
+        </ul>
       </main>
     </div>
   )
 }
 
 const MainSkeleton = () => {
-  return new Array(30)
+  return new Array(100)
     .fill()
     .map((_, ind) => (
-      <Skeleton className={style.skeleton} key={ind} variant="text" width={60} height={20} animation={false} />
+      <Skeleton className={style.skeleton} key={ind} variant="text" width={80} height={32} animation={false} />
     ))
 }
 
@@ -82,6 +82,7 @@ const style = {
     display: grid;
     grid-template-columns: 1fr;
     column-gap: 7.5px;
+    row-gap: 10px;
     list-style: none;
 
     @media ${DESKTOP_VIEWPORT} {
@@ -89,12 +90,10 @@ const style = {
     }
   `,
   skeleton: css`
-    margin-top: 5px;
     background-color: rgba(0, 0, 0, 0.05);
   `,
   pokemon: css`
     display: inline-block;
-    margin-top: 10px;
     text-decoration: none;
     color: inherit;
   `
