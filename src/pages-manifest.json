@@ -43,7 +43,7 @@
   {
     "chunk": "core-web-vitals",
     "path": "/web-vitals",
-    "title": "Core Web Vitals",
+    "title": "Web Vitals",
     "description": "This page specifies the values of core web vitals."
   }
 ]
