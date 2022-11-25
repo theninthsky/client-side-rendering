@@ -91,6 +91,7 @@ module.exports = (_, { mode }) => {
         ? [
             new InjectManifest({
               include: [/scripts\/.+\.js$/],
+              exclude: [/scripts\/main\./, /scripts\/runtime\./],
               swSrc: path.join(__dirname, 'public', 'service-worker.js')
             })
           ]
