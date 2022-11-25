@@ -1,6 +1,9 @@
 self.addEventListener('install', async () => {
   self.skipWaiting()
-  await Promise.all(self.__WB_MANIFEST.map(({ url }) => fetch(url)))
+
+  const asyncScripts = self.__WB_MANIFEST.filter(script => !/scripts\/(main|runtime)\./.test(script))
+
+  await Promise.all(asyncScripts.map(({ url }) => fetch(url)))
 
   const [window] = await self.clients.matchAll({ type: 'window' })
 
