@@ -18,3 +18,5 @@ createRoot(document.getElementById('root')).render(
     </Suspense>
   </BrowserRouter>
 )
+
+navigator.serviceWorker.addEventListener('message', () => window.location.reload())
