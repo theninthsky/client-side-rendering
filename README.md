@@ -32,7 +32,6 @@ This project is a case study of CSR, it aims to explore the potential of client-
   - [Deploying](#deploying)
   - [Benchmark](#benchmark)
   - [Areas for Improvement](#areas-for-improvement)
-  - [Module Federation](#module-federation)
 - [SEO](#seo)
   - [Sitemaps](#sitemaps)
   - [Indexing](#indexing)
@@ -839,47 +838,6 @@ As it turns out, performance is **not** a default in Next.js.
 - Compress assets using _[Brotli level 11](https://d33wubrfki0l68.cloudfront.net/3434fd222424236d1f0f5b4596de1480b5378156/1a5ec/assets/wp-content/uploads/2018/07/compression_estimator_jquery.jpg)_ (Cloudflare only uses level 4 to save on computing resources).
 - Use the paid _[Cloudflare Argo](https://blog.cloudflare.com/argo)_ service for even better response times.
 
-## Module Federation
-
-Applying the same preloading principles in a Module Federation project should be relatively simple:
-
-1. We generate a `pages-manifest.json` file in every micro-frontend.
-2. When deploying a micro-frontend, we extract the asset-injected _pages_ constant:
-
-```diff
-plugins: [
-  new HtmlPlugin({
-    scriptLoading: 'module',
-    templateContent: ({ compilation }) => {
-      const assets = compilation.getAssets().map(({ name }) => name)
-
-      const pages = pagesManifest.map(({ chunk, path, data }) => {
-        const scripts = assets.filter(name => new RegExp(`[/.]${chunk}\\.(.+)\\.js$`).test(name))
-
-        if (data && !Array.isArray(data)) data = [data]
-
-        return { path, scripts, data }
-      })
-
-+     axios.post({ url: 'https://...', data: pages })
-      // OR
-+     fs.writeFileSync('.../some-path', pages)
-
-      return htmlTemplate(pages)
-    }
-  })
-]
-```
-
-3. We merge the the _pages_ array with the shell's `pages-manifest.json` file.
-4. We deploy the shell.
-
-We will also have to write additional code to preload the `remoteEntry.js` files.
-
-Using this method, every time a micro-frontend is deployed, the shell has to be deployed aswell.
-<br>
-However, if we have more control over the build files in production, we could spare the shell's rebuild and deployment by manually editing its `index.html` file and merging the micro-frontend's `pages` array with the `pages` constant.
-
 # SEO
 
 ## Sitemaps
@@ -958,7 +916,7 @@ We have two options when it comes to prerendering:
 
 2. We can deploy our own prerender server using free open-source tools such as _[Prerender](https://github.com/prerender/prerender)_ and _[Rendertron](https://github.com/GoogleChrome/rendertron)_.
 
-Then we redirect web crawlers (identified by their `User-Agent` header string) to our prerendered pages using Cloudflare Workers: _[public/\_worker.js](public/_worker.js)_.
+Then we redirect web crawlers (identified by their `User-Agent` header string) to our prerendered pages using a Cloudflare worker: _[public/\_worker.js](public/_worker.js)_.
 
 _Prerendering_, also called _Dynamic Rendering_, is encouraged by _[Google](https://developers.google.com/search/docs/advanced/javascript/dynamic-rendering)_ and _[Microsoft](https://blogs.bing.com/webmaster/october-2018/bingbot-Series-JavaScript,-Dynamic-Rendering,-and-Cloaking-Oh-My)_.
 
