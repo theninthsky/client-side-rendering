@@ -1,6 +1,6 @@
 [
   {
-    "chunk": "index",
+    "chunk": "home",
     "path": "/",
     "title": "Home",
     "description": "This page demonstrates a large amount of components that are rendered on the screen."
