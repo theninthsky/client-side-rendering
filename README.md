@@ -26,9 +26,9 @@ This project is a case study of CSR, it aims to explore the potential of client-
     - [Preventing Sequenced Rendering](#preventing-sequenced-rendering)
     - [Transitioning Async Pages](#transitioning-async-pages)
     - [Prefetching Async Pages](#prefetching-async-pages)
-    - [Interim Summary](#interim-summary)
     - [Minimizing Idle Time](#minimizing-idle-time)
     - [Leveraging the 304 Status Code](#leveraging-the-304-status-code)
+    - [Interim Summary](#interim-summary)
   - [Deploying](#deploying)
   - [Benchmark](#benchmark)
   - [Areas for Improvement](#areas-for-improvement)
@@ -652,14 +652,6 @@ export default lazyPrefetch
 
 Now all pages will be prefetched and parsed (but not executed) before the user even tries to navigate to them.
 
-### Interim Summary
-
-Up until now we've managed the make our app well-splitted, extremely cachable, with fluid navigations between async pages and with page and data preloads.
-<br>
-From this point forward we are going to level it up one last time, with a method that is a little less conservative but with great benefit in terms of performance.
-
-The code so far can be found in the _[before-script-inlining](https://github.com/theninthsky/client-side-rendering/tree/before-script-inlining)_ branch.
-
 ### Minimizing Idle Time
 
 When inspecting our 43kb `react-dom.js` file, we can see that the time it took for the request to return was 128ms while the time it took to download the file was 9ms:
@@ -743,9 +735,7 @@ new HtmlPlugin({
 `
 ```
 
-Now the browser will get its initial scripts without having to send another request for the CDN.
-<br>
-And since the HTML file is streamed, the browser will execute the scripts as soon as it gets them, without having to wait for the entire file to download.
+Now the browser will get its initial scripts without having to send another request to the CDN. And since the HTML file is streamed, the browser will execute the scripts as soon as it gets them, without having to wait for the entire file to download.
 <br>
 So the browser will first send requests for the async chunks and the preloaded data, and while they are pending, it will start downloading and executing the main scripts.
 
@@ -792,7 +782,15 @@ self.addEventListener('fetch', event => {
 })
 ```
 
-Now every page we land on will request the `/` HTML document from the CDN, making the browser send the `If-None-Match` header and get a 304 status code every single time.
+Now every page we land on will request the root (`/`) HTML document from the CDN, making the browser send the `If-None-Match` header and get a 304 status code for every single route.
+
+### Interim Summary
+
+Up until now we've managed the make our app well-splitted, extremely cachable, with fluid navigations between async pages and with page and data preloads.
+<br>
+From this point forward we are going to level it up one last time using a method that is a little more extreme but with unmatched benefits in terms of performance.
+
+The code so far can be found in the _[before-swr](https://github.com/theninthsky/client-side-rendering/tree/before-swr)_ branch.
 
 ## Deploying
 
