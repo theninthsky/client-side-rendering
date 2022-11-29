@@ -800,10 +800,10 @@ When using server-side rendering, it is most common to fetch the (dynamic) data 
 This practice has a lot of sense to it, and fetching data on the browser will make the choice of using SSR completely unreasonable (it even falls behind CSR's performance since the fetch will occur only after the entire hydration process is finished).
 
 However, inlining the data in the HTML has one major flaw: it eliminates the natural seperation between the app and the dynamic data.
-
-The implications of this can be seen when trying to serve users cached pages:
 <br>
-It's obvious that we would like our app to load fast for all of our user. But since every user has a different connection speed, some users will see their requested pages only after several seconds.
+The implications of this can be seen when trying to serve users cached pages.
+
+It's obvious that we want our app to load fast for every user and especially for returning users. But since every user has a different connection speed, some users will see their requested pages only after several seconds.
 <br>
 In addition, even those with fast interent connection will have to pay the price of the initial connection before even starting to download their desired page:
 
