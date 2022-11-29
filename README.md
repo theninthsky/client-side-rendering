@@ -43,7 +43,6 @@ This project is a case study of CSR, it aims to explore the potential of client-
   - [SSR Disadvantages](#ssr-disadvantages)
   - [Why Not SSG?](#why-not-ssg)
   - [The Cost of Hydration](#the-cost-of-hydration)
-  - [The Problem With Streaming SSR](#the-problem-with-streaming-ssr)
 - [Conclusion](#conclusion)
   - [What Might Change in the Future](#what-might-change-in-the-future)
 
@@ -1066,28 +1065,6 @@ In other words, where SSR should have had a performance edge over CSR, we see a 
 
 It is impossible for this issue to occur in CSR apps, since the moment they render - JS has already been fully loaded.
 
-## The Problem With Streaming SSR
-
-As mentioned before, fetching data on the server is generally a bad idea, since the page won’t be visible to the user until the HTML document is returned from the server. In other words, server-side fetching couples the API server’s (or database) performance with the _[TTFB](https://web.dev/ttfb)_.
-
-However, when moving to client-side fetching, we encounter a different issue: the data request will be sent by the browser only after it finishes downloading, parsing and executing the scripts. So while we get a low TTFB metric, we also get a high _[LCP](https://web.dev/lcp)_ metric.
-
-The recently (re)emerging and anticipated solution for these issues is called _[Streaming SSR](https://shopify.dev/custom-storefronts/hydrogen/framework/streaming-ssr)_.
-<br>
-Streaming SSR solves both of the above issues by sending a partially rendered HTML to the browser (so the user sees the entire app without the data) and when the data is fetched server-side - it is sent to the client so the user can see the complete page.
-
-![SSR Streaming](images/ssr-streaming.gif)
-
-A detailed explanation can be found here: https://dev.to/ryansolid/server-rendering-in-javascript-optimizing-performance-1jnk
-
-This approach combines both sever-side fetching’s and client-side fetching’s advantages by giving the user low TTFB and LCP metrics.
-
-However, both client-side fetching and streaming SSR completely contradict the most important reason for using SSR: the SEO.
-<br>
-Basically, when using these approaches we inherit the exact same disadvantages of CSR in terms of SEO: the data does not exist in the initial HTML document and so it will not be indexed by web crawlers who cannot render JS (all except Googlebot). And so we are forced to use prerendering just like in normal CSR apps.
-
-Further reading: https://github.com/reactwg/react-18/discussions/37#discussioncomment-842671
-
 # Conclusion
 
 We saw that client-side rendering performance is on par and sometimes even better than SSR in terms of loading times.
@@ -1100,8 +1077,10 @@ These facts lead to the conclusion that there is no particular reason to use SSR
 
 ## What Might Change in the Future
 
-As time passes, connection speed gets better and end-user devices get stronger. So the performance differences between all mentioned rendering methods are guarenteed to be mitigated even further.
+As time passes, [connection speed is getting faster](https://worldpopulationreview.com/country-rankings/internet-speeds-by-country) and end-user devices get stronger. So the performance differences between all possible website rendering methods are guarenteed to be mitigated even further.
 <br>
-However, it is worth mentioning that _[Qwik](https://qwik.builder.io)_ is an interesting change that comes from the SSR world.
+However, it is worth mentioning that _[Qwik](https://qwik.builder.io)_ is an interesting change that comes from the SSR world (although it is still in beta).
+<br>
+By radically reducing the size of JS that is delivered to the browser, Qwik allows web pages to load extremely fast, without even having to "hydrate" them.
 
-This "resumability" approache aims to greatly improve SSR loading times, and it should be thoroughly tested in order to see if the performance differences will be so dramatic that it will be worth the hassel to render apps on the server.
+Nevertheless, it's important to note that nothing makes pages load faster than the SWR approach, which is only possible through client-side rendering.
