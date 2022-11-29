@@ -29,6 +29,7 @@ This project is a case study of CSR, it aims to explore the potential of client-
     - [Minimizing Idle Time](#minimizing-idle-time)
     - [Leveraging the 304 Status Code](#leveraging-the-304-status-code)
     - [Interim Summary](#interim-summary)
+    - [The Biggest Drawback of SSR](#the-biggest-drawback-of-ssr)
   - [Deploying](#deploying)
   - [Benchmark](#benchmark)
   - [Areas for Improvement](#areas-for-improvement)
@@ -782,7 +783,7 @@ self.addEventListener('fetch', event => {
 })
 ```
 
-Now every page we land on will request the root (`/`) HTML document from the CDN, making the browser send the `If-None-Match` header and get a 304 status code for every single route.
+Now every page we land on will request the root `/` HTML document from the CDN, making the browser send the `If-None-Match` header and get a 304 status code for every single route.
 
 ### Interim Summary
 
@@ -791,6 +792,32 @@ Up until now we've managed the make our app well-splitted, extremely cachable, w
 From this point forward we are going to level it up one last time using a method that is a little more extreme but with unmatched benefits in terms of performance.
 
 The code so far can be found in the _[before-swr](https://github.com/theninthsky/client-side-rendering/tree/before-swr)_ branch.
+
+### The Biggest Drawback of SSR
+
+When using server-side rendering, it is most common to fetch the (dynamic) data on the server and then "bake" it into the HTML before sending the page to the browser.
+<br>
+This practice has a lot of sense to it, and fetching data on the browser will make the choice of using SSR completely unreasonable (it even falls behind CSR's performance since the fetch will occur only after the entire hydration process is finished).
+
+However, inlining the data in the HTML has one major flaw: it eliminates the natural seperation between the app and the dynamic data.
+
+The implications of this can be seen when trying to serve users cached pages:
+<br>
+It's obvious that we would like our app to load fast for all of our user. But since every user has a different connection speed, some users will see their requested pages only after several seconds.
+<br>
+In addition, even those with fast interent connection will have to pay the price of the initial connection before even starting to download their desired page:
+
+![Connection Establishment](images/connection-establishment.png)
+
+These times differ greatly and can reach serveral hundreds of milliseconds.
+
+The only reasonable way to solve these issues is by caching pages in the browser (for example, by setting a `Max-Age` higher than `0`).
+
+But here is the problem with SSR: by doing so, users will potentailly see outdated content, since the data is inlined in the document.
+<br>
+The lack of seperation between the app and its data prevents us from using the browser's cache without risking the freshness of the data.
+
+However, in CSR apps we have complete seperation of the two, making it more than possible to cache only the app while still getting fresh data on every visit (just like native apps do).
 
 ## Deploying
 
