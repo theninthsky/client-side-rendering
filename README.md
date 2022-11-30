@@ -945,12 +945,10 @@ Then we redirect web crawlers (identified by their `User-Agent` header string) t
 _Prerendering_, also called _Dynamic Rendering_, is encouraged by _[Google](https://developers.google.com/search/docs/advanced/javascript/dynamic-rendering)_ and _[Microsoft](https://blogs.bing.com/webmaster/october-2018/bingbot-Series-JavaScript,-Dynamic-Rendering,-and-Cloaking-Oh-My)_.
 
 Using prerendering produces the **exact same** SEO results as using SSR in all search engines.
-<br>
-In fact, when using SSR with client-side data fetching, Googlebot might not wait for the data to arrive and just take a snapshot of the page. Other search engines will simply take the snapshot right away since they cannot render JS.
-<br>
-However, using prerendering, we can instruct our prerenderer to _[wait for the last request](https://github.com/prerender/prerender#waitafterlastrequest)_ before taking a snapshot, ensuring the page is crawled with its data.
 
 https://www.google.com/search?q=site:https://client-side-rendering.pages.dev
+<br>
+https://www.bing.com/search?q=site%3Ahttps%3A%2F%2Fclient-side-rendering.pages.dev
 
 ![Google Search Results](images/google-search-results.png)
 ![Google Lorem Ipsum Search Results](images/google-lorem-ipsum-search-results.png)
@@ -994,25 +992,15 @@ This, after going through prerendering, gives us the correct preview for every p
 
 ## SSR Disadvantages
 
-Here's a list of some SSR cons that should not be taken lightly:
+Here's a list of some SSR drawbacks to consider:
 
-- When moving to client-side data fetching, SSR will **always** be slower than CSR, since its document is always bigger and takes longer to download.
+- Server-side data fetching might be a bad idea in many cases, since some queries may take several hundreds of milliseconds to return (many will exceed that), and while pending, the user sees **absolutely nothing** in their browser.
+- When using client-side data fetching, SSR will **always** be slower than CSR, since its document is always bigger and takes longer to download. In addition, all web crawlers (except for Googlebot) will index the page without its data.
+- Streaming SSR also has _[some major drawbacks](https://remix.run/blog/react-server-components#zero-bundle-or-infinite-bundle)_.
 - SSR apps are always heavier than CSR apps, since every page is composed of both a fully-constructed HTML document and its scripts (used for hydration).
 - Since all images are initially included in the document, scripts and images will compete for bandwidth, causing delayed interactivity on slow networks.
 - Since accessing browser-related objects during the server render phase throws an error, some very helpful tools become unusable, while others (such as _[react-media](https://www.npmjs.com/package/react-media#server-side-rendering-ssr)_) require SSR-specific customizations.
-- SSR page responses mostly don't return a _[304 Not Modified](https://blog.hubspot.com/marketing/http-304-not-modified#:~:text=An%20HTTP%20304%20not%20modified%20status%20code%20means%20that%20the,to%20speed%20up%20page%20delivery)_ status.
-
-Let's elaborate on the first one in the list:
-<br>
-Fetching data on the server is usually a bad idea, since some queries may take several hundreds of milliseconds to return (many will exceed that), and while pending, the user will see **absolutely nothing** in their browser.
-<br>
-We can even see that Next.js's own documentation _[push you away](https://nextjs.org/docs/basic-features/data-fetching/get-server-side-props#when-should-i-use-getserversideprops)_ from server-side fetching and into client-side fetching.
-<br>
-And by doing so, we will fall short behind a CSR app's performance (as mentioned above).
-
-That's why choosing SSR for its "server-side data fetching" ability is a mistake - you may never know how much of the data fetching will end up in the client because of poor server performance (or inevitably large queries).
-
-A quick reminder that since we preload the data in our CSR app, we benefit in both first paint and last paint (when the data arrives).
+- SSR pages cannot respond with a _[304 Not Modified](https://blog.hubspot.com/marketing/http-304-not-modified#:~:text=An%20HTTP%20304%20not%20modified%20status%20code%20means%20that%20the,to%20speed%20up%20page%20delivery)_ status.
 
 ## Why Not SSG?
 
