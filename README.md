@@ -30,6 +30,8 @@ This project is a case study of CSR, it aims to explore the potential of client-
     - [Leveraging the 304 Status Code](#leveraging-the-304-status-code)
     - [Interim Summary](#interim-summary)
     - [The Biggest Drawback of SSR](#the-biggest-drawback-of-ssr)
+    - [The SWR Approach](#the-swr-approach)
+    - [Implementing SWR](#implementing-swr)
   - [Deploying](#deploying)
   - [Benchmark](#benchmark)
   - [Areas for Improvement](#areas-for-improvement)
@@ -145,7 +147,7 @@ So when the user visits the Lorem Ipsum page, they only download the main chunk 
 
 _Note: I believe that it is completely fine (and even encouraged) to have the user download your entire site (so they can have a smooth **app-like** navigation experience). But it is **very wrong** to have all the assets being downloaded **initially**, delaying the first render of the page.
 <br>
-These assets should be downloaded after the user-requested page has finished rendering and is visible to the user._
+These assets should be downloaded after the user-requested page has finished rendering and is entirely visible._
 
 ### Preloading Async Chunks
 
@@ -153,7 +155,7 @@ Code splitting has one major flaw - the runtime doesn't know these async chunks 
 
 ![Without Async Preload](images/without-async-preload.png)
 
-The way we can solve this issue is by implementing a script in the document that will be responsible of preloading assets:
+The way we can solve this issue is by implementing a script in the document that will be responsible for preloading assets:
 
 ```js
 plugins: [
@@ -808,15 +810,37 @@ In addition, even those with fast interent connection will have to pay the price
 
 ![Connection Establishment](images/connection-establishment.png)
 
-These times differ greatly and can reach serveral hundreds of milliseconds.
+These times vary greatly from serveral milliseconds to hundreds of milliseconds.
 
 The only reasonable way to solve these issues is by caching pages in the browser (for example, by setting a `Max-Age` higher than `0`).
 
 But here is the problem with SSR: by doing so, users will potentailly see outdated content, since the data is inlined in the document.
 <br>
-The lack of seperation between the app and its data prevents us from using the browser's cache without risking the freshness of the data.
+The lack of seperation between the app (also called `app shell`) and its data prevents us from using the browser's cache without risking the freshness of the data.
 
-However, in CSR apps we have complete seperation of the two, making it more than possible to cache only the app while still getting fresh data on every visit (just like native apps do).
+However, in CSR apps we have complete seperation of the two, making it more than possible to cache only the app shell while still getting fresh data on every visit (just like native apps do).
+
+### The SWR Approach
+
+We can easily implement app shell cache by setting the `Cache-Control: Max-Age=x` header of the HTML document to any value greater than 0. This way the app will load almost instantly (usually under 200ms) regardless of the user's connectivity or connection speed for the duration we set.
+
+However, the `Max-Age` attribute has one major flaw: during the set time period, the browser won't even attempt to reach the CDN, requests will be fulfilled immidiately by the cached responses. This means that no matter how many times the user reloads the page - they will always get a "stale" (potentially outdated) response.
+
+That's why the "Stale While Revalidate" (SWR) approach was invented.
+
+When using SWR, the browser is allowed to use a cached asset or response (usually for a limited time) but in the same time it sends a request for the server and asks for the newest asset. After the fresh asset is downloaded, the browser **replaces** the stale cached asset with the fresh asset, ready to be used the next time the page is loaded.
+
+This method completely surpasses any network conditions, it even allows our app to be available while offline (within the SWR chosen time period), and all of this without even compromising on the freshness of the app shell.
+
+There are two ways to achieve SWR in web applications:
+- The _[stale-while-revalidate](https://web.dev/stale-while-revalidate/#what-shipped)_ attribute.
+- A custom service worker.
+
+Although the first approach is completely usable (and can be set up within a few seconds), the second approach will give us a more granular control of how and when assets are cached and updated, so this is the approach we choose to implement.
+
+### Implementing SWR
+
+Will be added soon.
 
 ## Deploying
 
