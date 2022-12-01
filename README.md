@@ -93,7 +93,7 @@ Now, what part of our bundle comprises most of its weight? The answer is the **d
 
 So if we could split the vendors to their own hashed chunk, that would allow a separation between our code and the vendors code, leading to less cache invalidations.
 
-Let's add the following part to our `webpack.config.js` file:
+Let's add the following part to our _[webpack.config.js](webpack.config.js)_ file:
 
 ```js
 optimization: {
@@ -118,6 +118,8 @@ In such case, the entire vendors chunk's cache will invalidate.
 
 So, in order to make this even better, we will split **each dependency** to its own hashed chunk:
 
+_[webpack.config.js](webpack.config.js)_
+
 ```diff
 - name: 'vendors'
 + name: ({ context }) => (context.match(/[\\/]node_modules[\\/](.*?)([\\/]|$)/) || [])[1]
@@ -137,15 +139,17 @@ For Example, we wouldn't want users to download the _[react-big-calendar](https:
 
 The way we achieve this is (preferably) by route-based code splitting:
 
+_[App.jsx](src/App.jsx)_
+
 ```js
-const Home = lazy(() => import(/* webpackChunkName: "index" */ 'pages/Home'))
+const Home = lazy(() => import(/* webpackChunkName: "home" */ 'pages/Home'))
 const LoremIpsum = lazy(() => import(/* webpackChunkName: "lorem-ipsum" */ 'pages/LoremIpsum'))
 const Pokemon = lazy(() => import(/* webpackChunkName: "pokemon" */ 'pages/Pokemon'))
 ```
 
 So when the user visits the Lorem Ipsum page, they only download the main chunk script (which includes all shared dependencies such as the framework) and the `lorem-ipsum.[hash].js` chunk.
 
-_Note: I believe that it is completely fine (and even encouraged) to have the user download your entire site (so they can have a smooth **app-like** navigation experience). But it is **very wrong** to have all the assets being downloaded **initially**, delaying the first render of the page.
+_Note: I believe that it is completely fine (and even encouraged) to have the user download our entire site, so they can have a smooth **app-like** navigation experience. But it is **very wrong** to have all the assets being downloaded **initially**, delaying the first render of the page.
 <br>
 These assets should be downloaded after the user-requested page has finished rendering and is entirely visible._
 
@@ -156,6 +160,8 @@ Code splitting has one major flaw - the runtime doesn't know these async chunks 
 ![Without Async Preload](images/without-async-preload.png)
 
 The way we can solve this issue is by implementing a script in the document that will be responsible for preloading assets:
+
+_[webpack.config.js](webpack.config.js)_
 
 ```js
 plugins: [
@@ -175,6 +181,8 @@ plugins: [
   })
 ]
 ```
+
+_[index.js](public/index.js)_
 
 ```js
 module.exports = pages => `
@@ -226,6 +234,8 @@ But how can we create static data?
 <br>
 We will execute the following script during build time:
 
+_[fetch-static.mjs](scripts/fetch-static.mjs)_
+
 ```js
 import { mkdir, writeFile } from 'fs/promises'
 import axios from 'axios'
@@ -268,6 +278,8 @@ One of the disadvantages of CSR over SSR is that data will be fetched only after
 
 To overcome this, we will use preloading once again, this time for the data itself:
 
+_[webpack.config.js](webpack.config.js)_
+
 ```diff
 plugins: [
   new HtmlPlugin({
@@ -290,6 +302,8 @@ plugins: [
   })
 ]
 ```
+
+_[index.js](public/index.js)_
 
 ```diff
 module.exports = pages => `
@@ -376,6 +390,8 @@ So if that said dependency is `moment` and it weighs 72kb minzipped, then both a
 
 We need to split this dependency from these async chunks so that it could be shared between them:
 
+_[webpack.config.js](webpack.config.js)_
+
 ```diff
 optimization: {
   runtimeChunk: 'single',
@@ -400,6 +416,8 @@ However, we have no way of telling which async vendor chunks will be split befor
 
 That's why we will append the chunks names to the async vendor's name:
 
+_[webpack.config.js](webpack.config.js)_
+
 ```diff
 optimization: {
   runtimeChunk: 'single',
@@ -419,10 +437,10 @@ optimization: {
       }
     }
   }
-}
-```
-
-```diff
+},
+.
+.
+.
 plugins: [
   new HtmlPlugin({
     scriptLoading: 'module',
@@ -444,6 +462,8 @@ plugins: [
   })
 ]
 ```
+
+_[index.js](public/index.js)_
 
 ```diff
 module.exports = pages => `
@@ -518,6 +538,8 @@ Now all async vendor chunks will be fetched in parallel with their parent async 
 
 We can preload data when hovering over links (desktop) or when links enter the viewport (mobile):
 
+_[NavigationLink.jsx](src/components/NavigationLink.tsx)_
+
 ```js
 const createPreload = url => {
   if (document.head.querySelector(`link[href="${url}"]`)) return
@@ -561,6 +583,8 @@ We would prefer the app to be visually complete in a single render, but we would
 
 However, since we preload all async chunks (and their vendors), this won't be a problem for us. So we **should** suspend the entire app until the async chunk finishes downloading (which, in our case, happens in parallel with all the render-critical assets):
 
+_[index.jsx](src/index.jsx)_
+
 ```js
 createRoot(document.getElementById('root')).render(
   <BrowserRouter>
@@ -583,6 +607,8 @@ React 18 introduced us to the useTransition hook, which allows us to delay a ren
 <br>
 We will use this hook to delay the page's navigation until it is ready:
 
+_[useDelayedNavigate.ts](https://github.com/theninthsky/frontend-essentials/blob/main/src/hooks/useDelayedNavigate.ts)_
+
 ```js
 import { useTransition } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -596,6 +622,8 @@ const useDelayedNavigate = () => {
 
 export default useDelayedNavigate
 ```
+
+_[NavigationLink.jsx](src/components/NavigationLink.tsx)_
 
 ```js
 const NavigationLink = ({ to, onClick, children }) => {
@@ -629,6 +657,8 @@ That's why I think all pages should be prefetched ahead of time.
 
 We can do this by writing a wrapper function around React's _lazy_ function:
 
+_[lazy-prefetch.ts](https://github.com/theninthsky/frontend-essentials/blob/main/src/utils/lazy-prefetch.ts)_
+
 ```js
 import { lazy } from 'react'
 
@@ -641,6 +671,8 @@ const lazyPrefetch = chunk => {
 
 export default lazyPrefetch
 ```
+
+_[App.jsx](src/App.jsx)_
 
 ```diff
 - const Home = lazy(() => import(/* webpackChunkName: "index" */ 'pages/Home'))
@@ -670,6 +702,8 @@ This is a lot of precious time (marked in green) that the browser could use to e
 
 The way we can eliminate both of these problems is by inlining the render-critical scripts right into the HTML file:
 
+_[webpack.config.js](webpack.config.js)_
+
 ```diff
 optimization: {
   runtimeChunk: 'single',
@@ -689,10 +723,10 @@ optimization: {
       }
     }
   }
-}
-```
-
-```diff
+},
+.
+.
+.
 new HtmlPlugin({
 - scriptLoading: 'module',
 + inject: false,
@@ -717,6 +751,8 @@ new HtmlPlugin({
   }
 })
 ```
+
+_[index.js](public/index.js)_
 
 ```diff
 - module.exports = pages => `
@@ -773,6 +809,8 @@ However, since the ETag is stored per route (page), the browser won't send the `
 This means that for every unvisited page, the browser will get a 200 status code and will have to redownload the HTML, despite that fact that every page is the exact same HTML document.
 
 The way we can overcome this disadvantage is by redirecting every HTML request to the root route using a Service Worker:
+
+_[service-worker.js](public/service-worker.js)_
 
 ```js
 self.addEventListener('install', self.skipWaiting)
@@ -833,6 +871,7 @@ When using SWR, the browser is allowed to use a cached asset or response (usuall
 This method completely surpasses any network conditions, it even allows our app to be available while offline (within the SWR chosen time period), and all of this without even compromising on the freshness of the app shell.
 
 There are two ways to achieve SWR in web applications:
+
 - The _[stale-while-revalidate](https://web.dev/stale-while-revalidate/#what-shipped)_ attribute.
 - A custom service worker.
 
@@ -892,7 +931,9 @@ As it turns out, performance is **not** a default in Next.js.
 
 In order to make all of our app pages discoverable to search engines, we need to create a `sitemap.xml` file which specifies all of our website routes.
 
-Since we already have a centralized `pages-manifest.json` file, we can easily generate a sitemap during build time:
+Since we already have a centralized _[pages-manifest.json](src/pages-manifest.json)_ file, we can easily generate a sitemap during build time:
+
+_[create-sitemap.mjs](scripts/create-sitemap.mjs)_
 
 ```js
 import { Readable } from 'stream'
@@ -986,6 +1027,8 @@ When we share a CSR app link in social media, we can see that no matter what pag
 This happens because most CSR apps have only one HTML file, and social share previews do not render JS.
 <br>
 This is where prerendering comes to our aid once again, we only need to make sure to set the correct meta tags dynamically:
+
+_[Home.jsx](src/pages/Home.jsx)_
 
 ```js
 const Home = props => {
