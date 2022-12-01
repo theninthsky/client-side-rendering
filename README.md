@@ -891,7 +891,6 @@ plugins: [
     ? [
         new InjectManifest({
           include: [/scripts\/.+\.js$/],
-          exclude: [/scripts\/main\./, /scripts\/runtime\./],
           swSrc: path.join(__dirname, 'public', 'service-worker.js')
         })
       ]
@@ -902,11 +901,39 @@ plugins: [
 ]
 ```
 
+_[service-worker-registration.js](src/service-worker-registration.js)_
+
+```js
+const register = () => {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker
+      .register('/service-worker.js')
+      .then(() => console.log('Service worker registered!'))
+      .catch(err => console.error(err))
+  })
+}
+
+const unregister = () => {
+  navigator.serviceWorker.ready
+    .then(registration => registration.unregister())
+    .then(() => console.log('Service worker unregistered!'))
+    .catch(err => console.error(err))
+}
+
+if ('serviceWorker' in navigator) {
+  if (process.env.NODE_ENV === 'development') unregister()
+  else register()
+}
+```
+
 _[service-worker.js](public/service-worker.js)_
 
 ```js
 const CACHE_NAME = 'my-csr-app'
-const CACHED_URLS = ['/', ...self.__WB_MANIFEST.map(({ url }) => url)]
+const CACHED_URLS = [
+  '/',
+  ...self.__WB_MANIFEST.map(({ url }) => url).filter(script => !/scripts\/(main|runtime)\./.test(script))
+]
 const MAX_STALE_DURATION = 24 * 60 * 60
 
 const preCache = async () => {
@@ -956,6 +983,33 @@ We exclude the `main.js` and `runtime.js` scripts since we already inline them i
 Additionally, we define a `MAX_STALE_DURATION` constant to set the maximum duration we are willing for our users to see the (potentially) stale app shell.
 <br>
 The duration should be derived from how often we update (deploy) our app in production. And it's important to remember that native apps, in comparison, can sometimes be "stale" for months without being updated by the app stores.
+
+Another great thing we can add is revalidating the app while it is running:
+
+_[service-worker-registration.js](src/service-worker-registration.js)_
+
+```diff
++ const REVALIDATION_INTERVAL = 1 * 60 * 60 * 1000
+
+const register = () => {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker
+      .register('/service-worker.js')
+-     .then(() => console.log('Service worker registered!'))
++     .then(registration => {
++       console.log('Service worker registered!')
++
++       setInterval(() => registration.update(), REVALIDATION_INTERVAL)
++     })
+      .catch(err => console.error(err))
+  })
+}
+.
+.
+.
+```
+
+The code above arbitrarily revalidates the app every hour. However, we can implement a much more sophisticated revalidation process which will fire every time we deploy our app and notify all online users through _[WebSockets](https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API/Writing_WebSocket_client_applications)_ or _[SSE](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events)_.
 
 ## Deploying
 

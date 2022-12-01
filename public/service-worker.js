@@ -1,5 +1,8 @@
 const CACHE_NAME = 'client-side-rendering'
-const CACHED_URLS = ['/', ...self.__WB_MANIFEST.map(({ url }) => url)]
+const CACHED_URLS = [
+  '/',
+  ...self.__WB_MANIFEST.map(({ url }) => url).filter(script => !/scripts\/(main|runtime)\./.test(script))
+]
 const MAX_STALE_DURATION = 24 * 60 * 60
 
 const preCache = async () => {
