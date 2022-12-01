@@ -848,15 +848,15 @@ In addition, even those with fast interent connection will have to pay the price
 
 ![Connection Establishment](images/connection-establishment.png)
 
-These times vary greatly from serveral milliseconds to hundreds of milliseconds.
+These times vary greatly from serveral milliseconds to hundreds of milliseconds. And to make things even worse, browsers keep the DNS cache only for about a minute, and so this process repeats very frequently.
 
-The only reasonable way to solve these issues is by caching pages in the browser (for example, by setting a `Max-Age` higher than `0`).
+The only reasonable way to rise above these issues is by caching pages in the browser (for example, by setting a `Max-Age` value higher than `0`).
 
 But here is the problem with SSR: by doing so, users will potentailly see outdated content, since the data is inlined in the document.
 <br>
-The lack of seperation between the app (also called `app shell`) and its data prevents us from using the browser's cache without risking the freshness of the data.
+The lack of seperation between the app (also called the "app shell") and its data prevents us from using the browser's cache without risking the freshness of the data.
 
-However, in CSR apps we have complete seperation of the two, making it more than possible to cache only the app shell while still getting fresh data on every visit (just like native apps do).
+However, in CSR apps we have complete seperation of the two, making it more than possible to cache only the app shell while still getting fresh data on every visit (just like in native apps).
 
 ### The SWR Approach
 
@@ -879,13 +879,89 @@ Although the first approach is completely usable (and can be set up within a few
 
 ### Implementing SWR
 
-Will be added soon.
+Our SWR service worker needs to cache the HTML document and all of the scripts (and stylesheets) of all pages.
+<br>
+In addition, it needs to serve these cached assets right when the page loads and then send a request to the CDN, fetch all new assets (if exist) and finally replace the stale cached assets with the new ones.
+
+_[webpack.config.js](webpack.config.js)_
+
+```js
+plugins: [
+  ...(production
+    ? [
+        new InjectManifest({
+          include: [/scripts\/.+\.js$/],
+          exclude: [/scripts\/main\./, /scripts\/runtime\./],
+          swSrc: path.join(__dirname, 'public', 'service-worker.js')
+        })
+      ]
+    : []),
+.
+.
+.
+]
+```
+
+_[service-worker.js](public/service-worker.js)_
+
+```js
+const CACHE_NAME = 'my-csr-app'
+const CACHED_URLS = ['/', ...self.__WB_MANIFEST.map(({ url }) => url)]
+const MAX_STALE_DURATION = 24 * 60 * 60
+
+const preCache = async () => {
+  await caches.delete(CACHE_NAME)
+
+  const cache = await caches.open(CACHE_NAME)
+
+  await cache.addAll(CACHED_URLS)
+}
+
+const staleWhileRevalidate = async request => {
+  const documentRequest = request.destination === 'document'
+
+  if (documentRequest) request = new Request(self.registration.scope)
+
+  const cache = await caches.open(CACHE_NAME)
+  const cachedResponsePromise = await cache.match(request)
+  const networkResponsePromise = fetch(request)
+
+  if (documentRequest) {
+    networkResponsePromise.then(response => cache.put(request, response.clone()))
+
+    if ((new Date() - new Date(cachedResponsePromise?.headers.get('date'))) / 1000 > MAX_STALE_DURATION) {
+      return networkResponsePromise
+    }
+
+    return cachedResponsePromise
+  }
+
+  return cachedResponsePromise || networkResponsePromise
+}
+
+self.addEventListener('install', event => {
+  event.waitUntil(preCache())
+  self.skipWaiting()
+})
+
+self.addEventListener('fetch', event => {
+  if (['document', 'script'].includes(event.request.destination)) {
+    event.respondWith(staleWhileRevalidate(event.request))
+  }
+})
+```
+
+We exclude the `main.js` and `runtime.js` scripts since we already inline them in the HTML document.
+
+Additionally, we define a `MAX_STALE_DURATION` constant to set the maximum duration we are willing for our users to see the (potentially) stale app shell.
+<br>
+The duration should be derived from how often we update (deploy) our app in production. And it's important to remember that native apps, in comparison, can sometimes be "stale" for months without being updated by the app stores.
 
 ## Deploying
 
 The biggest advantage of a static app is that it can be served entirely from a CDN.
 <br>
-A CDN has many PoPs (Points of Presence), also called 'Edge Networks'. These PoPs are distributed around the globe and thus are able to serve files to every region **much** faster than a remote server.
+A CDN has many PoPs (Points of Presence), also called "Edge Networks". These PoPs are distributed around the globe and thus are able to serve files to every region **much** faster than a remote server.
 
 The fastest CDN to date is Cloudflare, which has more than 250 PoPs (and counting):
 
@@ -919,6 +995,8 @@ These are the results:
 ![Client-side Rendering Benchmark](images/client-side-rendering-benchmark.png)
 
 As it turns out, performance is **not** a default in Next.js.
+
+_Note that this benchmark only tests the first load of the page, without even considering how the app performs when it is fully cached._
 
 ## Areas for Improvement
 

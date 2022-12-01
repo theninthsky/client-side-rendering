@@ -1,6 +1,6 @@
 const CACHE_NAME = 'client-side-rendering'
 const CACHED_URLS = ['/', ...self.__WB_MANIFEST.map(({ url }) => url)]
-const MAX_STALE_DURATION = 86400
+const MAX_STALE_DURATION = 24 * 60 * 60
 
 const preCache = async () => {
   await caches.delete(CACHE_NAME)
