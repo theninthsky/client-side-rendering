@@ -1000,7 +1000,7 @@ The results exceed all expectations:
 
 ![SWR Disk Cache](images/swr-disk-cache.png)
 
-These are coming from a 5-year-old `Intel i3-8130U` laptop when the browser is using the disk cache (not the memory cache which is a lot faster).
+These metrics are coming from a 5-year-old `Intel i3-8130U` laptop when the browser is using the disk cache (not the memory cache which is a lot faster), and are completely independent of network speed or status.
 
 Some users leave the app open for extended periods, so another great thing we can add is revalidating the app while it is running:
 
