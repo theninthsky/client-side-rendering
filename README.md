@@ -675,11 +675,11 @@ export default lazyPrefetch
 _[App.jsx](src/App.jsx)_
 
 ```diff
-- const Home = lazy(() => import(/* webpackChunkName: "index" */ 'pages/Home'))
+- const Home = lazy(() => import(/* webpackChunkName: "home" */ 'pages/Home'))
 - const LoremIpsum = lazy(() => import(/* webpackChunkName: "lorem-ipsum" */ 'pages/LoremIpsum'))
 - const Pokemon = lazy(() => import(/* webpackChunkName: "pokemon" */ 'pages/Pokemon'))
 
-+ const Home = lazyPrefetch(() => import(/* webpackChunkName: "index" */ 'pages/Home'))
++ const Home = lazyPrefetch(() => import(/* webpackChunkName: "home" */ 'pages/Home'))
 + const LoremIpsum = lazyPrefetch(() => import(/* webpackChunkName: "lorem-ipsum" */ 'pages/LoremIpsum'))
 + const Pokemon = lazyPrefetch(() => import(/* webpackChunkName: "pokemon" */ 'pages/Pokemon'))
 ```
@@ -978,13 +978,31 @@ self.addEventListener('fetch', event => {
 })
 ```
 
+_[App.jsx](src/App.jsx)_
+
+```diff
+- const Home = lazyPrefetch(() => import(/* webpackChunkName: "home" */ 'pages/Home'))
+- const LoremIpsum = lazyPrefetch(() => import(/* webpackChunkName: "lorem-ipsum" */ 'pages/LoremIpsum'))
+- const Pokemon = lazyPrefetch(() => import(/* webpackChunkName: "pokemon" */ 'pages/Pokemon'))
+
++ const Home = lazy(() => import(/* webpackChunkName: "home" */ 'pages/Home'))
++ const LoremIpsum = lazy(() => import(/* webpackChunkName: "lorem-ipsum" */ 'pages/LoremIpsum'))
++ const Pokemon = lazy(() => import(/* webpackChunkName: "pokemon" */ 'pages/Pokemon'))
+```
+
 We exclude the `main.js` and `runtime.js` scripts since we already inline them in the HTML document.
 
 Additionally, we define a `MAX_STALE_DURATION` constant to set the maximum duration we are willing for our users to see the (potentially) stale app shell.
 <br>
 The duration should be derived from how often we update (deploy) our app in production. And it's important to remember that native apps, in comparison, can sometimes be "stale" for months without being updated by the app stores.
 
-Another great thing we can add is revalidating the app while it is running:
+The results exceed all expectations:
+
+![SWR Disk Cache](images/swr-disk-cache.png)
+
+These are coming from a 5-year-old `Intel i3-8130U` laptop when the browser is using the disk cache (not the memory cache which is a lot faster).
+
+Some users leave the app open for extended periods, so another great thing we can add is revalidating the app while it is running:
 
 _[service-worker-registration.js](src/service-worker-registration.js)_
 
@@ -1009,7 +1027,7 @@ const register = () => {
 .
 ```
 
-The code above arbitrarily revalidates the app every hour. However, we can implement a much more sophisticated revalidation process which will fire every time we deploy our app and notify all online users through _[WebSockets](https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API/Writing_WebSocket_client_applications)_ or _[SSE](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events)_.
+The code above arbitrarily revalidates the app every hour. However, we could implement a much more sophisticated revalidation process which will run every time we deploy our app and notify all online users through _[SSE](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events)_ or _[WebSockets](https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API/Writing_WebSocket_client_applications)_.
 
 ## Deploying
 
