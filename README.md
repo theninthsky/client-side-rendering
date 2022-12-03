@@ -1204,11 +1204,12 @@ _Prerendering_, also called _Dynamic Rendering_, is encouraged by _[Google](http
 Using prerendering produces the **exact same** SEO results as using SSR in all search engines.
 
 https://www.google.com/search?q=site:https://client-side-rendering.pages.dev
-<br>
-https://www.bing.com/search?q=site%3Ahttps%3A%2F%2Fclient-side-rendering.pages.dev
 
 ![Google Search Results](images/google-search-results.png)
 ![Google Lorem Ipsum Search Results](images/google-lorem-ipsum-search-results.png)
+
+https://www.bing.com/search?q=site%3Ahttps%3A%2F%2Fclient-side-rendering.pages.dev
+
 ![Bing Search Results](images/bing-search-results.png)
 
 In addition, cached pages will have unbelievably fast response times, which might positively affect their SEO score.
