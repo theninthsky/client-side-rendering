@@ -46,10 +46,6 @@ self.addEventListener('fetch', event => {
   }
 })
 
-self.addEventListener('periodicsync', async event => {
-  if (event.tag === 'revalidate-assets') {
-    const { status } = await fetch('/')
-
-    if (status !== 304) event.waitUntil(preCache())
-  }
+self.addEventListener('periodicsync', event => {
+  if (event.tag === 'revalidate-assets') event.waitUntil(preCache())
 })

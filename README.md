@@ -908,19 +908,27 @@ _[service-worker-registration.js](src/service-worker-registration.js)_
 
 ```js
 const register = () => {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker
-      .register('/service-worker.js')
-      .then(() => console.log('Service worker registered!'))
-      .catch(err => console.error(err))
+  window.addEventListener('load', async () => {
+    try {
+      await navigator.serviceWorker.register('/service-worker.js')
+
+      console.log('Service worker registered!')
+    } catch (err) {
+      console.error(err)
+    }
   })
 }
 
-const unregister = () => {
-  navigator.serviceWorker.ready
-    .then(registration => registration.unregister())
-    .then(() => console.log('Service worker unregistered!'))
-    .catch(err => console.error(err))
+const unregister = async () => {
+  try {
+    const registration = await navigator.serviceWorker.ready
+
+    await registration.unregister()
+
+    console.log('Service worker unregistered!')
+  } catch (err) {
+    console.error(err)
+  }
 }
 
 if ('serviceWorker' in navigator) {
@@ -1010,19 +1018,20 @@ Some users leave the app open for extended periods, so another great thing we ca
 _[service-worker-registration.js](src/service-worker-registration.js)_
 
 ```diff
-+ const REVALIDATION_INTERVAL = 1 * 60 * 60
++ const ACTIVE_REVALIDATION_INTERVAL = 1 * 60 * 60
 
 const register = () => {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker
-      .register('/service-worker.js')
--     .then(() => console.log('Service worker registered!'))
-+     .then(registration => {
-+       console.log('Service worker registered!')
-+
-+       setInterval(() => registration.update(), REVALIDATION_INTERVAL * 1000)
-+     })
-      .catch(err => console.error(err))
+  window.addEventListener('load', async () => {
+    try {
+-     await navigator.serviceWorker.register('/service-worker.js')
++     const registration = await navigator.serviceWorker.register('/service-worker.js')
+
+      console.log('Service worker registered!')
+
++     setInterval(() => registration.update(), ACTIVE_REVALIDATION_INTERVAL * 1000)
+    } catch (err) {
+      console.error(err)
+    }
   })
 }
 .
