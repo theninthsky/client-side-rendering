@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 
-const REVALIDATION_INTERVAL = 1 * 60 * 60 * 1000
+const REVALIDATION_INTERVAL = 1 * 60 * 60
 
 const register = () => {
   window.addEventListener('load', () => {
@@ -9,7 +9,7 @@ const register = () => {
       .then(registration => {
         console.log('Service worker registered!')
 
-        setInterval(() => registration.update(), REVALIDATION_INTERVAL)
+        setInterval(() => registration.update(), REVALIDATION_INTERVAL * 1000)
       })
       .catch(err => console.error(err))
   })

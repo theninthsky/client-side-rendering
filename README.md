@@ -17,7 +17,7 @@ This project is a case study of CSR, it aims to explore the potential of client-
   - [Bundle Size](#bundle-size)
   - [Caching](#caching)
   - [Code Splitting](#code-splitting)
-  - [Preloading Async Chunks](#preloading-async-chunks)
+  - [Preloading Async Pages](#preloading-async-pages)
   - [Generating Static Data](#generating-static-data)
   - [Preloading Data](#preloading-data)
   - [Tweaking Further](#tweaking-further)
@@ -28,10 +28,11 @@ This project is a case study of CSR, it aims to explore the potential of client-
     - [Prefetching Async Pages](#prefetching-async-pages)
     - [Minimizing Idle Time](#minimizing-idle-time)
     - [Leveraging the 304 Status Code](#leveraging-the-304-status-code)
-    - [Interim Summary](#interim-summary)
-    - [The Biggest Drawback of SSR](#the-biggest-drawback-of-ssr)
-    - [The SWR Approach](#the-swr-approach)
-    - [Implementing SWR](#implementing-swr)
+  - [Interim Summary](#interim-summary)
+  - [The Biggest Drawback of SSR](#the-biggest-drawback-of-ssr)
+  - [The SWR Approach](#the-swr-approach)
+  - [Implementing SWR](#implementing-swr)
+  - [Revalidating Installed Apps](#revalidating-installed-apps)
   - [Deploying](#deploying)
   - [Benchmark](#benchmark)
   - [Areas for Improvement](#areas-for-improvement)
@@ -153,13 +154,13 @@ _Note: I believe that it is completely fine (and even encouraged) to have the us
 <br>
 These assets should be downloaded after the user-requested page has finished rendering and is entirely visible._
 
-### Preloading Async Chunks
+### Preloading Async Pages
 
-Code splitting has one major flaw - the runtime doesn't know these async chunks are needed until the main script executes, leading to them being fetched in a significant delay:
+Code splitting has one major flaw - the runtime doesn't know which async chunks are needed until the main script executes, leading to them being fetched in a significant delay:
 
 ![Without Async Preload](images/without-async-preload.png)
 
-The way we can solve this issue is by implementing a script in the document that will be responsible for preloading assets:
+The way we can solve this issue is by implementing a script in the document that will be responsible for preloading relevant assets:
 
 _[webpack.config.js](webpack.config.js)_
 
@@ -597,6 +598,8 @@ createRoot(document.getElementById('root')).render(
 
 This would make our app and the async page visually render at the same time.
 
+_Note that this method should be used in conjunction with the method followed in the next section to prevent a blank page during suspensions._
+
 ### Transitioning Async Pages
 
 _Note: this technique requires React 18_
@@ -824,7 +827,7 @@ self.addEventListener('fetch', event => {
 
 Now every page we land on will request the root `/` HTML document from the CDN, making the browser send the `If-None-Match` header and get a 304 status code for every single route.
 
-### Interim Summary
+## Interim Summary
 
 Up until now we've managed the make our app well-splitted, extremely cachable, with fluid navigations between async pages and with page and data preloads.
 <br>
@@ -832,7 +835,7 @@ From this point forward we are going to level it up one last time using a method
 
 The code so far can be found in the _[before-swr](https://github.com/theninthsky/client-side-rendering/tree/before-swr)_ branch.
 
-### The Biggest Drawback of SSR
+## The Biggest Drawback of SSR
 
 When using server-side rendering, it is most common to fetch the (dynamic) data on the server and then "bake" it into the HTML before sending the page to the browser.
 <br>
@@ -858,7 +861,7 @@ The lack of seperation between the app (also called the "app shell") and its dat
 
 However, in CSR apps we have complete seperation of the two, making it more than possible to cache only the app shell while still getting fresh data on every visit (just like in native apps).
 
-### The SWR Approach
+## The SWR Approach
 
 We can easily implement app shell cache by setting the `Cache-Control: Max-Age=x` header of the HTML document to any value greater than 0. This way the app will load almost instantly (usually under 200ms) regardless of the user's connectivity or connection speed for the duration we set.
 
@@ -868,16 +871,16 @@ That's why the "Stale While Revalidate" (SWR) approach was invented.
 
 When using SWR, the browser is allowed to use a cached asset or response (usually for a limited time) but in the same time it sends a request for the server and asks for the newest asset. After the fresh asset is downloaded, the browser **replaces** the stale cached asset with the fresh asset, ready to be used the next time the page is loaded.
 
-This method completely surpasses any network conditions, it even allows our app to be available while offline (within the SWR chosen time period), and all of this without even compromising on the freshness of the app shell.
+This method completely surpasses any network conditions, it even allows our app to be available while offline (within the SWR allowed time period), and all of this without even compromising on the freshness of the app shell.
 
 There are two ways to achieve SWR in web applications:
 
 - The _[stale-while-revalidate](https://web.dev/stale-while-revalidate/#what-shipped)_ attribute.
 - A custom service worker.
 
-Although the first approach is completely usable (and can be set up within a few seconds), the second approach will give us a more granular control of how and when assets are cached and updated, so this is the approach we choose to implement.
+Although the first approach is completely usable (and can be set up within seconds), the second approach will give us a more granular control of how and when assets are cached and updated, so this is the approach we choose to implement.
 
-### Implementing SWR
+## Implementing SWR
 
 Our SWR service worker needs to cache the HTML document and all of the scripts (and stylesheets) of all pages.
 <br>
@@ -934,7 +937,7 @@ const CACHED_URLS = [
   '/',
   ...self.__WB_MANIFEST.map(({ url }) => url).filter(script => !/scripts\/(main|runtime)\./.test(script))
 ]
-const MAX_STALE_DURATION = 24 * 60 * 60
+const MAX_STALE_DURATION = 7 * 24 * 60 * 60
 
 const preCache = async () => {
   await caches.delete(CACHE_NAME)
@@ -994,7 +997,7 @@ We exclude the `main.js` and `runtime.js` scripts since we already inline them i
 
 Additionally, we define a `MAX_STALE_DURATION` constant to set the maximum duration we are willing for our users to see the (potentially) stale app shell.
 <br>
-The duration should be derived from how often we update (deploy) our app in production. And it's important to remember that native apps, in comparison, can sometimes be "stale" for months without being updated by the app stores.
+This duration can be derived from how often we update (deploy) our app in production. And it's important to remember that native apps, in comparison, can sometimes be "stale" for months without being updated by the app stores.
 
 The results exceed all expectations:
 
@@ -1007,7 +1010,7 @@ Some users leave the app open for extended periods, so another great thing we ca
 _[service-worker-registration.js](src/service-worker-registration.js)_
 
 ```diff
-+ const REVALIDATION_INTERVAL = 1 * 60 * 60 * 1000
++ const REVALIDATION_INTERVAL = 1 * 60 * 60
 
 const register = () => {
   window.addEventListener('load', () => {
@@ -1017,7 +1020,7 @@ const register = () => {
 +     .then(registration => {
 +       console.log('Service worker registered!')
 +
-+       setInterval(() => registration.update(), REVALIDATION_INTERVAL)
++       setInterval(() => registration.update(), REVALIDATION_INTERVAL * 1000)
 +     })
       .catch(err => console.error(err))
   })
@@ -1028,6 +1031,10 @@ const register = () => {
 ```
 
 The code above arbitrarily revalidates the app every hour. However, we could implement a much more sophisticated revalidation process which will run every time we deploy our app and notify all online users through _[SSE](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events)_ or _[WebSockets](https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API/Writing_WebSocket_client_applications)_.
+
+## Revalidating Installed Apps
+
+Will be added soon.
 
 ## Deploying
 
@@ -1127,23 +1134,23 @@ We can manually submit our sitemap to _[Google Search Console](https://search.go
 
 ### Google
 
-It is often said that Google is having trouble correctly indexing CSR (JS) apps.
+It is often said that Google is having trouble properly crawling CSR (JS) apps.
 <br>
-That might have been the case in 2018, but as of 2022, Google can index CSR apps very well.
+That might have been the case in 2018, but as of 2022, Google crawls CSR apps almost flawlessly.
 <br>
-The indexed pages will have a title, description and even content, as long as we remember to dynamically set them (either manually or using something like _[react-helmet](https://www.npmjs.com/package/react-helmet)_).
+The indexed pages will have a title, description and content, as long as we remember to dynamically set them (either manually or using something like _[react-helmet](https://www.npmjs.com/package/react-helmet)_).
 
 The following video explains how the new Googlebot renders JS apps:
 <br>
 https://www.youtube.com/watch?v=Ey0N1Ry0BPM
 
-However, since Googlebot tries to save on computing power, there might be cases where it would take a snapshot of the page before it finishes loading.
+However, since Googlebot tries to save on computing power, there might be cases where it would take a snapshot of the page before its dynamic data finishes loading.
 <br>
-So we better not rely on its ability to crawl JS apps and just serve it prerendered pages.
+So we better not entirely rely on its ability to crawl JS apps.
 
 ### Prerendering
 
-Other search engines such as Bing cannot render JS (despite claiming they can). So in order to have them crawl our app correctly, we will serve them **prerendered** versions of our pages.
+Other search engines such as Bing cannot render JS (despite claiming they can). So in order to have them crawl our app properly, we will serve them **prerendered** versions of our pages.
 <br>
 Prerendering is the act of crawling web apps in production (using headless Chromium) and generating a complete HTML file (with data) for each page.
 
@@ -1167,6 +1174,9 @@ https://www.bing.com/search?q=site%3Ahttps%3A%2F%2Fclient-side-rendering.pages.d
 
 ![Google Search Results](images/google-search-results.png)
 ![Google Lorem Ipsum Search Results](images/google-lorem-ipsum-search-results.png)
+![Bing Search Results](images/bing-search-results.png)
+
+In addition, cached pages will have unbelievably fast response times, which might positively affect their SEO score.
 
 _Note that if you are using CSS-in-JS, you should [disable the speedy optimization](src/utils/disable-speedy.ts) during prerendering in order to have your styles omitted to the DOM._
 
