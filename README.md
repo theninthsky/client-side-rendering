@@ -1162,7 +1162,42 @@ We have two options when it comes to prerendering:
 
 2. We can deploy our own prerender server using free open-source tools such as _[Prerender](https://github.com/prerender/prerender)_ and _[Rendertron](https://github.com/GoogleChrome/rendertron)_.
 
-Then we redirect web crawlers (identified by their `User-Agent` header string) to our prerendered pages using a Cloudflare worker: _[public/\_worker.js](public/_worker.js)_.
+Then we redirect web crawlers (identified by their `User-Agent` header string) to our prerendered pages using a Cloudflare worker:
+
+_[public/\_worker.js](public/_worker.js)_
+
+```js
+const BOT_AGENTS = ['googlebot', 'bingbot', 'yandex', 'twitterbot', 'whatsapp', ...]
+
+const fetchPrerendered = async request => {
+  const { url, headers } = request
+  const prerenderUrl = `https://service.prerender.io/${url}`
+  const headersToSend = new Headers(headers)
+
+  headersToSend.set('X-Prerender-Token', YOUR_PRERENDER_TOKEN)
+
+  const prerenderRequest = new Request(prerenderUrl, {
+    headers: headersToSend,
+    redirect: 'manual'
+  })
+
+  const { status, body } = await fetch(prerenderRequest)
+
+  return new Response(body, { status })
+}
+
+export default {
+  fetch(request, env) {
+    const pathname = new URL(request.url).pathname.toLowerCase()
+    const userAgent = (request.headers.get('User-Agent') || '').toLowerCase()
+
+    if (BOT_AGENTS.some(agent => userAgent.includes(agent)) && !pathname.includes('.')) return fetchPrerendered(request)
+
+    return env.ASSETS.fetch(request)
+  }
+}
+
+```
 
 _Prerendering_, also called _Dynamic Rendering_, is encouraged by _[Google](https://developers.google.com/search/docs/advanced/javascript/dynamic-rendering)_ and _[Microsoft](https://blogs.bing.com/webmaster/october-2018/bingbot-Series-JavaScript,-Dynamic-Rendering,-and-Cloaking-Oh-My)_.
 
