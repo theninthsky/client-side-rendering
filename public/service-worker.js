@@ -45,3 +45,11 @@ self.addEventListener('fetch', event => {
     event.respondWith(staleWhileRevalidate(event.request))
   }
 })
+
+self.addEventListener('periodicsync', async event => {
+  if (event.tag === 'revalidate-assets') {
+    const { status } = await fetch('/')
+
+    if (status !== 304) event.waitUntil(preCache())
+  }
+})
