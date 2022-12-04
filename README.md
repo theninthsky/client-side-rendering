@@ -38,11 +38,11 @@ This project is a case study of CSR, it aims to explore the potential of client-
   - [Benchmark](#benchmark)
   - [Areas for Improvement](#areas-for-improvement)
 - [SEO](#seo)
-  - [Sitemaps](#sitemaps)
   - [Indexing](#indexing)
     - [Google](#google)
     - [Prerendering](#prerendering)
   - [Social Media Share Previews](#social-media-share-previews)
+  - [Sitemaps](#sitemaps)
 - [CSR vs. SSR](#csr-vs-ssr)
   - [SSR Disadvantages](#ssr-disadvantages)
   - [Why Not SSG?](#why-not-ssg)
@@ -65,6 +65,8 @@ It is important to note that improving performance should not come at the expens
 
 This case study will cover two major aspects: performance and SEO. We will see how we can achieve great scores in both of them.
 
+Our deployed app can be found here: https://client-side-rendering.pages.dev
+
 _Note: while this project is implemented with React, the majority of its tweaks are not tied to any framework and are purely browser-based._
 
 # Performance
@@ -81,7 +83,7 @@ For example:
 <br>
 We can use _[day.js](https://www.npmjs.com/package/dayjs)_ instead of _[moment](https://www.npmjs.com/package/moment)_, _[zustand](https://www.npmjs.com/package/zustand)_ instead of _[redux toolkit](https://www.npmjs.com/package/@reduxjs/toolkit)_ etc.
 
-This is crucial not only for CSR apps, but also for SSR (and SSG) apps, since the bigger our bundle is - the longer it will take the page to be interactive (either through hydration or normal rendering).
+This is crucial not only for CSR apps, but also for SSR (and SSG) apps, since the bigger our bundle is - the longer it will take the page to be visible or interactive.
 
 ### Caching
 
@@ -1044,7 +1046,7 @@ const register = () => {
 .
 ```
 
-The code above arbitrarily revalidates the app every hour. However, we could implement a much more sophisticated revalidation process which will run every time we deploy our app and notify all online users through _[SSE](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events)_ or _[WebSockets](https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API/Writing_WebSocket_client_applications)_.
+The code above arbitrarily revalidates the app every hour. However, we could implement a more sophisticated revalidation process which will run every time we deploy our app and notify all online users either through _[SSE](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events)_ or _[WebSockets](https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API/Writing_WebSocket_client_applications)_.
 
 ## Revalidating Installed Apps
 
@@ -1098,6 +1100,8 @@ This way we ensure that users who installed our app will always see the most rec
 
 _Note that this is currently only working in Chromium-based browsers and in a non-iOS environment._
 
+Further reading: https://developer.chrome.com/articles/periodic-background-sync
+
 ## Deploying
 
 The biggest advantage of a static app is that it can be served entirely from a CDN.
@@ -1145,52 +1149,6 @@ _Note that this benchmark only tests the first load of the page, without even co
 - Use the paid _[Cloudflare Argo](https://blog.cloudflare.com/argo)_ service for even better response times.
 
 # SEO
-
-## Sitemaps
-
-In order to make all of our app pages discoverable to search engines, we need to create a `sitemap.xml` file which specifies all of our website routes.
-
-Since we already have a centralized _[pages-manifest.json](src/pages-manifest.json)_ file, we can easily generate a sitemap during build time:
-
-_[create-sitemap.mjs](scripts/create-sitemap.mjs)_
-
-```js
-import { Readable } from 'stream'
-import { writeFile } from 'fs/promises'
-import { SitemapStream, streamToPromise } from 'sitemap'
-
-import pagesManifest from '../src/pages-manifest.json' assert { type: 'json' }
-
-const stream = new SitemapStream({ hostname: 'https://client-side-rendering.pages.dev' })
-const links = pagesManifest.map(({ path }) => ({ url: path, changefreq: 'daily' }))
-
-streamToPromise(Readable.from(links).pipe(stream))
-  .then(data => data.toString())
-  .then(res => writeFile('public/sitemap.xml', res))
-  .catch(console.log)
-```
-
-This will emit the following sitemap:
-
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1" xmlns:news="http://www.google.com/schemas/sitemap-news/0.9" xmlns:video="http://www.google.com/schemas/sitemap-video/1.1" xmlns:xhtml="http://www.w3.org/1999/xhtml">
-   <url>
-      <loc>https://client-side-rendering.pages.dev/</loc>
-      <changefreq>daily</changefreq>
-   </url>
-   <url>
-      <loc>https://client-side-rendering.pages.dev/lorem-ipsum</loc>
-      <changefreq>daily</changefreq>
-   </url>
-   <url>
-      <loc>https://client-side-rendering.pages.dev/pokemon</loc>
-      <changefreq>daily</changefreq>
-   </url>
-</urlset>
-```
-
-We can manually submit our sitemap to _[Google Search Console](https://search.google.com/search-console)_ and _[Bing Webmaster Tools](https://www.bing.com/webmasters)_.
 
 ## Indexing
 
@@ -1312,6 +1270,52 @@ This, after going through prerendering, gives us the correct preview for every p
 ![Facebook Preview Pokemon](images/facebook-preview-pokemon.png)
 <br>
 ![Facebook Preview Pokemon Info](images/facebook-preview-pokemon-info.png)
+
+## Sitemaps
+
+In order to make all of our app pages discoverable to search engines, we should create a `sitemap.xml` file which specifies all of our website routes.
+
+Since we already have a centralized _[pages-manifest.json](src/pages-manifest.json)_ file, we can easily generate a sitemap during build time:
+
+_[create-sitemap.mjs](scripts/create-sitemap.mjs)_
+
+```js
+import { Readable } from 'stream'
+import { writeFile } from 'fs/promises'
+import { SitemapStream, streamToPromise } from 'sitemap'
+
+import pagesManifest from '../src/pages-manifest.json' assert { type: 'json' }
+
+const stream = new SitemapStream({ hostname: 'https://client-side-rendering.pages.dev' })
+const links = pagesManifest.map(({ path }) => ({ url: path, changefreq: 'daily' }))
+
+streamToPromise(Readable.from(links).pipe(stream))
+  .then(data => data.toString())
+  .then(res => writeFile('public/sitemap.xml', res))
+  .catch(console.log)
+```
+
+This will emit the following sitemap:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1" xmlns:news="http://www.google.com/schemas/sitemap-news/0.9" xmlns:video="http://www.google.com/schemas/sitemap-video/1.1" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+   <url>
+      <loc>https://client-side-rendering.pages.dev/</loc>
+      <changefreq>daily</changefreq>
+   </url>
+   <url>
+      <loc>https://client-side-rendering.pages.dev/lorem-ipsum</loc>
+      <changefreq>daily</changefreq>
+   </url>
+   <url>
+      <loc>https://client-side-rendering.pages.dev/pokemon</loc>
+      <changefreq>daily</changefreq>
+   </url>
+</urlset>
+```
+
+We can manually submit our sitemap to _[Google Search Console](https://search.google.com/search-console)_ and _[Bing Webmaster Tools](https://www.bing.com/webmasters)_.
 
 # CSR vs. SSR
 
