@@ -32,6 +32,7 @@ This project is a case study of CSR, it aims to explore the potential of client-
   - [The Biggest Drawback of SSR](#the-biggest-drawback-of-ssr)
   - [The SWR Approach](#the-swr-approach)
   - [Implementing SWR](#implementing-swr)
+  - [Revalidating Active Apps](#revalidating-active-apps)
   - [Revalidating Installed Apps](#revalidating-installed-apps)
   - [Deploying](#deploying)
   - [Benchmark](#benchmark)
@@ -1013,7 +1014,11 @@ The results exceed all expectations:
 
 These metrics are coming from a 5-year-old `Intel i3-8130U` laptop when the browser is using the disk cache (not the memory cache which is a lot faster), and are completely independent of network speed or status.
 
-Some users leave the app open for extended periods, so another great thing we can add is revalidating the app while it is running:
+Now that we've seen that nothing can match SWR in terms of performance, our new goal is to try to keep users' apps as much up-to-date as possible, without compromising on the SWR allowed time period.
+
+## Revalidating Active Apps
+
+Some users leave the app open for extended periods of time, so another thing we can do is to revalidate the app while it is running:
 
 _[service-worker-registration.js](src/service-worker-registration.js)_
 
@@ -1043,7 +1048,55 @@ The code above arbitrarily revalidates the app every hour. However, we could imp
 
 ## Revalidating Installed Apps
 
-Will be added soon.
+The final method we can use in order to promise our users always have the latest version of our app is called _[Periodic Background Sync](https://developer.mozilla.org/en-US/docs/Web/API/Web_Periodic_Background_Synchronization_API)_.
+
+This method only works for installed PWAs and allows the OS to periodically "wake-up" the service worker when the app is closed.
+
+During its wake-up time, the service worker can perform any task, including revalidating assets:
+
+_[service-worker-registration.js](src/service-worker-registration.js)_
+
+```diff
+const ACTIVE_REVALIDATION_INTERVAL = 1 * 60 * 60
++ const PERIODIC_REVALIDATION_INTERVAL = 2 * 60 * 60
+
+const register = () => {
+  window.addEventListener('load', async () => {
+    try {
+      const registration = await navigator.serviceWorker.register('/service-worker.js')
+
+      console.log('Service worker registered!')
+
+      setInterval(() => registration.update(), ACTIVE_REVALIDATION_INTERVAL * 1000)
+
++     await registration.periodicSync?.register('revalidate-assets', {
++       minInterval: PERIODIC_REVALIDATION_INTERVAL * 1000
++     })
+    } catch (err) {
+      console.error(err)
+    }
+  })
+}
+.
+.
+.
+```
+
+_[service-worker.js](public/service-worker.js)_
+
+```js
+.
+.
+.
+self.addEventListener('periodicsync', event => {
+  if (event.tag === 'revalidate-assets') event.waitUntil(preCache())
+})
+
+```
+
+This way we ensure that users who installed our app will always see the most recent version when they open it.
+
+_Note that this is currently only working in Chromium-based browsers and in a non-iOS environment._
 
 ## Deploying
 
