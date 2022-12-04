@@ -47,5 +47,8 @@ self.addEventListener('fetch', event => {
 })
 
 self.addEventListener('periodicsync', event => {
-  if (event.tag === 'revalidate-assets') event.waitUntil(preCache())
+  if (event.tag === 'revalidate-assets') {
+    event.waitUntil(preCache())
+    new BroadcastChannel('main').postMessage({ syncTime: new Date().toISOString() })
+  }
 })

@@ -45,5 +45,11 @@
     "path": "/web-vitals",
     "title": "Web Vitals",
     "description": "This page specifies the values of core web vitals."
+  },
+  {
+    "chunk": "periodic-sync",
+    "path": "/periodic-sync",
+    "title": "Periodic Sync",
+    "description": "This page specifies the time of the last periodic background sync."
   }
 ]

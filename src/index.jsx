@@ -18,3 +18,5 @@ createRoot(document.getElementById('root')).render(
     </Suspense>
   </BrowserRouter>
 )
+
+new BroadcastChannel('main').onmessage = ({ data }) => localStorage.setItem('syncTime', data.syncTime)
