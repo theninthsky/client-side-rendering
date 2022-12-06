@@ -31,9 +31,10 @@ This project is a case study of CSR, it aims to explore the potential of client-
   - [Interim Summary](#interim-summary)
   - [The Biggest Drawback of SSR](#the-biggest-drawback-of-ssr)
   - [The SWR Approach](#the-swr-approach)
-  - [Implementing SWR](#implementing-swr)
-  - [Revalidating Active Apps](#revalidating-active-apps)
-  - [Revalidating Installed Apps](#revalidating-installed-apps)
+    - [Implementing SWR](#implementing-swr)
+    - [Revalidating Active Apps](#revalidating-active-apps)
+    - [Revalidating Installed Apps](#revalidating-installed-apps)
+  - [Summary](#summary)
   - [Deploying](#deploying)
   - [Benchmark](#benchmark)
   - [Areas for Improvement](#areas-for-improvement)
@@ -876,6 +877,8 @@ When using SWR, the browser is allowed to use a cached asset or response (usuall
 
 This method completely surpasses any network conditions, it even allows our app to be available while offline (within the SWR allowed time period), and all of this without even compromising on the freshness of the app shell.
 
+Many popular websites implement app-shell SWR including Twitter, CodeSandbox and Photopea.
+
 There are two ways to achieve SWR in web applications:
 
 - The _[stale-while-revalidate](https://web.dev/stale-while-revalidate/#what-shipped)_ attribute.
@@ -1101,6 +1104,16 @@ This way we ensure that users who installed our app will always see the most rec
 _Note that this is currently only working in Chromium-based browsers and in a non-iOS environment._
 
 Further reading: https://developer.chrome.com/articles/periodic-background-sync
+
+## Summary
+
+We've managed to make the initial load of our app extremely fast, only what is needed for the page is being loaded.
+<br>
+In addition, we preload other pages (and even their data), which makes it seem as if they were never seperated to begin with.
+<br>
+And finally, we wrapped everything inside SWR, so the repeated loads of our app are unbelievably fast, it's literaly impossible to get anything better than that.
+
+All of these were achieved without compromising on the DX and without dictating which JS framework we choose and where we deploy our app, it can be on any CDN we choose (more on that in the next section).
 
 ## Deploying
 
