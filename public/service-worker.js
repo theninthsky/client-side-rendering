@@ -6,8 +6,6 @@ const CACHED_URLS = [
 const MAX_STALE_DURATION = 7 * 24 * 60 * 60
 
 const preCache = async () => {
-  await caches.delete(CACHE_NAME)
-
   const cache = await caches.open(CACHE_NAME)
 
   await cache.addAll(CACHED_URLS)
