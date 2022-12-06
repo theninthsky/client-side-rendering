@@ -886,7 +886,7 @@ There are two ways to achieve SWR in web applications:
 
 Although the first approach is completely usable (and can be set up within seconds), the second approach will give us a more granular control of how and when assets are cached and updated, so this is the approach we choose to implement.
 
-## Implementing SWR
+### Implementing SWR
 
 Our SWR service worker needs to cache the HTML document and all of the scripts (and stylesheets) of all pages.
 <br>
@@ -1021,7 +1021,7 @@ These metrics are coming from a 5-year-old `Intel i3-8130U` laptop when the brow
 
 Now that we've seen that nothing can match SWR in terms of performance, our new goal is to try to keep users' apps as much up-to-date as possible, without compromising on the SWR allowed time period.
 
-## Revalidating Active Apps
+### Revalidating Active Apps
 
 Some users leave the app open for extended periods of time, so another thing we can do is to revalidate the app while it is running:
 
@@ -1051,7 +1051,7 @@ const register = () => {
 
 The code above arbitrarily revalidates the app every hour. However, we could implement a more sophisticated revalidation process which will run every time we deploy our app and notify all online users either through _[SSE](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events)_ or _[WebSockets](https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API/Writing_WebSocket_client_applications)_.
 
-## Revalidating Installed Apps
+### Revalidating Installed Apps
 
 The final method we can use in order to promise our users always have the latest version of our app is called _[Periodic Background Sync](https://developer.mozilla.org/en-US/docs/Web/API/Web_Periodic_Background_Synchronization_API)_.
 
@@ -1063,7 +1063,7 @@ _[service-worker-registration.js](src/service-worker-registration.js)_
 
 ```diff
 const ACTIVE_REVALIDATION_INTERVAL = 1 * 60 * 60
-+ const PERIODIC_REVALIDATION_INTERVAL = 24 * 60 * 60
++ const PERIODIC_REVALIDATION_INTERVAL = 12 * 60 * 60
 
 const register = () => {
   window.addEventListener('load', async () => {
