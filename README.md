@@ -1063,7 +1063,7 @@ _[service-worker-registration.js](src/service-worker-registration.js)_
 
 ```diff
 const ACTIVE_REVALIDATION_INTERVAL = 1 * 60 * 60
-+ const PERIODIC_REVALIDATION_INTERVAL = 2 * 60 * 60
++ const PERIODIC_REVALIDATION_INTERVAL = 24 * 60 * 60
 
 const register = () => {
   window.addEventListener('load', async () => {
@@ -1074,9 +1074,13 @@ const register = () => {
 
       setInterval(() => registration.update(), ACTIVE_REVALIDATION_INTERVAL * 1000)
 
-+     await registration.periodicSync?.register('revalidate-assets', {
-+       minInterval: PERIODIC_REVALIDATION_INTERVAL * 1000
-+     })
++     const { state } = await navigator.permissions.query({ name: 'periodic-background-sync' })
++
++     if (state === 'granted') {
++       await registration.periodicSync.register('revalidate-assets', {
++         minInterval: PERIODIC_REVALIDATION_INTERVAL * 1000
++       })
++     }
     } catch (err) {
       console.error(err)
     }
