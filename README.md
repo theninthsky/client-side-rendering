@@ -855,7 +855,9 @@ In addition, even those with fast interent connection will have to pay the price
 
 ![Connection Establishment](images/connection-establishment.png)
 
-These times vary greatly from serveral milliseconds to hundreds of milliseconds. And to make things even worse, browsers keep the DNS cache only for about a minute, and so this process repeats very frequently.
+In the sample above (caught by a 500Mbps interent connection speed), it tooks 600ms just to get the first byte of the HTML document.
+<br>
+These times vary greatly from tens of milliseconds to hundreds of milliseconds. And to make things even worse, browsers keep the DNS cache only for about a minute, and so this process repeats very frequently.
 
 The only reasonable way to rise above these issues is by caching pages in the browser (for example, by setting a `Max-Age` value higher than `0`).
 
