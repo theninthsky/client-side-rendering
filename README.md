@@ -859,7 +859,7 @@ In the sample above (caught by a 500Mbps interent connection speed), it tooks 60
 <br>
 These times vary greatly from tens of milliseconds to hundreds of milliseconds. And to make things even worse, browsers keep the DNS cache only for about a minute, and so this process repeats very frequently.
 
-The only reasonable way to rise above these issues is by caching pages in the browser (for example, by setting a `Max-Age` value higher than `0`).
+The only reasonable way to rise above these issues is by caching HTML pages in the browser (for example, by setting a `Max-Age` value higher than `0`).
 
 But here is the problem with SSR: by doing so, users will potentailly see outdated content, since the data is inlined in the document.
 <br>
@@ -879,7 +879,7 @@ When using SWR, the browser is allowed to use a cached asset or response (usuall
 
 This method completely surpasses any network conditions, it even allows our app to be available while offline (within the SWR allowed time period), and all of this without even compromising on the freshness of the app shell.
 
-Many popular websites implement app-shell SWR including Twitter, CodeSandbox and Photopea.
+Many popular websites such as Twitter, CodeSandbox and Photopea implement SWR in their app shell.
 
 There are two ways to achieve SWR in web applications:
 
@@ -956,8 +956,6 @@ const CACHED_URLS = [
 const MAX_STALE_DURATION = 7 * 24 * 60 * 60
 
 const preCache = async () => {
-  await caches.delete(CACHE_NAME)
-
   const cache = await caches.open(CACHE_NAME)
 
   await cache.addAll(CACHED_URLS)
