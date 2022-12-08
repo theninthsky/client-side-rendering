@@ -48,9 +48,12 @@ self.addEventListener('fetch', event => {
   }
 })
 
-self.addEventListener('periodicsync', event => {
+self.addEventListener('periodicsync', async event => {
   if (event.tag === 'revalidate-assets') {
     event.waitUntil(preCache())
-    new BroadcastChannel('main').postMessage({ syncTime: new Date().toISOString() })
+
+    const [windowClient] = await clients.matchAll({ includeUncontrolled: true, type: 'window' })
+
+    windowClient.postMessage({ type: 'periodic-sync-update-occured', syncTime: new Date().toISOString() })
   }
 })

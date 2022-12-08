@@ -31,7 +31,5 @@ navigator.serviceWorker.addEventListener('message', ({ data }) => {
 
       if (allowReload && document.visibilityState === 'hidden') window.location.reload()
     })
-  }
+  } else if (data.type === 'periodic-sync-update-occured') localStorage.setItem('syncTime', data.syncTime)
 })
-
-new BroadcastChannel('main').onmessage = ({ data }) => localStorage.setItem('syncTime', data.syncTime)
