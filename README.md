@@ -1069,6 +1069,8 @@ navigator.serviceWorker.addEventListener('message', ({ data }) => {
 })
 ```
 
+This way the app will self-reload even without the user's notice.
+
 _Note that we define the pages in which the reload is allowed, that's in order to prevent reloading in critical times such as filling out forms._
 
 ### Revalidating Active Apps
@@ -1233,7 +1235,7 @@ https://www.youtube.com/watch?v=Ey0N1Ry0BPM
 
 However, since Googlebot tries to save on computing power, there might be cases where it would take a snapshot of the page before its dynamic data finishes loading.
 <br>
-So we better not entirely rely on its ability to crawl JS apps.
+So in order to achieve perfect SEO results, we better not entirely rely on its ability to crawl JS apps.
 
 ### Prerendering
 
@@ -1299,7 +1301,7 @@ https://www.bing.com/search?q=site%3Ahttps%3A%2F%2Fclient-side-rendering.pages.d
 
 ![Bing Search Results](images/bing-search-results.png)
 
-In addition, cached pages will have unbelievably fast response times, which might positively affect their SEO score.
+In addition, cached pages will have unbelievably low response times, which might positively affect their SEO score.
 
 _Note that if you are using CSS-in-JS, you should [disable the speedy optimization](src/utils/disable-speedy.ts) during prerendering in order to have your styles omitted to the DOM._
 
