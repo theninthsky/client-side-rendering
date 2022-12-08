@@ -33,9 +33,13 @@ const staleWhileRevalidate = async request => {
   return cachedResponsePromise || networkResponsePromise
 }
 
-self.addEventListener('install', event => {
+self.addEventListener('install', async event => {
   event.waitUntil(preCache())
   self.skipWaiting()
+
+  const [windowClient] = await clients.matchAll({ includeUncontrolled: true, type: 'window' })
+
+  windowClient.postMessage({ type: 'update-available' })
 })
 
 self.addEventListener('fetch', event => {

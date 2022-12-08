@@ -32,6 +32,7 @@ This project is a case study of CSR, it aims to explore the potential of client-
   - [The Biggest Drawback of SSR](#the-biggest-drawback-of-ssr)
   - [The SWR Approach](#the-swr-approach)
     - [Implementing SWR](#implementing-swr)
+    - [Reloading On Update](#reloading-on-update)
     - [Revalidating Active Apps](#revalidating-active-apps)
     - [Revalidating Installed Apps](#revalidating-installed-apps)
   - [Summary](#summary)
@@ -1020,6 +1021,55 @@ The results exceed all expectations:
 These metrics are coming from a 5-year-old `Intel i3-8130U` laptop when the browser is using the disk cache (not the memory cache which is a lot faster), and are completely independent of network speed or status.
 
 Now that we've seen that nothing can match SWR in terms of performance, our new goal is to try to keep users' apps as much up-to-date as possible, without compromising on the SWR allowed time period.
+
+### Reloading On Update
+
+When a user opens our app and there's and update, the browser will replace the old cached files with the new ones. The user then will see the update only when they reload the page.
+<br>
+If we wanted to update to be visible right away, we could manually reload the app.
+<br>
+However, reloading the app while the user is viewing it is a very bad idea. Instead, we can reload the app while it is _hidden_:
+
+_[service-worker.js](public/service-worker.js)_
+
+```diff
+.
+.
+.
+self.addEventListener('install', async event => {
+  event.waitUntil(preCache())
+  self.skipWaiting()
+
++ const [windowClient] = await clients.matchAll({ includeUncontrolled: true, type: 'window' })
+
++ windowClient.postMessage({ type: 'update-available' })
+})
+.
+.
+.
+```
+
+_[index.jsx](src/index.jsx)_
+
+```js
+import pagesManifest from 'pages-manifest.json'
+
+navigator.serviceWorker.addEventListener('message', ({ data }) => {
+  if (data.type === 'update-available') {
+    window.addEventListener('visibilitychange', () => {
+      let { pathname } = window.location
+
+      if (pathname !== '/') pathname = pathname.replace(/\/$/, '')
+
+      const allowReload = pagesManifest.find(({ path, allowReload }) => allowReload && isStructureEqual(pathname, path))
+
+      if (allowReload && document.visibilityState === 'hidden') window.location.reload()
+    })
+  }
+})
+```
+
+_Note that we define the pages in which the reload is allowed, that's in order to prevent reloading in critical times such as filling out forms._
 
 ### Revalidating Active Apps
 

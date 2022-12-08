@@ -3,7 +3,8 @@
     "chunk": "home",
     "path": "/",
     "title": "Home",
-    "description": "This page demonstrates a large amount of components that are rendered on the screen."
+    "description": "This page demonstrates a large amount of components that are rendered on the screen.",
+    "allowReload": true
   },
   {
     "chunk": "lorem-ipsum",
@@ -13,7 +14,8 @@
     "data": {
       "url": "/json/lorem-ipsum.json",
       "menuPreload": true
-    }
+    },
+    "allowReload": true
   },
   {
     "chunk": "pokemon",
@@ -26,7 +28,8 @@
         "crossorigin": "anonymous",
         "menuPreload": true
       }
-    ]
+    ],
+    "allowReload": true
   },
   {
     "chunk": "pokemon-info",
@@ -38,7 +41,8 @@
         "crossorigin": "anonymous",
         "preconnectURL": "https://raw.githubusercontent.com"
       },
-    "menuItem": false
+    "menuItem": false,
+    "allowReload": true
   },
   {
     "chunk": "core-web-vitals",
@@ -50,6 +54,7 @@
     "chunk": "periodic-sync",
     "path": "/periodic-sync",
     "title": "Periodic Sync",
-    "description": "This page specifies the time of the last periodic background sync."
+    "description": "This page specifies the time of the last periodic background sync.",
+    "allowReload": true
   }
 ]
