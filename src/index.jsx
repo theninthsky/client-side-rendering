@@ -20,16 +20,22 @@ createRoot(document.getElementById('root')).render(
   </BrowserRouter>
 )
 
+const reloadIfPossible = () => {
+  if (document.visibilityState === 'visible') return
+
+  let { pathname } = window.location
+
+  if (pathname !== '/') pathname = pathname.replace(/\/$/, '')
+
+  const reloadAllowed = !!pagesManifest.find(({ path, allowReload }) => allowReload && isStructureEqual(pathname, path))
+
+  if (reloadAllowed) window.location.reload()
+}
+
 navigator.serviceWorker.addEventListener('message', ({ data }) => {
   if (data.type === 'update-available') {
-    window.addEventListener('visibilitychange', () => {
-      let { pathname } = window.location
+    reloadIfPossible()
 
-      if (pathname !== '/') pathname = pathname.replace(/\/$/, '')
-
-      const allowReload = pagesManifest.find(({ path, allowReload }) => allowReload && isStructureEqual(pathname, path))
-
-      if (allowReload && document.visibilityState === 'hidden') window.location.reload()
-    })
+    window.addEventListener('visibilitychange', reloadIfPossible)
   } else if (data.type === 'periodic-sync-update-occured') localStorage.setItem('syncTime', data.syncTime)
 })

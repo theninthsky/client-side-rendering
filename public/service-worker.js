@@ -7,8 +7,10 @@ const MAX_STALE_DURATION = 7 * 24 * 60 * 60
 
 const preCache = async () => {
   const cache = await caches.open(CACHE_NAME)
+  const [windowClient] = await clients.matchAll({ includeUncontrolled: true, type: 'window' })
 
   await cache.addAll(CACHED_URLS)
+  windowClient.postMessage({ type: 'update-available' })
 }
 
 const staleWhileRevalidate = async request => {
@@ -36,10 +38,6 @@ const staleWhileRevalidate = async request => {
 self.addEventListener('install', async event => {
   event.waitUntil(preCache())
   self.skipWaiting()
-
-  const [windowClient] = await clients.matchAll({ includeUncontrolled: true, type: 'window' })
-
-  windowClient.postMessage({ type: 'update-available' })
 })
 
 self.addEventListener('fetch', event => {

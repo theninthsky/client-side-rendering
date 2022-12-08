@@ -1033,20 +1033,13 @@ However, reloading the app while the user is viewing it is a very bad idea. Inst
 _[service-worker.js](public/service-worker.js)_
 
 ```diff
-.
-.
-.
-self.addEventListener('install', async event => {
-  event.waitUntil(preCache())
-  self.skipWaiting()
-
+const preCache = async () => {
+  const cache = await caches.open(CACHE_NAME)
 + const [windowClient] = await clients.matchAll({ includeUncontrolled: true, type: 'window' })
 
+  await cache.addAll(CACHED_URLS)
 + windowClient.postMessage({ type: 'update-available' })
-})
-.
-.
-.
+}
 ```
 
 _[index.jsx](src/index.jsx)_
@@ -1054,17 +1047,21 @@ _[index.jsx](src/index.jsx)_
 ```js
 import pagesManifest from 'pages-manifest.json'
 
+const reloadIfPossible = () => {
+  if (document.visibilityState === 'visible') return
+
+  let { pathname } = window.location
+
+  if (pathname !== '/') pathname = pathname.replace(/\/$/, '')
+
+  const reloadAllowed = !!pagesManifest.find(({ path, allowReload }) => allowReload && isStructureEqual(pathname, path))
+
+  if (reloadAllowed) window.location.reload()
+}
+
 navigator.serviceWorker.addEventListener('message', ({ data }) => {
   if (data.type === 'update-available') {
-    window.addEventListener('visibilitychange', () => {
-      let { pathname } = window.location
-
-      if (pathname !== '/') pathname = pathname.replace(/\/$/, '')
-
-      const allowReload = pagesManifest.find(({ path, allowReload }) => allowReload && isStructureEqual(pathname, path))
-
-      if (allowReload && document.visibilityState === 'hidden') window.location.reload()
-    })
+    window.addEventListener('visibilitychange', reloadIfPossible)
   }
 })
 ```
@@ -1096,9 +1093,19 @@ const register = () => {
     }
   })
 }
-.
-.
-.
+```
+
+_[index.jsx](src/index.jsx)_
+
+```diff
+navigator.serviceWorker.addEventListener('message', ({ data }) => {
+  if (data.type === 'update-available') {
++   reloadIfPossible()
++
+    window.addEventListener('visibilitychange', reloadIfPossible)
+  }
+})
+
 ```
 
 The code above arbitrarily revalidates the app every hour. However, we could implement a more sophisticated revalidation process which will run every time we deploy our app and notify all online users either through _[SSE](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events)_ or _[WebSockets](https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API/Writing_WebSocket_client_applications)_.
