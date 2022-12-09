@@ -1498,9 +1498,7 @@ These facts lead to the conclusion that there is no particular reason to use SSR
 ## What Might Change in the Future
 
 As time passes, [connection speed is getting faster](https://worldpopulationreview.com/country-rankings/internet-speeds-by-country) and end-user devices get stronger. So the performance differences between all possible website rendering methods are guarenteed to be mitigated even further.
-<br>
-However, it is worth mentioning that _[Qwik](https://qwik.builder.io)_ is an interesting change that comes from the SSR world (although it is still in beta).
-<br>
-By radically reducing the size of JS that is delivered to the browser, Qwik allows web pages to load extremely fast, without even having to "hydrate" them.
+
+There are some new SSR methods (such as Streaming SSR with Server Components) and frameworks (such as Marko and Qwik) which pretend to reduce the inital JS that has to be downloaded.
 
 Nevertheless, it's important to note that nothing makes pages load faster than the SWR approach, which is only possible through client-side rendering.
