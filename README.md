@@ -12,6 +12,7 @@ This project is a case study of CSR, it aims to explore the potential of client-
 
 ## Table of Contents
 
+- [Intro](#intro)
 - [Motivation](#motivation)
 - [Performance](#performance)
   - [Bundle Size](#bundle-size)
@@ -52,22 +53,48 @@ This project is a case study of CSR, it aims to explore the potential of client-
 - [Conclusion](#conclusion)
   - [What Might Change in the Future](#what-might-change-in-the-future)
 
+# Intro
+
+Client-side rendering is the practice of sending the web browser static assets and leaving it to perform the entire rendering process of the app.
+Server-side rendering is the practice of rendering the entire app (or page) on the server, sending to the browser a pre-rendered HTML document ready to be displayed.
+Static Site Generation is the practice of pre-generating HTML pages as static assets to be sent and displayed by the browser.
+
+Contrary to popular belief, the SSR process of modern frameworks such as React, Angular, Vue and Svelte, makes the app render twice: one time on the server and another time on the browser (this is called "hydration"). Without the latter, the app cannot become interactive and would just be a static, "lifeless", web page.
+<br>
+The "hydration" process takes about the same time as a full render.
+<br>
+Needless to say that SSG apps have to be "hydrated" aswell.
+
+The HTML document is fully constucted in both SSR and SSG, which gives them the following advantages:
+
+1. Web crawlers will be able to crawl their pages out-of-the-box, which is critical for SEO.
+2. When inlining critical CSS, the _[FCP](https://web.dev/fcp)_ of the page will usually be very good (in SSR it heavily depends on the API server response times).
+
+On the other hand, CSR has the following advantages:
+
+1. The app itself is completely decoupled from the server, which means it loads without being affected by the API server's response times.
+2. The developer experience is seemless, all libraries and packages just work without any special customizations.
+3. Newly introduced framework updates can be used right away, without having to wait for the wrapping SSR framework to implement them.
+4. The learning curve is better, since developers only have to learn the framework instead of both the framework and its SSR wrapper.
+
+In this case-study, we will focus on CSR and how to overcome its built-in shortages while leaveraging its strong points.
+
+Our deployed app can be found here: https://client-side-rendering.pages.dev
+
 # Motivation
 
-Over the last few years, server-side rendering has started to (re)gain popularity in the form of frameworks such as _[Next.js](https://nextjs.org)_ and _[Remix](https://remix.run)_.
+Over the last few years, server-side rendering has started to (re)gain popularity in the form of frameworks such as _[Next.js](https://nextjs.org)_ and _[Remix](https://remix.run)_ to the point that developers just start working with them as a default, without understanding their limitations and even in apps which do not require SEO at all.
 <br>
 While SSR has some advantages, these frameworks keep emphasizing how fast they are ("Performance as a default"), implying client-side rendering is slow.
 <br>
 In addition, it is a common misconception that great SEO can only be achieved by using SSR, and that there's nothing we can do to improve the way search engines crawl CSR apps.
 
-This project implements a basic CSR app with some tweaks such as code-splitting, with the ambition that as the app scales, the loading time of a single page would mostly remain unaffected.
+This project implements a basic CSR app with some tweaks such as code-splitting and preloading, with the ambition that as the app scales, the loading time of a single page would mostly remain unaffected.
 The objective is to simulate the number of packages used in a production grade app and try to decrease its loading time as much as possible, mostly by parallelizing requests.
 
 It is important to note that improving performance should not come at the expense of the developer experience, so the way this project is architected should vary only slightly compared to "normal" react projects, and it won't be as extremely opinionated as Next.js (or as limiting as SSR is in general).
 
 This case study will cover two major aspects: performance and SEO. We will see how we can achieve great scores in both of them.
-
-Our deployed app can be found here: https://client-side-rendering.pages.dev
 
 _Note: while this project is implemented with React, the majority of its tweaks are not tied to any framework and are purely browser-based._
 
@@ -1217,7 +1244,7 @@ These are the results:
 
 As it turns out, performance is **not** a default in Next.js.
 
-_Note that this benchmark only tests the first load of the page, without even considering how the app performs when it is fully cached._
+_Note that this benchmark only tests the first load of the page, without even considering how the app performs when it is fully cached (where our SWR implementation really shines)._
 
 ## Areas for Improvement
 
