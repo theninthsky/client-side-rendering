@@ -83,11 +83,19 @@ Our deployed app can be found here: https://client-side-rendering.pages.dev
 
 # Motivation
 
+_"Recently, SSR (Server Side Rendering) has taken the JavaScript front-end world by storm. The fact that you can now render your sites and apps on the server before sending them to your clients is an absolutely **revolutionary** idea (and totally not what everyone was doing before JS client-side apps got popular in the first place...)._
+
+_However, the same criticisms that were valid for PHP, ASP, JSP, (and such) sites are valid for server-side rendering today. It's slow, breaks fairly easily, and is difficult to implement properly._
+
+_Thing is, despite what everyone might be telling you, you probably don't need SSR. You can get almost all the advantages of it (without the disadvantages) by using prerendering."_
+
+_~[Prerender SPA Plugin](https://github.com/chrisvfritz/prerender-spa-plugin#what-is-prerendering)_
+
 Over the last few years, server-side rendering has started to (re)gain popularity in the form of frameworks such as _[Next.js](https://nextjs.org)_ and _[Remix](https://remix.run)_ to the point that developers just start working with them as a default, without understanding their limitations and even in apps which do not require SEO at all.
 <br>
 While SSR has some advantages, these frameworks keep emphasizing how fast they are ("Performance as a default"), implying client-side rendering is slow.
 <br>
-In addition, it is a common misconception that great SEO can only be achieved by using SSR, and that there's nothing we can do to improve the way search engines crawl CSR apps.
+In addition, it is a common misconception that perfect SEO can only be achieved by using SSR, and that there's nothing we can do to improve the way search engines crawl CSR apps.
 
 This project implements a basic CSR app with some tweaks such as code-splitting and preloading, with the ambition that as the app scales, the loading time of a single page would mostly remain unaffected.
 The objective is to simulate the number of packages used in a production grade app and try to decrease its loading time as much as possible, mostly by parallelizing requests.
@@ -1279,11 +1287,11 @@ Prerendering is the act of crawling web apps in production (using headless Chrom
 
 We have two options when it comes to prerendering:
 
-1. We can use a dedicated service such as _[prerender.io](https://prerender.io)_ and _[seo4ajax](https://www.seo4ajax.com/)_.
+1. We can use a dedicated service such as _[prerender.io](https://prerender.io)_.
 
 ![Prerender.io Table](images/prerender-io-table.png)
 
-2. We can deploy our own prerender server using free open-source tools such as _[Prerender](https://github.com/prerender/prerender)_ and _[Rendertron](https://github.com/GoogleChrome/rendertron)_.
+2. We can deploy our own prerender server using free open-source tools such as _[Prerender](https://github.com/prerender/prerender)_.
 
 Then we redirect web crawlers (identified by their `User-Agent` header string) to our prerendered pages using a Cloudflare worker:
 
