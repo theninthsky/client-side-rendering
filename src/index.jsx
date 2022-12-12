@@ -20,14 +20,21 @@ createRoot(document.getElementById('root')).render(
   </BrowserRouter>
 )
 
+const events = ['mousedown', 'keydown']
+let userInteracted = false
+
+events.forEach(event => addEventListener(event, () => (userInteracted = true), { once: true }))
+
 const reloadIfPossible = () => {
-  if (document.visibilityState === 'visible') return
+  if (userInteracted || document.visibilityState === 'visible') return
 
   let { pathname } = window.location
 
   if (pathname !== '/') pathname = pathname.replace(/\/$/, '')
 
-  const reloadAllowed = !!pagesManifest.find(({ path, allowReload }) => allowReload && isStructureEqual(pathname, path))
+  const reloadAllowed = !!pagesManifest.find(
+    ({ path, preventReload }) => !preventReload && isStructureEqual(pathname, path)
+  )
 
   if (reloadAllowed) window.location.reload()
 }
