@@ -90,7 +90,7 @@ module.exports = (_, { mode }) => {
       ...(production
         ? [
             new InjectManifest({
-              include: [/scripts\/.+\.js$/],
+              include: [/fonts\//, /scripts\/.+\.js$/],
               swSrc: path.join(__dirname, 'public', 'service-worker.js')
             })
           ]
