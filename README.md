@@ -1061,7 +1061,7 @@ Now that we've seen that nothing can match SWR in terms of performance, our new 
 
 When a user opens our app and there's and update, the browser will replace the old cached files with the new ones. The user then will see the update only when they reload the page.
 <br>
-If we wanted to update to be visible right away, we could manually reload the app.
+If we wanted the update to be visible right away, we could manually reload the app.
 <br>
 However, reloading the app while the user is viewing it is a very bad idea. Instead, we can reload the app while it is _hidden_:
 
@@ -1082,28 +1082,39 @@ _[index.jsx](src/index.jsx)_
 ```js
 import pagesManifest from 'pages-manifest.json'
 
+const events = ['mousedown', 'keydown']
+let userInteracted = false
+
+events.forEach(event => addEventListener(event, () => (userInteracted = true), { once: true }))
+
 const reloadIfPossible = () => {
-  if (document.visibilityState === 'visible') return
+  if (userInteracted || document.visibilityState === 'visible') return
 
   let { pathname } = window.location
 
   if (pathname !== '/') pathname = pathname.replace(/\/$/, '')
 
-  const reloadAllowed = !!pagesManifest.find(({ path, allowReload }) => allowReload && isStructureEqual(pathname, path))
+  const reloadAllowed = !!pagesManifest.find(
+    ({ path, preventReload }) => !preventReload && isStructureEqual(pathname, path)
+  )
 
   if (reloadAllowed) window.location.reload()
 }
 
 navigator.serviceWorker.addEventListener('message', ({ data }) => {
   if (data.type === 'update-available') {
+    reloadIfPossible()
+
     window.addEventListener('visibilitychange', reloadIfPossible)
   }
 })
 ```
 
-This way the app will self-reload even without the user's notice.
+We reload the app only when it is hidden **and** the user did not interact with it. This way the app will self-update even without the user's notice.
 
-_Note that we define the pages in which the reload is allowed, that's in order to prevent reloading in critical times such as filling out forms._
+_Note that we do not consider the `scroll` event as an interaction, since this action is stateless and in most cases the browser will restore the scroll position upon reload._
+<br>
+_In addition, we can define a `preventReload` property in pages that we wouldn't want to be automatically reloaded (such as a user's feed which potentially changes on every reload)._
 
 ### Revalidating Active Apps
 
