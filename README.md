@@ -937,7 +937,7 @@ plugins: [
   ...(production
     ? [
         new InjectManifest({
-          include: [/scripts\/.+\.js$/],
+          include: [/fonts\//, /scripts\/.+\.js$/],
           swSrc: path.join(__dirname, 'public', 'service-worker.js')
         })
       ]
@@ -1025,7 +1025,7 @@ self.addEventListener('install', event => {
 })
 
 self.addEventListener('fetch', event => {
-  if (['document', 'script'].includes(event.request.destination)) {
+  if (['document', 'font', 'script'].includes(event.request.destination)) {
     event.respondWith(staleWhileRevalidate(event.request))
   }
 })
