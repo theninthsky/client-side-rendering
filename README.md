@@ -1302,9 +1302,9 @@ We have two options when it comes to prerendering:
 
 ![Prerender.io Table](images/prerender-io-table.png)
 
-2. We can deploy our own prerender server using free open-source tools such as _[Prerender](https://github.com/prerender/prerender)_.
+2. We can deploy our own prerender server using free open-source tools such as _[Prerender](https://github.com/prerender/prerender)_ (a fully working example can be found _[here](https://github.com/theninthsky/prerender-server)_).
 
-Then we redirect web crawlers (identified by their `User-Agent` header string) to our prerendered pages using a Cloudflare worker:
+Then we redirect web crawlers (identified by their `User-Agent` header string) to our prerendered pages using a Cloudflare worker (in the following example we redirect to _prerender.io_):
 
 _[public/\_worker.js](public/_worker.js)_
 
