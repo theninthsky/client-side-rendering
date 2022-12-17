@@ -71,11 +71,12 @@ module.exports = (_, { mode }) => {
     optimization: {
       runtimeChunk: 'single',
       splitChunks: {
-        chunks: 'async',
+        chunks: 'initial',
         minSize: 40000,
         cacheGroups: {
           vendor: {
             test: /[\\/]node_modules[\\/]/,
+            chunks: 'all',
             name: (module, chunks) => {
               const allChunksNames = chunks.map(({ name }) => name).join('.')
               const moduleName = (module.context.match(/[\\/]node_modules[\\/](.*?)([\\/]|$)/) || [])[1]
@@ -96,24 +97,18 @@ module.exports = (_, { mode }) => {
           ]
         : [new ReactRefreshPlugin(), new ForkTsCheckerPlugin(), new ESLintPlugin()]),
       new HtmlPlugin({
-        inject: false,
-        templateContent: ({ htmlWebpackPlugin, compilation }) => {
-          const assets = compilation.getAssets()
-          const initialScripts = htmlWebpackPlugin.files.js
-            .map(script => assets.find(({ name }) => decodeURIComponent(script).slice(1) === name))
-            .map(({ name, source }) => ({ name, source: source._children[0]._value }))
-
+        scriptLoading: 'module',
+        templateContent: ({ compilation }) => {
+          const assets = compilation.getAssets().map(({ name }) => name)
           const pages = pagesManifest.map(({ chunk, path, data }) => {
-            const scripts = assets
-              .filter(({ name }) => new RegExp(`[/.]${chunk}\\.(.+)\\.js$`).test(name))
-              .map(({ name }) => name)
+            const scripts = assets.filter(name => new RegExp(`[/.]${chunk}\\.(.+)\\.js$`).test(name))
 
             if (data && !Array.isArray(data)) data = [data]
 
             return { path, scripts, data }
           })
 
-          return htmlTemplate(initialScripts, pages)
+          return htmlTemplate(pages)
         }
       }),
       new CopyPlugin({

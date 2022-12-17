@@ -27,7 +27,6 @@ This project is a case study of CSR, it aims to explore the potential of client-
     - [Preventing Sequenced Rendering](#preventing-sequenced-rendering)
     - [Transitioning Async Pages](#transitioning-async-pages)
     - [Prefetching Async Pages](#prefetching-async-pages)
-    - [Minimizing Idle Time](#minimizing-idle-time)
     - [Leveraging the 304 Status Code](#leveraging-the-304-status-code)
   - [Interim Summary](#interim-summary)
   - [The Biggest Drawback of SSR](#the-biggest-drawback-of-ssr)
@@ -729,107 +728,6 @@ _[App.jsx](src/App.jsx)_
 
 Now all pages will be prefetched and parsed (but not executed) before the user even tries to navigate to them.
 
-### Minimizing Idle Time
-
-When inspecting our 43kb `react-dom.js` file, we can see that the time it took for the request to return was 128ms while the time it took to download the file was 9ms:
-
-![RTT vs Download](images/rtt-vs-download.png)
-
-This proves to us the well-known fact that RTT (and not download speed) has the most impact on web pages load times, even when served from a nearby CDN edge.
-
-Additionally, we can see that after the HTML file is downloaded, we have a large timespan where the browser does nothing and just waits for the scripts to be download:
-
-![Browser Idle Period](images/browser-idle-period.png)
-
-This is a lot of precious time (marked in green) that the browser could use to execute scripts and speed up the page's visibility (and interactivity).
-
-The way we can eliminate both of these problems is by inlining the render-critical scripts right into the HTML file:
-
-_[webpack.config.js](webpack.config.js)_
-
-```diff
-optimization: {
-  runtimeChunk: 'single',
-  splitChunks: {
--   chunks: 'initial',
-+   chunks: 'async',
-    minSize: 40000,
-    cacheGroups: {
-      vendor: {
-        test: /[\\/]node_modules[\\/]/,
-        name: (module, chunks) => {
-          const allChunksNames = chunks.map(({ name }) => name).join('.')
-          const moduleName = (module.context.match(/[\\/]node_modules[\\/](.*?)([\\/]|$)/) || [])[1]
-
-          return `${moduleName}.${allChunksNames}`
-        }
-      }
-    }
-  }
-},
-.
-.
-.
-new HtmlPlugin({
-- scriptLoading: 'module',
-+ inject: false,
-- templateContent: ({ compilation }) => {
-+ templateContent: ({ htmlWebpackPlugin, compilation }) => {
--   const assets = compilation.getAssets().map(({ name }) => name)
-+   const assets = compilation.getAssets()
-+   const initialScripts = htmlWebpackPlugin.files.js
-+           .map(script => assets.find(({ name }) => decodeURIComponent(script).slice(1) === name))
-+           .map(({ name, source }) => ({ name, source: source._children[0]._value }))
-
-    const pages = pagesManifest.map(({ chunk, path, data }) => {
-      const scripts = assets.filter(name => new RegExp(`[/.]${chunk}\\.(.+)\\.js$`).test(name))
-
-      if (data && !Array.isArray(data)) data = [data]
-
-      return { path, scripts, data }
-    })
-
--   return htmlTemplate(pages)
-+   return htmlTemplate(initialScripts, pages)
-  }
-})
-```
-
-_[index.js](public/index.js)_
-
-```diff
-- module.exports = pages => `
-+ module.exports = (initialScripts, pages) => `
-    <!DOCTYPE html>
-    <html lang="en">
-      <head>
-        .
-        .
-        .
-
-+       ${initialScripts.map(({ name, source }) => `<script id="${name}" type="module">${source}</script>`).join('\n')}
-      </head>
-      <body>
-        <div id="root"></div>
-      </body>
-    </html>
-`
-```
-
-Now the browser will get its initial scripts without having to send another request to the CDN. And since the HTML file is streamed, the browser will execute the scripts as soon as it gets them, without having to wait for the entire file to download.
-<br>
-So the browser will first send requests for the async chunks and the preloaded data, and while they are pending, it will start downloading and executing the main scripts.
-
-While might make a noticeable difference on fast networks, this is especially critical for slower networks, where the delay is much larger and so the RTT is much more impactful:
-
-![Inlined Scripts Fast 3G](images/inlined-scripts-fast-3g.png)
-
-We can see that the async chunks start to download (marked in blue) almost immidiately after the HTML file finishes downloading (and even parsing, which saves a lot of time).
-
-This inlining method has only one disadvantage: the HTML file grows from about 2kb to about 100kb (depends on the implementation). However, in the next section, we will be taking advantage of the `304 Not Modified` status code to make the HTML size mostly irrelevant.
-
-_Note that we do not inline the async chunks since that would force us to generate multiple HTML documents, one for each page (and so losing the `304 Not Modified` status returned by a single HTML). In addition, this would negatively impact the Total Blocking Time of the page._
-
 ### Leveraging the 304 Status Code
 
 When a static asset is returned from a CDN, it includes an `ETag` header. An ETag is the content hash of the resource.
@@ -871,9 +769,11 @@ Now every page we land on will request the root `/` HTML document from the CDN, 
 
 Up until now we've managed the make our app well-splitted, extremely cachable, with fluid navigations between async pages and with page and data preloads.
 <br>
-From this point forward we are going to level it up one last time using a method that is a little more extreme but with unmatched benefits in terms of performance.
+All of the above were achieved by adding a few lines of code to the webpack config and without imposing any limitations to how we develop our app.
 
-The code so far can be found in the _[before-swr](https://github.com/theninthsky/client-side-rendering/tree/before-swr)_ branch.
+In its current state, our app has great performance, far exceeding any preconfigured CSR solutions such as _[CRA](https://create-react-app.dev)_.
+
+From this point forward we are going to level it up one last time using a method that is a little less conservative but with unmatched benefits in terms of performance.
 
 ## The Biggest Drawback of SSR
 
@@ -893,7 +793,9 @@ In addition, even those with fast interent connection will have to pay the price
 
 In the sample above (caught by a 500Mbps interent connection speed), it tooks 600ms just to get the first byte of the HTML document.
 <br>
-These times vary greatly from tens of milliseconds to hundreds of milliseconds. And to make things even worse, browsers keep the DNS cache only for about a minute, and so this process repeats very frequently.
+These times vary greatly from several hundreds of milliseconds to (in extreme cases) more than a second. And to make things even worse, browsers keep the DNS cache only for about a minute, and so this process repeats very frequently.
+<br>
+This proves to us the well-known fact that _[RTT](https://www.cloudflare.com/learning/cdn/glossary/round-trip-time-rtt)_ (and not download speed) has the most impact on web pages load times, even when served from a nearby CDN edge.
 
 The only reasonable way to rise above these issues is by caching HTML pages in the browser (for example, by setting a `Max-Age` value higher than `0`).
 
@@ -926,7 +828,7 @@ Although the first approach is completely usable (and can be set up within secon
 
 ### Implementing SWR
 
-Our SWR service worker needs to cache the HTML document and all of the scripts (and stylesheets) of all pages.
+Our SWR service worker needs to cache the HTML document and all of the fonts and scripts (and stylesheets) of all pages.
 <br>
 In addition, it needs to serve these cached assets right when the page loads and then send a request to the CDN, fetch all new assets (if exist) and finally replace the stale cached assets with the new ones.
 
@@ -985,10 +887,7 @@ _[service-worker.js](public/service-worker.js)_
 
 ```js
 const CACHE_NAME = 'my-csr-app'
-const CACHED_URLS = [
-  '/',
-  ...self.__WB_MANIFEST.map(({ url }) => url).filter(script => !/scripts\/(main|runtime)\./.test(script))
-]
+const CACHED_URLS = ['/', ...self.__WB_MANIFEST.map(({ url }) => url)]
 const MAX_STALE_DURATION = 7 * 24 * 60 * 60
 
 const preCache = async () => {
@@ -1043,9 +942,7 @@ _[App.jsx](src/App.jsx)_
 + const Pokemon = lazy(() => import(/* webpackChunkName: "pokemon" */ 'pages/Pokemon'))
 ```
 
-We exclude the `main.js` and `runtime.js` scripts since we already inline them in the HTML document.
-
-Additionally, we define a `MAX_STALE_DURATION` constant to set the maximum duration we are willing for our users to see the (potentially) stale app shell.
+We define a `MAX_STALE_DURATION` constant to set the maximum duration we are willing for our users to see the (potentially) stale app shell.
 <br>
 This duration can be derived from how often we update (deploy) our app in production. And it's important to remember that native apps, in comparison, can sometimes be "stale" for months without being updated by the app stores.
 
