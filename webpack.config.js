@@ -47,12 +47,6 @@ module.exports = (_, { mode }) => {
         },
         {
           test: /\.svg$/i,
-          type: 'asset',
-          resourceQuery: /url/
-        },
-        {
-          test: /\.svg$/i,
-          resourceQuery: { not: [/url/] },
           use: [{ loader: '@svgr/webpack', options: { dimensions: false } }]
         },
         {
