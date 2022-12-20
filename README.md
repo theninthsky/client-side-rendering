@@ -104,13 +104,13 @@ It is important to note that improving performance should not come at the expens
 
 This case study will cover two major aspects: performance and SEO. We will see how we can achieve great scores in both of them.
 
-_Note: while this project is implemented with React, the majority of its tweaks are not tied to any framework and are purely browser-based._
+_Note that while this project is implemented with React, the vast majority of its tweaks are not tied to any framework and are purely browser-based._
 
 # Performance
 
 We will assume a standard Webpack 5 setup and add the required customizations as we progress.
 <br>
-The vast majority of code changes that we'll go throught will be inside the _[webpack.config.js](webpack.config.js)_ configuration file and the _[index.js](public/index.js)_ HTML template.
+Most of the code changes that we'll go throught will be in the _[webpack.config.js](webpack.config.js)_ configuration file and the _[index.js](public/index.js)_ HTML template.
 
 ### Bundle Size
 
@@ -1217,13 +1217,9 @@ That might have been the case in 2018, but as of 2022, Google crawls CSR apps al
 <br>
 The indexed pages will have a title, description and content, as long as we remember to dynamically set them (either manually or using something like _[react-helmet](https://www.npmjs.com/package/react-helmet)_).
 
-The following video explains how the new Googlebot renders JS apps:
+However, since Googlebot tries to save on computing power (aka ["Crawl Budget"](https://developers.google.com/search/docs/crawling-indexing/large-site-managing-crawl-budget)), there might be cases where it would take a snapshot of the page before its dynamic data finishes loading.
 <br>
-https://www.youtube.com/watch?v=Ey0N1Ry0BPM
-
-However, since Googlebot tries to save on computing power, there might be cases where it would take a snapshot of the page before its dynamic data finishes loading.
-<br>
-So in order to achieve perfect SEO results, we better not entirely rely on its ability to crawl JS apps.
+So for achieving perfect SEO results, we might prefer to "play it safe" and not to entirely rely on its ability to crawl JS apps (although it generally does a perfect job). We will discuss what we can do in the next section.
 
 ### Prerendering
 
@@ -1289,9 +1285,9 @@ https://www.bing.com/search?q=site%3Ahttps%3A%2F%2Fclient-side-rendering.pages.d
 
 ![Bing Search Results](images/bing-search-results.png)
 
-In addition, cached pages will have unbelievably low response times, which might positively affect their SEO score.
+In addition, cached prerendered pages will have unbelievably low response times, which may (or may not) positively affect their SEO score.
 
-_Note that if you are using CSS-in-JS, you should [disable the speedy optimization](src/utils/disable-speedy.ts) during prerendering in order to have your styles omitted to the DOM._
+_Note that when using CSS-in-JS, we should [disable the speedy optimization](src/utils/disable-speedy.ts) during prerendering in order to have our styles omitted to the DOM._
 
 ### Social Media Share Previews
 
