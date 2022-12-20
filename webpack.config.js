@@ -4,6 +4,7 @@ const ReactRefreshTypeScript = require('react-refresh-typescript')
 const ForkTsCheckerPlugin = require('fork-ts-checker-webpack-plugin')
 const ESLintPlugin = require('eslint-webpack-plugin')
 const HtmlPlugin = require('html-webpack-plugin')
+const HtmlInlineScriptPlugin = require('html-inline-script-webpack-plugin')
 const { InjectManifest } = require('workbox-webpack-plugin')
 const CopyPlugin = require('copy-webpack-plugin')
 
@@ -63,14 +64,13 @@ module.exports = (_, { mode }) => {
       clean: true
     },
     optimization: {
-      runtimeChunk: 'single',
       splitChunks: {
         chunks: 'initial',
-        minSize: 40000,
         cacheGroups: {
-          vendor: {
+          vendors: {
             test: /[\\/]node_modules[\\/]/,
             chunks: 'all',
+            minSize: 40000,
             name: (module, chunks) => {
               const allChunksNames = chunks.map(({ name }) => name).join('.')
               const moduleName = (module.context.match(/[\\/]node_modules[\\/](.*?)([\\/]|$)/) || [])[1]
@@ -105,6 +105,7 @@ module.exports = (_, { mode }) => {
           return htmlTemplate(pages)
         }
       }),
+      new HtmlInlineScriptPlugin(),
       new CopyPlugin({
         patterns: [
           {

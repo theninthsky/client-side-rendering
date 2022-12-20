@@ -19,14 +19,15 @@ This project is a case study of CSR, it aims to explore the potential of client-
   - [Caching](#caching)
   - [Code Splitting](#code-splitting)
   - [Preloading Async Pages](#preloading-async-pages)
-  - [Generating Static Data](#generating-static-data)
+  - [Preventing Duplicate Async Vendors](#preventing-duplicate-async-vendors)
   - [Preloading Data](#preloading-data)
   - [Tweaking Further](#tweaking-further)
-    - [Splitting Vendors From Async Chunks](#splitting-vendors-from-async-chunks)
+    - [Generating Static Data](#generating-static-data)
     - [Preloading Other Pages Data](#preloading-other-pages-data)
     - [Preventing Sequenced Rendering](#preventing-sequenced-rendering)
     - [Transitioning Async Pages](#transitioning-async-pages)
     - [Prefetching Async Pages](#prefetching-async-pages)
+    - [Minimizing Idle Time](#minimizing-idle-time)
     - [Leveraging the 304 Status Code](#leveraging-the-304-status-code)
   - [Interim Summary](#interim-summary)
   - [The Biggest Drawback of SSR](#the-biggest-drawback-of-ssr)
@@ -141,7 +142,7 @@ optimization: {
   splitChunks: {
     chunks: 'initial',
     cacheGroups: {
-      vendor: {
+      vendors: {
         test: /[\\/]node_modules[\\/]/,
         name: 'vendors'
       }
@@ -209,7 +210,6 @@ plugins: [
     scriptLoading: 'module',
     templateContent: ({ compilation }) => {
       const assets = compilation.getAssets().map(({ name }) => name)
-
       const pages = pagesManifest.map(({ chunk, path }) => {
         const script = assets.find(name => name.includes(`/${chunk}.`) && name.endsWith('.js'))
 
@@ -264,51 +264,159 @@ This way, the browser is able to fetch the page-related script chunk **in parall
 
 ![With Async Preload](images/with-async-preload.png)
 
-### Generating Static Data
+### Preventing Duplicate Async Vendors
 
-I like the idea of SSG: we create a cacheable HTML file and inject static data into it.
-<br>
-This can be useful for data that is not highly dynamic, such as content from CMS.
+Code splitting introduced us to a new problem: async vendor duplication.
 
-But how can we create static data?
-<br>
-We will execute the following script during build time:
+Say we have two async chunks: `lorem-ipsum.[hash].js` and `pokemon.[hash].js`.
+If they both include the same dependency that is not part of the main chunk, that means the user will download that dependency **twice**.
 
-_[fetch-static.mjs](scripts/fetch-static.mjs)_
+So if that said dependency is `moment` and it weighs 72kb minzipped, then both async chunk's size will be **at least** 72kb.
 
-```js
-import { mkdir, writeFile } from 'fs/promises'
-import axios from 'axios'
+We need to split this dependency from these async chunks so that it could be shared between them:
 
-const path = 'public/json'
-const axiosOptions = { transformResponse: res => res }
+_[webpack.config.js](webpack.config.js)_
 
-mkdir(path, { recursive: true })
-
-const fetchLoremIpsum = async () => {
-  const { data } = await axios.get('https://loripsum.net/api/200/long/plaintext', axiosOptions)
-
-  writeFile(`${path}/lorem-ipsum.json`, JSON.stringify(data))
+```diff
+optimization: {
+  runtimeChunk: 'single',
+  splitChunks: {
+    chunks: 'initial',
+    cacheGroups: {
+      vendors: {
+        test: /[\\/]node_modules[\\/]/,
++       chunks: 'all',
+        name: ({ context }) => (context.match(/[\\/]node_modules[\\/](.*?)([\\/]|$)/) || [])[1]
+      }
+    }
+  }
 }
-
-fetchLoremIpsum()
 ```
 
-That would create a `json/lorem-ipsum.json` file to be stored in the CDN.
+Now both `lorem-ipsum.[hash].js` and `pokemon.[hash].js` will use the extracted `moment.[hash].js` chunk, sparing the user a lot of network traffic (and giving these assets better cache persistence).
 
-And now we simply fetch our static data:
+However, we have no way of telling which async vendor chunks will be split before we build the application, so we wouldn't know which async vendor chunks we need to preload (refer to the "Preloading Async Chunks" section):
 
-```js
-fetch('json/lorem-ipsum.json')
+![Without Async Vendor Preload](images/without-async-vendor-preload.png)
+
+That's why we will append the chunks names to the async vendor's name:
+
+_[webpack.config.js](webpack.config.js)_
+
+```diff
+optimization: {
+  runtimeChunk: 'single',
+  splitChunks: {
+    chunks: 'initial',
+    cacheGroups: {
+      vendors: {
+        test: /[\\/]node_modules[\\/]/,
+        chunks: 'all',
+-       name: ({ context }) => (context.match(/[\\/]node_modules[\\/](.*?)([\\/]|$)/) || [])[1]
++       name: (module, chunks) => {
++         const allChunksNames = chunks.map(({ name }) => name).join('.')
++         const moduleName = (module.context.match(/[\\/]node_modules[\\/](.*?)([\\/]|$)/) || [])[1]
+
++         return `${moduleName}.${allChunksNames}`
+        }
+      }
+    }
+  }
+},
+.
+.
+.
+plugins: [
+  new HtmlPlugin({
+    scriptLoading: 'module',
+    templateContent: ({ compilation }) => {
+      const assets = compilation.getAssets().map(({ name }) => name)
+      const pages = pagesManifest.map(({ chunk, path, data }) => {
+-       const script = assets.find(name => name.includes(`/${chunk}.`) && name.endsWith('.js'))
++       const scripts = assets.filter(name => new RegExp(`[/.]${chunk}\\.(.+)\\.js$`).test(name))
+
+        if (data && !Array.isArray(data)) data = [data]
+
+-       return { path, script, data }
++       return { path, scripts, data }
+      })
+
+      return htmlTemplate(pages)
+    }
+  })
+]
 ```
 
-There are numerous advantages to this approach:
+_[index.js](public/index.js)_
 
-- We generate static data so we won't bother our server or CMS for every user request.
-- The data will be fetched a lot faster from a nearby CDN edge than from a remote server.
-- Since this script runs on our server during build time, we can authenticate with services however we want, there is no limit to what can be sent (secret tokens for example).
+```diff
+module.exports = pages => `
+  <!DOCTYPE html>
+  <html lang="en">
+    <head>
+      <title>CSR</title>
 
-Whenever we need to update the static data we simply rebuild the app or, better yet, just rerun the script.
+      <script>
+        const isStructureEqual = (pathname, path) => {
+          pathname = pathname.split('/')
+          path = path.split('/')
+
+          if (pathname.length !== path.length) return false
+
+          return pathname.every((segment, ind) => segment === path[ind] || path[ind].includes(':'))
+        }
+
+        let { pathname } = window.location
+
+        if (pathname !== '/') pathname = pathname.replace(/\\/$/, '')
+
+        const pages = ${JSON.stringify(pages)}
+
+-       for (const { path, script, data } of pages) {
++       for (const { path, scripts, data } of pages) {
+          const match = pathname === path || (path.includes(':') && isStructureEqual(pathname, path))
+
+          if (!match) continue
+
++         scripts.forEach(script => {
+            document.head.appendChild(
+              Object.assign(document.createElement('link'), { rel: 'preload', href: '/' + script, as: 'script' })
+            )
++         })
+
+          if (!data) break
+
+           data.forEach(({ url, dynamicPathIndexes, crossorigin }) => {
+            let fullURL = url
+
+            if (dynamicPathIndexes) {
+              const pathnameArr = pathname.split('/')
+              const dynamics = dynamicPathIndexes.map(index => pathnameArr[index])
+
+              let counter = 0
+
+              fullURL = url.replace(/\\$/g, match => dynamics[counter++])
+            }
+
+            document.head.appendChild(
+              Object.assign(document.createElement('link'), { rel: 'preload', href: fullURL, as: 'fetch', crossOrigin: crossorigin })
+            )
+          })
+
+          break
+        }
+      </script>
+    </head>
+    <body>
+      <div id="root"></div>
+    </body>
+  </html>
+`
+```
+
+Now all async vendor chunks will be fetched in parallel with their parent async chunk:
+
+![With Async Vendor Preload](images/with-async-vendor-preload.png)
 
 ### Preloading Data
 
@@ -326,7 +434,6 @@ plugins: [
     scriptLoading: 'module',
     templateContent: ({ compilation }) => {
       const assets = compilation.getAssets().map(({ name }) => name)
-
 -     const pages = pagesManifest.map(({ chunk, path }) => {
 +     const pages = pagesManifest.map(({ chunk, path, data }) => {
         const script = assets.find(name => name.includes(`/${chunk}.`) && name.endsWith('.js'))
@@ -419,160 +526,51 @@ The only limitation is that we can only preload GET resources, but this would no
 
 ## Tweaking Further
 
-### Splitting Vendors From Async Chunks
+### Generating Static Data
 
-Code splitting introduced us to a new problem: vendor duplication.
+If we take a closer look, here is what SSG essentially does: it creates a cacheable HTML file and injects static data into it.
+<br>
+This can be useful for data that is not highly dynamic, such as content from CMS.
 
-Say we have two async chunks: `lorem-ipsum.[hash].js` and `pokemon.[hash].js`.
-If they both include the same dependency that is not part of the main chunk, that means the user will download that dependency **twice**.
+So how can we create static data?
+<br>
+We will execute the following script during build time:
 
-So if that said dependency is `moment` and it weighs 72kb minzipped, then both async chunk's size will be **at least** 72kb.
+_[fetch-static.mjs](scripts/fetch-static.mjs)_
 
-We need to split this dependency from these async chunks so that it could be shared between them:
+```js
+import { mkdir, writeFile } from 'fs/promises'
+import axios from 'axios'
 
-_[webpack.config.js](webpack.config.js)_
+const path = 'public/json'
+const axiosOptions = { transformResponse: res => res }
 
-```diff
-optimization: {
-  runtimeChunk: 'single',
-  splitChunks: {
-    chunks: 'initial',
-    cacheGroups: {
-      vendor: {
-        test: /[\\/]node_modules[\\/]/,
-+       chunks: 'all',
-        name: ({ context }) => (context.match(/[\\/]node_modules[\\/](.*?)([\\/]|$)/) || [])[1]
-      }
-    }
-  }
+mkdir(path, { recursive: true })
+
+const fetchLoremIpsum = async () => {
+  const { data } = await axios.get('https://loripsum.net/api/100/long/plaintext', axiosOptions)
+
+  writeFile(`${path}/lorem-ipsum.json`, JSON.stringify(data))
 }
+
+fetchLoremIpsum()
 ```
 
-Now both `lorem-ipsum.[hash].js` and `pokemon.[hash].js` will use the extracted `moment.[hash].js` chunk, sparing the user a lot of network traffic (and giving these assets better cache persistence).
+That would create a `json/lorem-ipsum.json` file to be stored in the CDN.
 
-However, we have no way of telling which async vendor chunks will be split before we build the application, so we wouldn't know which async vendor chunks we need to preload (refer to the "Preloading Async Chunks" section).
+And now we simply fetch the static data in our app:
 
-![Without Async Vendor Preload](images/without-async-vendor-preload.png)
-
-That's why we will append the chunks names to the async vendor's name:
-
-_[webpack.config.js](webpack.config.js)_
-
-```diff
-optimization: {
-  runtimeChunk: 'single',
-  splitChunks: {
-    chunks: 'initial',
-    cacheGroups: {
-      vendor: {
-        test: /[\\/]node_modules[\\/]/,
-        chunks: 'all',
--       name: ({ context }) => (context.match(/[\\/]node_modules[\\/](.*?)([\\/]|$)/) || [])[1]
-+       name: (module, chunks) => {
-+         const allChunksNames = chunks.map(({ name }) => name).join('.')
-+         const moduleName = (module.context.match(/[\\/]node_modules[\\/](.*?)([\\/]|$)/) || [])[1]
-
-+         return `${moduleName}.${allChunksNames}`
-        }
-      }
-    }
-  }
-},
-.
-.
-.
-plugins: [
-  new HtmlPlugin({
-    scriptLoading: 'module',
-    templateContent: ({ compilation }) => {
-      const assets = compilation.getAssets().map(({ name }) => name)
-
-      const pages = pagesManifest.map(({ chunk, path, data }) => {
--       const script = assets.find(name => name.includes(`/${chunk}.`) && name.endsWith('.js'))
-+       const scripts = assets.filter(name => new RegExp(`[/.]${chunk}\\.(.+)\\.js$`).test(name))
-
-        if (data && !Array.isArray(data)) data = [data]
-
--       return { path, script, data }
-+       return { path, scripts, data }
-      })
-
-      return htmlTemplate(pages)
-    }
-  })
-]
+```js
+fetch('json/lorem-ipsum.json')
 ```
 
-_[index.js](public/index.js)_
+There are numerous advantages to this approach:
 
-```diff
-module.exports = pages => `
-  <!DOCTYPE html>
-  <html lang="en">
-    <head>
-      <title>CSR</title>
+- We generate static data so we won't bother our server or CMS for every user request.
+- The data will be fetched a lot faster from a nearby CDN edge than from a remote server.
+- Since this script runs on our server during build time, we can authenticate with services however we want, there is no limit to what can be sent (secret tokens for example).
 
-      <script>
-        const isStructureEqual = (pathname, path) => {
-          pathname = pathname.split('/')
-          path = path.split('/')
-
-          if (pathname.length !== path.length) return false
-
-          return pathname.every((segment, ind) => segment === path[ind] || path[ind].includes(':'))
-        }
-
-        let { pathname } = window.location
-
-        if (pathname !== '/') pathname = pathname.replace(/\\/$/, '')
-
-        const pages = ${JSON.stringify(pages)}
-
--       for (const { path, script, data } of pages) {
-+       for (const { path, scripts, data } of pages) {
-          const match = pathname === path || (path.includes(':') && isStructureEqual(pathname, path))
-
-          if (!match) continue
-
-+         scripts.forEach(script => {
-            document.head.appendChild(
-              Object.assign(document.createElement('link'), { rel: 'preload', href: '/' + script, as: 'script' })
-            )
-+         })
-
-          if (!data) break
-
-           data.forEach(({ url, dynamicPathIndexes, crossorigin }) => {
-            let fullURL = url
-
-            if (dynamicPathIndexes) {
-              const pathnameArr = pathname.split('/')
-              const dynamics = dynamicPathIndexes.map(index => pathnameArr[index])
-
-              let counter = 0
-
-              fullURL = url.replace(/\\$/g, match => dynamics[counter++])
-            }
-
-            document.head.appendChild(
-              Object.assign(document.createElement('link'), { rel: 'preload', href: fullURL, as: 'fetch', crossOrigin: crossorigin })
-            )
-          })
-
-          break
-        }
-      </script>
-    </head>
-    <body>
-      <div id="root"></div>
-    </body>
-  </html>
-`
-```
-
-Now all async vendor chunks will be fetched in parallel with their parent async chunk:
-
-![With Async Vendor Preload](images/with-async-vendor-preload.png)
+Whenever we need to update the static data we simply rebuild the app or, better yet, just rerun the script.
 
 ### Preloading Other Pages Data
 
@@ -728,6 +726,48 @@ _[App.jsx](src/App.jsx)_
 
 Now all pages will be prefetched and parsed (but not executed) before the user even tries to navigate to them.
 
+### Minimizing Idle Time
+
+When inspecting our 43kb `react-dom.js` file, we can see that the time it took for the request to return was 128ms while the time it took to download the file was 9ms:
+
+![RTT vs Download](images/rtt-vs-download.png)
+
+This proves to us the well-known fact that RTT (and not download speed) has the most impact on web pages load times, even when served from a nearby CDN edge.
+
+Additionally, we can see that after the HTML file is downloaded, we have a large timespan where the browser does nothing and just waits for the scripts to be download:
+
+![Browser Idle Period](images/browser-idle-period.png)
+
+This is a lot of precious time (marked in green) that the browser could use to execute scripts and speed up the page's visibility (and interactivity).
+
+The way we can mitigate these issues is by inlining the render-critical scripts right into the HTML file:
+
+_[webpack.config.js](webpack.config.js)_
+
+```diff
++ const HtmlInlineScriptPlugin = require('html-inline-script-webpack-plugin')
+.
+.
+.
+plugins: [
++ new HtmlInlineScriptPlugin()
+]
+```
+
+Now the browser will get its initial scripts without having to send another request to the CDN. And since the HTML file is streamed, the browser will execute the scripts as soon as it gets them, without having to wait for the entire file to download.
+<br>
+So the browser will first send requests for the async chunks and the preloaded data, and while they are pending, it will start downloading and executing the main scripts.
+
+While making a noticeable difference on fast networks, this is especially critical for slower networks, where the delay is much larger and so the RTT is much more impactful:
+
+![Inlined Scripts Fast 3G](images/inlined-scripts-slow-4g.png)
+
+We can see that the async chunks start to download (marked in blue) almost immidiately after the HTML file finishes downloading (and even parsing, which saves a lot of time).
+
+This inlining method has only one disadvantage: the HTML file grows from about 2kb to about 100kb (depends on the implementation). However, in the next section, we will be taking advantage of the `304 Not Modified` status code to make the HTML size mostly irrelevant.
+
+_Note that we do not inline the async chunks since that would force us to generate multiple HTML documents, one for each page (and so losing the `304 Not Modified` status returned by a single HTML). In addition, this would negatively impact the Total Blocking Time of the page._
+
 ### Leveraging the 304 Status Code
 
 When a static asset is returned from a CDN, it includes an `ETag` header. An ETag is the content hash of the resource.
@@ -771,7 +811,7 @@ Up until now we've managed the make our app well-splitted, extremely cachable, w
 <br>
 All of the above were achieved by adding a few lines of code to the webpack config and without imposing any limitations to how we develop our app.
 
-In its current state, our app has great performance, far exceeding any preconfigured CSR solutions such as _[CRA](https://create-react-app.dev)_.
+In its current state, our app has amazing performance, far exceeding any preconfigured CSR solutions such as _[CRA](https://create-react-app.dev)_.
 
 From this point forward we are going to level it up one last time using a method that is a little less conservative but with unmatched benefits in terms of performance.
 
@@ -794,8 +834,6 @@ In addition, even those with fast interent connection will have to pay the price
 In the sample above (caught by a 500Mbps interent connection speed), it tooks 600ms just to get the first byte of the HTML document.
 <br>
 These times vary greatly from several hundreds of milliseconds to (in extreme cases) more than a second. And to make things even worse, browsers keep the DNS cache only for about a minute, and so this process repeats very frequently.
-<br>
-This proves to us the well-known fact that _[RTT](https://www.cloudflare.com/learning/cdn/glossary/round-trip-time-rtt)_ (and not download speed) has the most impact on web pages load times, even when served from a nearby CDN edge.
 
 The only reasonable way to rise above these issues is by caching HTML pages in the browser (for example, by setting a `Max-Age` value higher than `0`).
 
