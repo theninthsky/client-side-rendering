@@ -1,4 +1,4 @@
-import { lazy } from 'react'
+import { lazy, Suspense } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 
 import pagesManifest from 'pages-manifest.json'
@@ -25,11 +25,13 @@ const App = () => {
       <Navigation />
 
       <Layout>
-        <Routes>
-          {routes}
+        <Suspense>
+          <Routes>
+            {routes}
 
-          <Route path="/*" element={<Navigate replace to="/" />} />
-        </Routes>
+            <Route path="/*" element={<Navigate replace to="/" />} />
+          </Routes>
+        </Suspense>
       </Layout>
     </>
   )

@@ -174,9 +174,9 @@ https://webpack.js.org/plugins/split-chunks-plugin/#defaults
 
 ### Code Splitting
 
-A lot of the features we write end up being used only in a few of our pages, so we would like them to be downloaded only when the user visits the page they are being used in.
+A lot of the features we write end up being used only in a few of our pages, so we would like them to be loaded only when the user visits the page they are being used in.
 
-For Example, we wouldn't want users to download the _[react-big-calendar](https://www.npmjs.com/package/react-big-calendar)_ package if they just loaded the home page. We would only want that to happen when they visit the calendar page.
+For Example, we wouldn't want users to download, parse and execute the _[react-big-calendar](https://www.npmjs.com/package/react-big-calendar)_ package if they merely loaded the home page. We would only want that to happen when they visit the calendar page.
 
 The way we achieve this is (preferably) by route-based code splitting:
 
@@ -190,13 +190,13 @@ const Pokemon = lazy(() => import(/* webpackChunkName: "pokemon" */ 'pages/Pokem
 
 So when the user visits the Lorem Ipsum page, they only download the main chunk script (which includes all shared dependencies such as the framework) and the `lorem-ipsum.[hash].js` chunk.
 
-_Note: I believe that it is completely fine (and even encouraged) to have the user download our entire site, so they can have a smooth **app-like** navigation experience. But it is **very wrong** to have all the assets being downloaded **initially**, delaying the first render of the page.
+_Note: it is completely fine (and even encouraged) to have the user download our entire app, so they can have a smooth **app-like** navigation experience. But it is **very wrong** to make all assets load **initially**, delaying the first render of the page.
 <br>
 These assets should be downloaded after the user-requested page has finished rendering and is entirely visible._
 
 ### Preloading Async Pages
 
-Code splitting has one major flaw - the runtime doesn't know which async chunks are needed until the main script executes, leading to them being fetched in a significant delay:
+Code splitting has one major flaw - the runtime doesn't know which async chunks are needed until the main script executes, leading to them being fetched in a significant delay (since they make another round-trip to the CDN):
 
 ![Without Async Preload](images/without-async-preload.png)
 
@@ -599,7 +599,7 @@ When we split a page from the main app, we separate its render phase, meaning th
 ![Before Page Render](images/before-page-render.png)
 ![After Page Render](images/after-page-render.png)
 
-This happens due to the common approach of wrapping routes with Suspense:
+This happens due to the common approach of wrapping only the routes with Suspense:
 
 ```js
 const App = () => {
@@ -619,23 +619,26 @@ This method has a lot of sense to it:
 <br>
 We would prefer the app to be visually complete in a single render, but we would never want to stall the page render until the async chunk finishes downloading.
 
-However, since we preload all async chunks (and their vendors), this won't be a problem for us. So we **should** suspend the entire app until the async chunk finishes downloading (which, in our case, happens in parallel with all the render-critical assets):
+However, since we preload all async chunks (and their vendors), this won't be a problem for us. So we **should** hide the entire app until the async chunk finishes downloading (which, in our case, happens in parallel with all the render-critical assets):
 
 _[index.jsx](src/index.jsx)_
 
 ```js
-createRoot(document.getElementById('root')).render(
-  <BrowserRouter>
-    <Suspense>
-      <App />
-    </Suspense>
-  </BrowserRouter>
-)
+const root = document.getElementById('root')
+
+root.style.display = 'none'
+
+new MutationObserver((_, observer) => {
+  if (document.getElementsByTagName('h1').length) {
+    root.style.display = 'block'
+    observer.disconnect()
+  }
+}).observe(root, { childList: true, subtree: true })
 ```
 
-This would make our app and the async page visually render at the same time.
+In our case, we only show the app when the title of the page is rendered to the DOM (only pages have a title).
 
-_Note that this method should be used in conjunction with the method followed in the next section to prevent a blank page during suspensions._
+This would make our app and the async page visually show up at the same time.
 
 ### Transitioning Async Pages
 
@@ -762,9 +765,13 @@ While making a noticeable difference on fast networks, this is especially critic
 
 ![Inlined Scripts Fast 3G](images/inlined-scripts-slow-4g.png)
 
-We can see that the async chunks start to download (marked in blue) almost immidiately after the HTML file finishes downloading (and even parsing, which saves a lot of time).
+We can see that the async chunks start to download (marked in blue) almost immidiately after the HTML file finishes downloading, parsing and executing, which saves a lot of time.
+<br>
+This makes the framework's startup time almost irrelevant, since the app, in most cases, will finish rendering even before the async page starts rendring.
 
-This inlining method has only one disadvantage: the HTML file grows from about 2kb to about 100kb (depends on the implementation). However, in the next section, we will be taking advantage of the `304 Not Modified` status code to make the HTML size mostly irrelevant.
+This inlining method has only one disadvantage: the HTML file grows from about 2kb to about 100kb (depends on the implementation).
+<br>
+However, in the next section, we will be taking advantage of the `304 Not Modified` status code to make the HTML size less of a problem.
 
 _Note that we do not inline the async chunks since that would force us to generate multiple HTML documents, one for each page (and so losing the `304 Not Modified` status returned by a single HTML). In addition, this would negatively impact the Total Blocking Time of the page._
 

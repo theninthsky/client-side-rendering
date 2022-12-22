@@ -1,6 +1,5 @@
 import 'utils/disable-speedy'
 
-import { Suspense } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import { StyledEngineProvider } from '@mui/material/styles'
@@ -10,13 +9,22 @@ import 'styles'
 import pagesManifest from 'pages-manifest.json'
 import App from './App'
 
-createRoot(document.getElementById('root')).render(
+const root = document.getElementById('root')
+
+root.style.display = 'none'
+
+new MutationObserver((_, observer) => {
+  if (document.getElementsByTagName('h1').length) {
+    root.style.display = 'block'
+    observer.disconnect()
+  }
+}).observe(root, { childList: true, subtree: true })
+
+createRoot(root).render(
   <BrowserRouter>
-    <Suspense>
-      <StyledEngineProvider injectFirst>
-        <App />
-      </StyledEngineProvider>
-    </Suspense>
+    <StyledEngineProvider injectFirst>
+      <App />
+    </StyledEngineProvider>
   </BrowserRouter>
 )
 
