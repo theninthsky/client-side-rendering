@@ -6,21 +6,11 @@ import { StyledEngineProvider } from '@mui/material/styles'
 
 import 'service-worker-registration'
 import 'styles'
+import 'utils/delay-page-visibility'
 import pagesManifest from 'pages-manifest.json'
 import App from './App'
 
-const root = document.getElementById('root')
-
-root.style.display = 'none'
-
-new MutationObserver((_, observer) => {
-  if (document.getElementsByTagName('h1').length) {
-    root.style.display = 'block'
-    observer.disconnect()
-  }
-}).observe(root, { childList: true, subtree: true })
-
-createRoot(root).render(
+createRoot(document.getElementById('root')).render(
   <BrowserRouter>
     <StyledEngineProvider injectFirst>
       <App />
