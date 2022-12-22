@@ -6,7 +6,7 @@ const path = 'public/json'
 const axiosOptions = { transformResponse: res => res }
 
 mkdir(path, { recursive: true })
-process.on('beforeExit', () => console.log('Fetched all static assets'))
+process.on('beforeExit', () => console.log('Fetched all static assets.'))
 
 const fetchLoremIpsum = async () => {
   const { data } = await axios.get('https://loripsum.net/api/100/long/plaintext', axiosOptions)
