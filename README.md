@@ -548,7 +548,7 @@ const axiosOptions = { transformResponse: res => res }
 mkdir(path, { recursive: true })
 
 const fetchLoremIpsum = async () => {
-  const { data } = await axios.get('https://loripsum.net/api/50/long/plaintext', axiosOptions)
+  const { data } = await axios.get('https://loripsum.net/api/100/long/plaintext', axiosOptions)
 
   writeFile(`${path}/lorem-ipsum.json`, JSON.stringify(data))
 }
@@ -644,7 +644,7 @@ _[index.jsx](src/index.jsx)_
 import 'utils/delay-page-visibility'
 ```
 
-In our case, we only show the app when the title of the page is rendered to the DOM (only pages have a title).
+In our case, we only show the app when the `Layout` component has children (which means that an async page was loaded).
 
 This would make our app and the async page visually show up at the same time.
 
@@ -755,14 +755,8 @@ The way we can mitigate these issues is by inlining the render-critical scripts 
 
 _[webpack.config.js](webpack.config.js)_
 
-```diff
-+ const HtmlInlineScriptPlugin = require('html-inline-script-webpack-plugin')
-.
-.
-.
-plugins: [
-+ new HtmlInlineScriptPlugin()
-]
+```js
+plugins: [new HtmlInlineScriptPlugin()]
 ```
 
 Now the browser will get its initial scripts without having to send another request to the CDN. And since the HTML file is streamed, the browser will execute the scripts as soon as it gets them, without having to wait for the entire file to download.
@@ -897,15 +891,15 @@ plugins: [
         })
       ]
     : []),
-.
-.
-.
+  new EnvironmentPlugin({ TIMESTAMP: Date.now() })
 ]
 ```
 
 _[service-worker.js](public/service-worker.js)_
 
 ```js
+eval(process.env.TIMESTAMP)
+
 const CACHE_NAME = 'my-csr-app'
 const CACHED_URLS = ['/', ...self.__WB_MANIFEST.map(({ url }) => url)]
 const MAX_STALE_DURATION = 7 * 24 * 60 * 60
@@ -998,6 +992,8 @@ _[App.jsx](src/App.jsx)_
 We define a `MAX_STALE_DURATION` constant to set the maximum duration we are willing for our users to see the (potentially) stale app shell.
 <br>
 This duration can be derived from how often we update (deploy) our app in production. And it's important to remember that native apps, in comparison, can sometimes be "stale" for months without being updated by the app stores.
+
+_Note that we inject a `TIMESTAMP` variable since we would like the content of the service worker file to change on every build (which doesn't happen all the time since we inline the initial scripts in the HTML) so the revalidation can take place._
 
 The results exceed all expectations:
 

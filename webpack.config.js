@@ -1,4 +1,5 @@
 const path = require('path')
+const { EnvironmentPlugin } = require('webpack')
 const ReactRefreshPlugin = require('@pmmmwh/react-refresh-webpack-plugin')
 const ReactRefreshTypeScript = require('react-refresh-typescript')
 const ForkTsCheckerPlugin = require('fork-ts-checker-webpack-plugin')
@@ -90,6 +91,7 @@ module.exports = (_, { mode }) => {
             })
           ]
         : [new ReactRefreshPlugin(), new ForkTsCheckerPlugin(), new ESLintPlugin()]),
+      new EnvironmentPlugin({ TIMESTAMP: Date.now() }),
       new HtmlPlugin({
         scriptLoading: 'module',
         templateContent: ({ compilation }) => {
