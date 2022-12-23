@@ -2,7 +2,11 @@ import { memo } from 'react'
 import { css } from '@emotion/css'
 
 const Layout = ({ children }) => {
-  return <div className={style.wrapper}>{children}</div>
+  return (
+    <div id="layout" className={style.wrapper}>
+      {children}
+    </div>
+  )
 }
 
 const style = {

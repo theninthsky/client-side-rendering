@@ -548,7 +548,7 @@ const axiosOptions = { transformResponse: res => res }
 mkdir(path, { recursive: true })
 
 const fetchLoremIpsum = async () => {
-  const { data } = await axios.get('https://loripsum.net/api/100/long/plaintext', axiosOptions)
+  const { data } = await axios.get('https://loripsum.net/api/50/long/plaintext', axiosOptions)
 
   writeFile(`${path}/lorem-ipsum.json`, JSON.stringify(data))
 }
@@ -617,23 +617,31 @@ const App = () => {
 
 This method has a lot of sense to it:
 <br>
-We would prefer the app to be visually complete in a single render, but we would never want to stall the page render until the async chunk finishes downloading.
+We would prefer the app to be visually complete in a single render, but we would never want to stall the page render until the async chunk finishes loading.
 
-However, since we preload all async chunks (and their vendors), this won't be a problem for us. So we **should** hide the entire app until the async chunk finishes downloading (which, in our case, happens in parallel with all the render-critical assets):
+However, since we preload all async chunks (and their vendors), this won't be a problem for us. So we **should** hide the entire app until the async chunk finishes loading (which, in our case, happens in parallel with all the render-critical assets):
+
+_[delay-page-visibility.ts](src/utils/delay-page-visibility.ts)_
+
+```js
+const root = document.getElementById('root') as HTMLDivElement
+
+document.body.style.overflow = 'hidden'
+root.style.visibility = 'hidden'
+
+new MutationObserver((_, observer) => {
+  if (!document.getElementById('layout')?.hasChildNodes()) return
+
+  document.body.removeAttribute('style')
+  root.removeAttribute('style')
+  observer.disconnect()
+}).observe(root, { childList: true, subtree: true })
+```
 
 _[index.jsx](src/index.jsx)_
 
 ```js
-const root = document.getElementById('root')
-
-root.style.display = 'none'
-
-new MutationObserver((_, observer) => {
-  if (document.getElementsByTagName('h1').length) {
-    root.style.display = 'block'
-    observer.disconnect()
-  }
-}).observe(root, { childList: true, subtree: true })
+import 'utils/delay-page-visibility'
 ```
 
 In our case, we only show the app when the title of the page is rendered to the DOM (only pages have a title).
@@ -895,39 +903,6 @@ plugins: [
 ]
 ```
 
-_[service-worker-registration.js](src/service-worker-registration.js)_
-
-```js
-const register = () => {
-  window.addEventListener('load', async () => {
-    try {
-      await navigator.serviceWorker.register('/service-worker.js')
-
-      console.log('Service worker registered!')
-    } catch (err) {
-      console.error(err)
-    }
-  })
-}
-
-const unregister = async () => {
-  try {
-    const registration = await navigator.serviceWorker.ready
-
-    await registration.unregister()
-
-    console.log('Service worker unregistered!')
-  } catch (err) {
-    console.error(err)
-  }
-}
-
-if ('serviceWorker' in navigator) {
-  if (process.env.NODE_ENV === 'development') unregister()
-  else register()
-}
-```
-
 _[service-worker.js](public/service-worker.js)_
 
 ```js
@@ -975,6 +950,39 @@ self.addEventListener('fetch', event => {
 })
 ```
 
+_[service-worker-registration.js](src/utils/service-worker-registration.js)_
+
+```js
+const register = () => {
+  window.addEventListener('load', async () => {
+    try {
+      await navigator.serviceWorker.register('/service-worker.js')
+
+      console.log('Service worker registered!')
+    } catch (err) {
+      console.error(err)
+    }
+  })
+}
+
+const unregister = async () => {
+  try {
+    const registration = await navigator.serviceWorker.ready
+
+    await registration.unregister()
+
+    console.log('Service worker unregistered!')
+  } catch (err) {
+    console.error(err)
+  }
+}
+
+if ('serviceWorker' in navigator) {
+  if (process.env.NODE_ENV === 'development') unregister()
+  else register()
+}
+```
+
 _[App.jsx](src/App.jsx)_
 
 ```diff
@@ -1019,7 +1027,7 @@ const preCache = async () => {
 }
 ```
 
-_[index.jsx](src/index.jsx)_
+_[service-worker-registration.js](src/utils/service-worker-registration.js)_
 
 ```js
 import pagesManifest from 'pages-manifest.json'
@@ -1045,8 +1053,6 @@ const reloadIfPossible = () => {
 
 navigator.serviceWorker.addEventListener('message', ({ data }) => {
   if (data.type === 'update-available') {
-    reloadIfPossible()
-
     window.addEventListener('visibilitychange', reloadIfPossible)
   }
 })
@@ -1062,7 +1068,7 @@ _In addition, we can define a `preventReload` property in pages that we wouldn't
 
 Some users leave the app open for extended periods of time, so another thing we can do is to revalidate the app while it is running:
 
-_[service-worker-registration.js](src/service-worker-registration.js)_
+_[service-worker-registration.js](src/utils/service-worker-registration.js)_
 
 ```diff
 + const ACTIVE_REVALIDATION_INTERVAL = 1 * 60 * 60
@@ -1081,11 +1087,7 @@ const register = () => {
     }
   })
 }
-```
 
-_[index.jsx](src/index.jsx)_
-
-```diff
 navigator.serviceWorker.addEventListener('message', ({ data }) => {
   if (data.type === 'update-available') {
 +   reloadIfPossible()
@@ -1093,7 +1095,6 @@ navigator.serviceWorker.addEventListener('message', ({ data }) => {
     window.addEventListener('visibilitychange', reloadIfPossible)
   }
 })
-
 ```
 
 The code above arbitrarily revalidates the app every hour. However, we could implement a more sophisticated revalidation process which will run every time we deploy our app and notify all online users either through _[SSE](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events)_ or _[WebSockets](https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API/Writing_WebSocket_client_applications)_.
@@ -1106,7 +1107,15 @@ This method only works for installed PWAs and allows the OS to periodically "wak
 
 During its wake-up time, the service worker can perform any task, including revalidating assets:
 
-_[service-worker-registration.js](src/service-worker-registration.js)_
+_[service-worker.js](public/service-worker.js)_
+
+```js
+self.addEventListener('periodicsync', event => {
+  if (event.tag === 'revalidate-assets') event.waitUntil(preCache())
+})
+```
+
+_[service-worker-registration.js](src/utils/service-worker-registration.js)_
 
 ```diff
 const ACTIVE_REVALIDATION_INTERVAL = 1 * 60 * 60
@@ -1133,21 +1142,6 @@ const register = () => {
     }
   })
 }
-.
-.
-.
-```
-
-_[service-worker.js](public/service-worker.js)_
-
-```js
-.
-.
-.
-self.addEventListener('periodicsync', event => {
-  if (event.tag === 'revalidate-assets') event.waitUntil(preCache())
-})
-
 ```
 
 This way we ensure that users who installed our app will always see the most recent version when they open it.

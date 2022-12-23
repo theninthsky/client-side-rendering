@@ -4,7 +4,7 @@ document.body.style.overflow = 'hidden'
 root.style.visibility = 'hidden'
 
 new MutationObserver((_, observer) => {
-  if (!document.getElementsByTagName('h1').length) return
+  if (!document.getElementById('layout')?.hasChildNodes()) return
 
   document.body.removeAttribute('style')
   root.removeAttribute('style')
