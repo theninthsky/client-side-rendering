@@ -3,6 +3,8 @@ const CACHED_URLS = ['/', ...self.__WB_MANIFEST.map(({ url }) => url)]
 const MAX_STALE_DURATION = 7 * 24 * 60 * 60
 
 const preCache = async () => {
+  await caches.delete(CACHE_NAME)
+
   const cache = await caches.open(CACHE_NAME)
   const [windowClient] = await clients.matchAll({ includeUncontrolled: true, type: 'window' })
 
@@ -45,7 +47,7 @@ self.addEventListener('fetch', event => {
 
 self.addEventListener('periodicsync', async event => {
   if (event.tag === 'revalidate-assets') {
-    event.waitUntil(preCache())
+    await event.target.registration.update()
 
     const [windowClient] = await clients.matchAll({ includeUncontrolled: true, type: 'window' })
 

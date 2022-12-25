@@ -861,6 +861,8 @@ const CACHED_URLS = ['/', ...self.__WB_MANIFEST.map(({ url }) => url)]
 const MAX_STALE_DURATION = 7 * 24 * 60 * 60
 
 const preCache = async () => {
+  await caches.delete(CACHE_NAME)
+
   const cache = await caches.open(CACHE_NAME)
 
   await cache.addAll(CACHED_URLS)
@@ -969,6 +971,8 @@ _[service-worker.js](public/service-worker.js)_
 
 ```diff
 const preCache = async () => {
+  await caches.delete(CACHE_NAME)
+
   const cache = await caches.open(CACHE_NAME)
 + const [windowClient] = await clients.matchAll({ includeUncontrolled: true, type: 'window' })
 
@@ -1061,7 +1065,7 @@ _[service-worker.js](public/service-worker.js)_
 
 ```js
 self.addEventListener('periodicsync', event => {
-  if (event.tag === 'revalidate-assets') event.waitUntil(preCache())
+  if (event.tag === 'revalidate-assets') event.target.registration.update()
 })
 ```
 
