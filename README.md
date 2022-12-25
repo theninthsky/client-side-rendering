@@ -27,7 +27,6 @@ This project is a case study of CSR, it aims to explore the potential of client-
     - [Preventing Sequenced Rendering](#preventing-sequenced-rendering)
     - [Transitioning Async Pages](#transitioning-async-pages)
     - [Prefetching Async Pages](#prefetching-async-pages)
-    - [Minimizing Idle Time](#minimizing-idle-time)
     - [Leveraging the 304 Status Code](#leveraging-the-304-status-code)
   - [Interim Summary](#interim-summary)
   - [The Biggest Drawback of SSR](#the-biggest-drawback-of-ssr)
@@ -737,46 +736,6 @@ _[App.jsx](src/App.jsx)_
 
 Now all pages will be prefetched and parsed (but not executed) before the user even tries to navigate to them.
 
-### Minimizing Idle Time
-
-When inspecting our 43kb `react-dom.js` file, we can see that the time it took for the request to return was 128ms while the time it took to download the file was 9ms:
-
-![RTT vs Download](images/rtt-vs-download.png)
-
-This proves to us the well-known fact that RTT (and not download speed) has the most impact on web pages load times, even when served from a nearby CDN edge.
-
-Additionally, we can see that after the HTML file is downloaded, we have a large timespan where the browser does nothing and just waits for the scripts to be download:
-
-![Browser Idle Period](images/browser-idle-period.png)
-
-This is a lot of precious time (marked in green) that the browser could use to execute scripts and speed up the page's visibility (and interactivity).
-
-The way we can mitigate these issues is by inlining the render-critical scripts right into the HTML file:
-
-_[webpack.config.js](webpack.config.js)_
-
-```js
-plugins: [new HtmlInlineScriptPlugin()]
-```
-
-Now the browser will get its initial scripts without having to send another request to the CDN. And since the HTML file is streamed, the browser will execute the scripts as soon as it gets them, without having to wait for the entire file to download.
-<br>
-So the browser will first send requests for the async chunks and the preloaded data, and while they are pending, it will start downloading and executing the main scripts.
-
-While making a noticeable difference on fast networks, this is especially critical for slower networks, where the delay is much larger and so the RTT is much more impactful:
-
-![Inlined Scripts Fast 3G](images/inlined-scripts-slow-4g.png)
-
-We can see that the async chunks start to download (marked in blue) almost immidiately after the HTML file finishes downloading, parsing and executing, which saves a lot of time.
-<br>
-This makes the framework's startup time almost irrelevant, since the app, in most cases, will finish rendering even before the async page starts rendring.
-
-This inlining method has only one disadvantage: the HTML file grows from about 2kb to about 100kb (depends on the implementation).
-<br>
-However, in the next section, we will be taking advantage of the `304 Not Modified` status code to make the HTML size less of a problem.
-
-_Note that we do not inline the async chunks since that would force us to generate multiple HTML documents, one for each page (and so losing the `304 Not Modified` status returned by a single HTML). In addition, this would negatively impact the Total Blocking Time of the page._
-
 ### Leveraging the 304 Status Code
 
 When a static asset is returned from a CDN, it includes an `ETag` header. An ETag is the content hash of the resource.
@@ -890,16 +849,13 @@ plugins: [
           swSrc: path.join(__dirname, 'public', 'service-worker.js')
         })
       ]
-    : []),
-  new EnvironmentPlugin({ TIMESTAMP: Date.now() })
+    : [])
 ]
 ```
 
 _[service-worker.js](public/service-worker.js)_
 
 ```js
-eval(process.env.TIMESTAMP)
-
 const CACHE_NAME = 'my-csr-app'
 const CACHED_URLS = ['/', ...self.__WB_MANIFEST.map(({ url }) => url)]
 const MAX_STALE_DURATION = 7 * 24 * 60 * 60
@@ -993,8 +949,6 @@ We define a `MAX_STALE_DURATION` constant to set the maximum duration we are wil
 <br>
 This duration can be derived from how often we update (deploy) our app in production. And it's important to remember that native apps, in comparison, can sometimes be "stale" for months without being updated by the app stores.
 
-_Note that we inject a `TIMESTAMP` variable since we would like the content of the service worker file to change on every build (which doesn't happen all the time since we inline the initial scripts in the HTML) so the revalidation can take place._
-
 The results exceed all expectations:
 
 ![SWR Disk Cache](images/swr-disk-cache.png)
@@ -1062,7 +1016,7 @@ _In addition, we can define a `preventReload` property in pages that we wouldn't
 
 ### Revalidating Active Apps
 
-Some users leave the app open for extended periods of time, so another thing we can do is to revalidate the app while it is running:
+Some users leave the app open for extended periods of time, so another thing we can do is revalidate the app while it is running:
 
 _[service-worker-registration.js](src/utils/service-worker-registration.js)_
 
@@ -1148,13 +1102,13 @@ Further reading: https://developer.chrome.com/articles/periodic-background-sync
 
 ## Summary
 
-We've managed to make the initial load of our app extremely fast, only what is needed for the page is being loaded.
+We've managed to make the initial load of our app extremely fast, only what is needed for the requested page is being loaded.
 <br>
 In addition, we preload other pages (and even their data), which makes it seem as if they were never seperated to begin with.
 <br>
-And finally, we wrapped everything inside SWR, so the repeated loads of our app are unbelievably fast, it's literaly impossible to get anything better than that.
+And finally, we wrapped everything with SWR, so the repeated loads of our app are unbelievably fast, it's literaly impossible to get anything better than that.
 
-All of these were achieved without compromising on the DX and without dictating which JS framework we choose and where we deploy our app, it can be on any CDN we choose (more on that in the next section).
+All of these were achieved without compromising on the developer experience and without dictating which JS framework we choose or where we deploy our app, it can be on any CDN we choose (more on that in the next section).
 
 ## Deploying
 

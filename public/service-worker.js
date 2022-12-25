@@ -1,5 +1,3 @@
-eval(process.env.TIMESTAMP)
-
 const CACHE_NAME = 'client-side-rendering'
 const CACHED_URLS = ['/', ...self.__WB_MANIFEST.map(({ url }) => url)]
 const MAX_STALE_DURATION = 7 * 24 * 60 * 60
