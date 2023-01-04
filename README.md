@@ -1335,6 +1335,7 @@ Here's a list of some SSR drawbacks to consider:
 - When using client-side data fetching, SSR will **always** be slower than CSR, since its document is always bigger and takes longer to download. In addition, all web crawlers (except for Googlebot) will index the page without its data.
 - Streaming SSR also has _[some major drawbacks](https://remix.run/blog/react-server-components#zero-bundle-or-infinite-bundle)_.
 - SSR apps are always heavier than CSR apps, since every page is composed of both a fully-constructed HTML document and its scripts (used for hydration).
+- When _[hydration fails](https://stackoverflow.com/questions/71706064/react-18-hydration-failed-because-the-initial-ui-does-not-match-what-was-render)_, the app will render twice in the browser, increasing the _[TTI](https://web.dev/tti)_ and _[TBT](https://web.dev/tbt)_ of the page.
 - Since all images are initially included in the document, scripts and images will compete for bandwidth, causing delayed interactivity on slow networks.
 - Since accessing browser-related objects during the server render phase throws an error, some very helpful tools become unusable, while others (such as _[react-media](https://www.npmjs.com/package/react-media#server-side-rendering-ssr)_) require SSR-specific customizations.
 - SSR pages cannot respond with a _[304 Not Modified](https://blog.hubspot.com/marketing/http-304-not-modified#:~:text=An%20HTTP%20304%20not%20modified%20status%20code%20means%20that%20the,to%20speed%20up%20page%20delivery)_ status.
@@ -1361,7 +1362,9 @@ Another example for this is JS animations - they would first appear static and s
 
 There are various examples of how this delayed functionality negatively impacts the user experience, like the way some websites only show the navigation bar after JS has been loaded (since they cannot access the Local Storage to check if it has a user info entry).
 
-Another issue which can be especially critical for E-commere websites is that SSG pages might reflect outdated data (a product's price or availability for example).
+Another issue, which can be especially critical for E-commere websites, is that SSG pages might reflect outdated data (a product's price or availability for example).
+
+However, if we insist on using SSG (for some unknown reason), we can simply use the _[Prerender SPA Plugin](https://github.com/chrisvfritz/prerender-spa-plugin#what-is-prerendering)_ to generate SSG pages from our CSR app.
 
 ## The Cost of Hydration
 
