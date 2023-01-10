@@ -1172,9 +1172,9 @@ That might have been the case in 2018, but as of 2022, Google crawls CSR apps al
 <br>
 The indexed pages will have a title, description and content, as long as we remember to dynamically set them (either manually or using something like _[react-helmet](https://www.npmjs.com/package/react-helmet)_).
 
-However, since Googlebot tries to save on computing power (aka ["Crawl Budget"](https://developers.google.com/search/docs/crawling-indexing/large-site-managing-crawl-budget)), there might be cases where it would take a snapshot of the page before its dynamic data finishes loading.
+It is important to note that some API servers take a long time to respond to data requests, and so there might be cases where Googlebot will take a snapshot of the page even before its dynamic data finishes loading.
 <br>
-So for achieving perfect SEO results, we might prefer to "play it safe" and not to entirely rely on its ability to crawl JS apps (although it generally does a perfect job). We will discuss what we can do in the next section.
+In these unfortunate cases (which also lead to horrible UX), we might prefer to "play it safe" and not to entirely rely on Googlebot's crawling process. We will discuss what else we can do in the next section.
 
 ### Prerendering
 
@@ -1195,7 +1195,7 @@ Then we redirect web crawlers (identified by their `User-Agent` header string) t
 _[public/\_worker.js](public/_worker.js)_
 
 ```js
-const BOT_AGENTS = ['googlebot', 'bingbot', 'yandex', 'twitterbot', 'whatsapp', ...]
+const BOT_AGENTS = ['bingbot', 'yandex', 'twitterbot', 'whatsapp', ...]
 
 const fetchPrerendered = async request => {
   const { url, headers } = request
@@ -1241,6 +1241,8 @@ https://www.bing.com/search?q=site%3Ahttps%3A%2F%2Fclient-side-rendering.pages.d
 ![Bing Search Results](images/bing-search-results.png)
 
 In addition, cached prerendered pages will have unbelievably low response times, which may (or may not) positively affect their SEO score.
+<br>
+This is also a good solution for API servers that are slow to respond to data requests.
 
 _Note that when using CSS-in-JS, we should [disable the speedy optimization](src/utils/disable-speedy.ts) during prerendering in order to have our styles omitted to the DOM._
 
