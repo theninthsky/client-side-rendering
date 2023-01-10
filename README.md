@@ -1168,9 +1168,13 @@ _Note that this benchmark only tests the first load of the page, without even co
 
 It is often said that Google is having trouble properly crawling CSR (JS) apps.
 <br>
-That might have been the case in 2018, but as of 2022, Google crawls CSR apps almost flawlessly.
+That might have been the case in 2018, but as of 2023, Google crawls CSR apps almost flawlessly.
 <br>
-The indexed pages will have a title, description and content, as long as we remember to dynamically set them (either manually or using something like _[react-helmet](https://www.npmjs.com/package/react-helmet)_).
+The indexed pages will have a title, description, content and all other SEO-related attributes, as long as we remember to dynamically set them (either manually or using something like _[react-helmet](https://www.npmjs.com/package/react-helmet)_).
+
+Googlebot uses the latest version of Chromium to crawl apps, so the only thing we should do is to make sure our app loads fast and that it is quick to fetch data.
+
+A detailed explanation of Googlebot's JS crawling process can be found _[here](https://developers.google.com/search/docs/crawling-indexing/javascript/javascript-seo-basics)_.
 
 It is important to note that some API servers take a long time to respond to data requests, and so there might be cases where Googlebot will take a snapshot of the page even before its dynamic data finishes loading.
 <br>
