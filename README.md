@@ -521,7 +521,7 @@ Now we can see that the data is being fetched right away:
 
 With the above script, we can even preload dynamic routes data (such as _[pokemon/:name](https://client-side-rendering.pages.dev/pokemon/pikachu)_).
 
-The only limitation is that we can only preload GET resources, but this would not be a problem when the backend is well-architected.
+The only limitation is that we can only preload GET resources. However, we can easily implement an endpoint that transforms GET requests with query params to POST requests with body.
 
 ## Tweaking Further
 
