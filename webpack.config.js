@@ -19,6 +19,7 @@ module.exports = (_, { mode }) => {
       port: 3000,
       devMiddleware: { stats: 'errors-warnings' }
     },
+    cache: { type: 'filesystem' },
     devtool: production ? 'source-map' : 'inline-source-map',
     resolve: {
       modules: [path.resolve(__dirname, 'src'), 'node_modules'],
