@@ -1098,6 +1098,8 @@ const register = () => {
 }
 ```
 
+![Periodic Background Sync](images/periodic-background-sync.jpg)
+
 This way we ensure that users who installed our app will always see the most recent version when they open it.
 
 _Note that this is currently only working in Chromium-based browsers and in a non-iOS environment._
