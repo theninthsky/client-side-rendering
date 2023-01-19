@@ -1174,11 +1174,15 @@ That might have been the case in 2018, but as of 2023, Google crawls CSR apps al
 <br>
 The indexed pages will have a title, description, content and all other SEO-related attributes, as long as we remember to dynamically set them (either manually or using something like _[react-helmet](https://www.npmjs.com/package/react-helmet)_).
 
+This can be easily proven by inspecting our app in _[Google Search Console](https://search.google.com/search-console)_:
+
+![Google Search Console Rendering](images/google-search-console-rendering.png)
+
 Googlebot uses the latest version of Chromium to crawl apps, so the only thing we should do is to make sure our app loads fast and that it is quick to fetch data.
 
 A detailed explanation of Googlebot's JS crawling process can be found _[here](https://developers.google.com/search/docs/crawling-indexing/javascript/javascript-seo-basics)_.
 
-It is important to note that some API servers take a long time to respond to data requests, and so there might be cases where Googlebot will take a snapshot of the page even before its dynamic data finishes loading.
+It is important to note that some API servers take a very long time to respond to data requests, and so there might be cases where Googlebot will take a snapshot of the page even before its dynamic data finishes loading.
 <br>
 In these unfortunate cases (which also lead to horrible UX), we might prefer to "play it safe" and not to entirely rely on Googlebot's crawling process. We will discuss what else we can do in the next section.
 
