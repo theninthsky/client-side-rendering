@@ -7,6 +7,15 @@ import pagesManifest from 'pages-manifest.json'
 import Title from 'components/common/Title'
 import Info from 'components/common/Info'
 
+/* Bloat */
+import { ApolloClient, InMemoryCache } from '@apollo/client'
+import moment from 'moment'
+import { isDate } from 'lodash'
+
+// Does nothing, is meant to bloat the page's bundle size to simulate real-life app weight
+new ApolloClient({ uri: '', cache: new InMemoryCache() })
+isDate(moment().toDate())
+
 const { title, description } = pagesManifest.find(({ chunk }) => chunk === 'core-web-vitals')
 
 const WebVitals = () => {
