@@ -823,7 +823,7 @@ When using SWR, the browser is allowed to use a cached asset or response (usuall
 
 This method completely surpasses any network conditions, it even allows our app to be available while offline (within the SWR allowed time period), and all of this without even compromising on the freshness of the app shell.
 
-Many popular websites such as Twitter, CodeSandbox and Photopea implement SWR in their app shell.
+Many popular websites such as Twitter, YouTube and CodeSandbox implement SWR in their app shell.
 
 There are two ways to achieve SWR in web applications:
 
