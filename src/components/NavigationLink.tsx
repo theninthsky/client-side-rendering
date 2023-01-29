@@ -3,6 +3,7 @@ import { NavLink, NavLinkProps } from 'react-router-dom'
 import { useDelayedNavigate, useMedia } from 'frontend-essentials'
 import { css, cx } from '@emotion/css'
 
+import preload from 'utils/preload'
 import { MOBILE_VIEWPORT } from 'styles/constants'
 
 export type Data = {
@@ -17,23 +18,16 @@ export type NavigationLinkProps = NavLinkProps & {
   onClick?: () => void
 }
 
-const createPreload = ({ url, crossorigin, menuPreload }: Data) => {
-  if (!menuPreload || document.head.querySelector(`link[href="${url}"]`)) return
-
-  document.head.appendChild(
-    Object.assign(document.createElement('link'), {
-      rel: 'preload',
-      href: url,
-      as: 'fetch',
-      crossOrigin: crossorigin
-    })
-  )
-}
-
 const onLinkEvent = (data: Data | Data[]) => {
-  if (Array.isArray(data)) return data.forEach(createPreload)
+  if (Array.isArray(data)) {
+    return data.forEach(({ url, crossorigin, menuPreload }) => {
+      if (menuPreload) preload(url, { crossorigin })
+    })
+  }
 
-  createPreload(data)
+  const { url, crossorigin, menuPreload } = data
+
+  if (menuPreload) preload(url, { crossorigin })
 }
 
 const NavigationLink: FC<NavigationLinkProps> = ({ className, to, data, onClick, children, ...otherProps }) => {

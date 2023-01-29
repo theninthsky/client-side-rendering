@@ -578,7 +578,7 @@ We can preload data when hovering over links (desktop) or when links enter the v
 _[NavigationLink.jsx](src/components/NavigationLink.tsx)_
 
 ```js
-const createPreload = url => {
+const preload = url => {
   if (document.head.querySelector(`link[href="${url}"]`)) return
 
   document.head.appendChild(
