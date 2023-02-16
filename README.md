@@ -58,9 +58,9 @@ Client-side rendering is the practice of sending the web browser static assets a
 Server-side rendering is the practice of rendering the entire app (or page) on the server, sending to the browser a pre-rendered HTML document ready to be displayed.
 Static Site Generation is the practice of pre-generating HTML pages as static assets to be sent and displayed by the browser.
 
-Contrary to popular belief, the SSR process of modern frameworks such as React, Angular, Vue and Svelte, makes the app render twice: one time on the server and another time on the browser (this is called "hydration"). Without the latter, the app cannot become interactive and would just be a static, "lifeless", web page.
+Contrary to popular belief, the SSR process of modern frameworks such as React, Angular, Vue and Svelte, makes the app render twice: one time on the server and another time on the browser (this is called "hydration"). Without the latter the app will not be interactive and would just act as a "lifeless" web page.
 <br>
-The "hydration" process takes about the same time as a full render.
+The "hydration" process takes about the same time as a normal render.
 <br>
 Needless to say that SSG apps have to be "hydrated" aswell.
 
@@ -69,14 +69,14 @@ The HTML document is fully constucted in both SSR and SSG, which gives them the 
 1. Web crawlers will be able to crawl their pages out-of-the-box, which is critical for SEO.
 2. When inlining critical CSS, the _[FCP](https://web.dev/fcp)_ of the page will usually be very good (in SSR it heavily depends on the API server response times).
 
-On the other hand, CSR has the following advantages:
+On the other hand, CSR apps have the following advantages:
 
 1. The app itself is completely decoupled from the server, which means it loads without being affected by the API server's response times.
 2. The developer experience is seemless, all libraries and packages just work without any special customizations.
 3. Newly introduced framework updates can be used right away, without having to wait for the wrapping SSR framework to implement them.
 4. The learning curve is better, since developers only have to learn the framework instead of both the framework and its SSR wrapper.
 
-In this case-study, we will focus on CSR and how to overcome its built-in shortages while leaveraging its strong points.
+In this case-study, we will focus on CSR and how to overcome its (seemingly) inherent shortages while leaveraging its strong points.
 
 Our deployed app can be found here: https://client-side-rendering.pages.dev
 
