@@ -1174,17 +1174,25 @@ That might have been the case in 2018, but as of 2023, Google crawls CSR apps al
 <br>
 The indexed pages will have a title, description, content and all other SEO-related attributes, as long as we remember to dynamically set them (either manually or using something like _[react-helmet](https://www.npmjs.com/package/react-helmet)_).
 
-This can be easily proven by inspecting our app in _[Google Search Console](https://search.google.com/search-console)_:
+https://www.google.com/search?q=site:https://client-side-rendering.pages.dev
+
+![Google Search Results](images/google-search-results.png)
+![Google Lorem Ipsum Search Results](images/google-lorem-ipsum-search-results.png)
+
+Googlebot's ability the render JS can be easily demonstrated by performing a live URL test of our app in the _[Google Search Console](https://search.google.com/search-console)_:
 
 ![Google Search Console Rendering](images/google-search-console-rendering.png)
 
-Googlebot uses the latest version of Chromium to crawl apps, so the only thing we should do is to make sure our app loads fast and that it is quick to fetch data.
+Googlebot uses the latest version of Chromium to crawl apps, so the only thing we should do is make sure our app loads fast and that it is quick to fetch data.
+
+Even when data takes long time to fetch, Googlebot (in most cases) will wait for it before taking a snapshot of the page:
+https://support.google.com/webmasters/thread/202552760/for-how-long-does-googlebot-wait-for-the-last-http-request
+https://support.google.com/webmasters/thread/165370285?hl=en&msgid=165510733
 
 A detailed explanation of Googlebot's JS crawling process can be found _[here](https://developers.google.com/search/docs/crawling-indexing/javascript/javascript-seo-basics)_.
 
-It is important to note that some API servers take a very long time to respond to data requests, and so there might be cases where Googlebot will take a snapshot of the page even before its dynamic data finishes loading.
-<br>
-In these unfortunate cases (which also lead to horrible UX), we might prefer to "play it safe" and not to entirely rely on Googlebot's crawling process. We will discuss what else we can do in the next section.
+It is important to note that some API servers take very long time to respond to data requests.
+In such extreme cases (which also severely harm the UX), we might prefer not to entirely rely on Googlebot's crawling process. We will discuss what else we can do in the next section.
 
 ### Prerendering
 
@@ -1237,14 +1245,9 @@ export default {
 
 ```
 
-_Prerendering_, also called _Dynamic Rendering_, is encouraged by _[Google](https://developers.google.com/search/docs/advanced/javascript/dynamic-rendering)_ and _[Microsoft](https://blogs.bing.com/webmaster/october-2018/bingbot-Series-JavaScript,-Dynamic-Rendering,-and-Cloaking-Oh-My)_.
+_Prerendering_, also called _Dynamic Rendering_, is encouraged by _[Google](https://developers.google.com/search/docs/advanced/javascript/dynamic-rendering)_ and _[Microsoft](https://blogs.bing.com/webmaster/october-2018/bingbot-Series-JavaScript,-Dynamic-Rendering,-and-Cloaking-Oh-My)_ and is heavily used by many popular websites including Twitter.
 
 Using prerendering produces the **exact same** SEO results as using SSR in all search engines.
-
-https://www.google.com/search?q=site:https://client-side-rendering.pages.dev
-
-![Google Search Results](images/google-search-results.png)
-![Google Lorem Ipsum Search Results](images/google-lorem-ipsum-search-results.png)
 
 https://www.bing.com/search?q=site%3Ahttps%3A%2F%2Fclient-side-rendering.pages.dev
 
