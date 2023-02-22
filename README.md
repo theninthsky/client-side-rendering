@@ -1018,6 +1018,11 @@ _Note that we do not consider the `scroll` event as an interaction, since this a
 <br>
 _In addition, we can define a `preventReload` property in pages that we wouldn't want to be automatically reloaded (such as a user's feed which potentially changes on every reload)._
 
+And finally, starting from version 110, Chrome (desktop) automatically freezes inactive tabs and then reloads them upon reactivation:
+https://blog.google/products/chrome/new-chrome-features-to-save-battery-and-make-browsing-smoother
+
+![Chrome Memory Saver](images/chrome-memory-saver.png)
+
 ### Revalidating Active Apps
 
 Some users leave the app open for extended periods of time, so another thing we can do is revalidate the app while it is running:
