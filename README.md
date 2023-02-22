@@ -522,6 +522,47 @@ Now we can see that the data is being fetched right away:
 With the above script, we can even preload dynamic routes data (such as _[pokemon/:name](https://client-side-rendering.pages.dev/pokemon/pikachu)_).
 
 The only limitation is that we can only preload GET resources. However, we can easily implement an endpoint that transforms GET requests with query params to POST requests with body.
+<br>
+Here's an example of such transform proxy as a Cloudflare worker:
+
+```js
+export default {
+  async fetch(request, env) {
+    const { pathname, searchParams } = new URL(request.url)
+    const headers = new Headers(request.headers)
+    const body = Object.fromEntries(
+      [...searchParams.entries()].map(([key, value]) => {
+        try {
+          value = JSON.parse(value)
+        } catch (err) {}
+
+        return [key, value]
+      })
+    )
+
+    headers.set('Content-Type', 'application/json')
+
+    return await fetch(new Request(pathname.slice(1), { method: 'post', headers, body: JSON.stringify(body) }))
+  }
+}
+```
+
+The worker above will transform the following request:
+
+```
+[GET] https://my-transform-proxy.com/https://my-server-url.com/posts?title=Test&description=A test request
+```
+
+to:
+
+```
+[POST] https://my-server-url.com/posts
+
+{
+  "title": "Test",
+  "description": "A test request"
+}
+```
 
 ## Tweaking Further
 
