@@ -1018,7 +1018,8 @@ _Note that we do not consider the `scroll` event as an interaction, since this a
 <br>
 _In addition, we can define a `preventReload` property in pages that we wouldn't want to be automatically reloaded (such as a user's feed which potentially changes on every reload)._
 
-And finally, starting from version 110, Chrome (desktop) automatically freezes inactive tabs and then reloads them upon reactivation:
+And on top of everything, starting from version 110, Chrome (desktop) automatically freezes inactive tabs and then reloads them upon reactivation:
+<br>
 https://blog.google/products/chrome/new-chrome-features-to-save-battery-and-make-browsing-smoother
 
 ![Chrome Memory Saver](images/chrome-memory-saver.png)
@@ -1175,7 +1176,7 @@ _Note that this benchmark only tests the first load of the page, without even co
 
 It is often said that Google is having trouble properly crawling CSR (JS) apps.
 <br>
-That might have been the case in 2018, but as of 2023, Google crawls CSR apps almost flawlessly.
+That might have been the case in 2018, but as of 2023, Google crawls CSR apps flawlessly.
 <br>
 The indexed pages will have a title, description, content and all other SEO-related attributes, as long as we remember to dynamically set them (either manually or using something like _[react-helmet](https://www.npmjs.com/package/react-helmet)_).
 
