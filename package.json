@@ -5,6 +5,7 @@
     "node": "^16"
   },
   "scripts": {
+    "postinstall": "npm run fetch-static",
     "start": "webpack serve --mode development",
     "prebuild": "npm-run-all -p fetch-static create-sitemap",
     "build": "webpack --mode production",
