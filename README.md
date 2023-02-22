@@ -555,9 +555,19 @@ const fetchLoremIpsum = async () => {
 fetchLoremIpsum()
 ```
 
-That would create a `json/lorem-ipsum.json` file to be stored in the CDN.
+_[package.json](package.json)_
 
-And now we simply fetch the static data in our app:
+```json
+"scripts": {
+  "postinstall": "npm run fetch-static",
+  "prebuild": "npm run fetch-static",
+  "fetch-static": "node scripts/fetch-static.mjs"
+}
+```
+
+The above script would create a `json/lorem-ipsum.json` file that will be stored in the CDN.
+
+Then we simply fetch the static data in our app:
 
 ```js
 fetch('json/lorem-ipsum.json')
@@ -569,7 +579,7 @@ There are numerous advantages to this approach:
 - The data will be fetched a lot faster from a nearby CDN edge than from a remote server.
 - Since this script runs on our server during build time, we can authenticate with services however we want, there is no limit to what can be sent (secret tokens for example).
 
-Whenever we need to update the static data we simply rebuild the app or, better yet, just rerun the script.
+Whenever we need to update the static data we simply rebuild the app or, if we have control over our build files in production, just rerun the script.
 
 ### Preloading Other Pages Data
 
