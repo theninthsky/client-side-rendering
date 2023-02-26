@@ -2,16 +2,19 @@ import process from 'node:process'
 import { mkdir, writeFile } from 'fs/promises'
 import axios from 'axios'
 
-const path = 'public/json'
-const axiosOptions = { transformResponse: res => res }
+const PATH = 'public/json'
+const LOG_LABEL = 'Fetched all static assets in'
 
-mkdir(path, { recursive: true })
-process.on('beforeExit', () => console.log('Fetched all static assets.'))
+console.time(LOG_LABEL)
+
+mkdir(PATH, { recursive: true })
 
 const fetchLoremIpsum = async () => {
-  const { data } = await axios.get('https://loripsum.net/api/100/long/plaintext', axiosOptions)
+  const { data } = await axios('https://asdfast.beobit.net/api/?startLorem=true&length=200')
 
-  writeFile(`${path}/lorem-ipsum.json`, JSON.stringify(data))
+  writeFile(`${PATH}/lorem-ipsum.json`, JSON.stringify(data.text))
 }
 
 fetchLoremIpsum()
+
+process.on('beforeExit', () => console.timeLog(LOG_LABEL))
