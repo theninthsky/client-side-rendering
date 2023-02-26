@@ -16,6 +16,7 @@ import _ from 'lodash'
 new ApolloClient({ uri: '', cache: new InMemoryCache() })
 _.isDate(moment().toDate())
 
+const METRICS_ORDER = ['TTFB', 'FCP', 'LCP', 'CLS', 'FID', 'INP']
 const { title, description } = pagesManifest.find(({ chunk }) => chunk === 'core-web-vitals')
 
 const WebVitals = () => {
@@ -48,11 +49,13 @@ const WebVitals = () => {
       <Info className={style.info}>{description}</Info>
 
       <div className={style.metrics}>
-        {Object.entries(metrics).map(([metric, { value, rating }]) => (
-          <div key={metric} className={style.metric}>
-            <strong>{metric}</strong>: {value} ({rating})
-          </div>
-        ))}
+        {Object.entries(metrics)
+          .sort(([metricA], [metricB]) => METRICS_ORDER.indexOf(metricA) - METRICS_ORDER.indexOf(metricB))
+          .map(([metric, { value, rating }]) => (
+            <div key={metric} className={style.metric}>
+              <strong>{metric}</strong>: {value} ({rating})
+            </div>
+          ))}
       </div>
     </div>
   )
