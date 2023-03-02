@@ -96,12 +96,24 @@ While SSR has some advantages, these frameworks keep emphasizing how fast they a
 <br>
 In addition, it is a common misconception that perfect SEO can only be achieved by using SSR, and that there's nothing we can do to improve the way search engines crawl CSR apps.
 
+Another claim that is often raised regarding the advantages of SSR is that web apps are getting bigger, and so their loading times will only keep increasing (which means bad _[FCP](https://web.dev/fcp)_ for CSR apps).
+
+While it’s true that apps are naturally expanding, they size of a single page should only **get smaller** as time passes.
+<br>
+This is due to a popular trend of making smaller and more efficient versions of packages, as seen with _zustand_, _day.js_, _headless-ui_ and _react-router v6_.
+<br>
+It can also be observed in the decreasing sizes of frameworks in correlation with their release dates: Angular (74.1kb), React (44.5kb), Vue (34kb), Solid (7.6kb) and Svelte (1.7kb).
+<br>
+These packages consist the most of a web page’s scripts weight.
+<br>
+And so, when properly utilizing code-splitting, the loading times of a single page should even **decrease** over time.
+
 This project implements a basic CSR app with some tweaks such as code-splitting and preloading, with the ambition that as the app scales, the loading time of a single page would mostly remain unaffected.
 The objective is to simulate the number of packages used in a production grade app and try to decrease its loading time as much as possible, mostly by parallelizing requests.
 
 It is important to note that improving performance should not come at the expense of the developer experience, so the way this project is architected should vary only slightly compared to "normal" react projects, and it won't be as extremely opinionated as Next.js (or as limiting as SSR is in general).
 
-This case study will cover two major aspects: performance and SEO. We will see how we can achieve great scores in both of them.
+This case study will cover two major aspects: performance and SEO. We will see how we can achieve top scores in both of them.
 
 _Note that while this project is implemented with React, the vast majority of its tweaks are not tied to any framework and are purely browser-based._
 
