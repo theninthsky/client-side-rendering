@@ -1257,10 +1257,14 @@ Googlebot's ability the render JS can be easily demonstrated by performing a liv
 Googlebot uses the latest version of Chromium to crawl apps, so the only thing we should do is make sure our app loads fast and that it is quick to fetch data.
 
 Even when data takes long time to fetch, Googlebot (in most cases) will wait for it before taking a snapshot of the page:
+<br>
 https://support.google.com/webmasters/thread/202552760/for-how-long-does-googlebot-wait-for-the-last-http-request
+<br>
 https://support.google.com/webmasters/thread/165370285?hl=en&msgid=165510733
 
-A detailed explanation of Googlebot's JS crawling process can be found _[here](https://developers.google.com/search/docs/crawling-indexing/javascript/javascript-seo-basics)_.
+A detailed explanation of Googlebot's JS crawling process can be found here:
+<br>
+https://developers.google.com/search/docs/crawling-indexing/javascript/javascript-seo-basics
 
 It is important to note that some API servers take very long time to respond to data requests.
 In such extreme cases (which also severely harm the UX), we might prefer not to entirely rely on Googlebot's crawling process. We will discuss what else we can do in the next section.
