@@ -54,13 +54,15 @@ This project is a case study of CSR, it aims to explore the potential of client-
 
 # Intro
 
-Client-side rendering is the practice of sending the web browser static assets and leaving it to perform the entire rendering process of the app.
-Server-side rendering is the practice of rendering the entire app (or page) on the server, sending to the browser a pre-rendered HTML document ready to be displayed.
-Static Site Generation is the practice of pre-generating HTML pages as static assets to be sent and displayed by the browser.
+**Client-side rendering** is the practice of sending the web browser static assets and leaving it to perform the entire rendering process of the app.
+<br>
+**Server-side rendering** is the practice of rendering the entire app (or page) on the server, sending to the browser a pre-rendered HTML document ready to be displayed.
+<br>
+**Static Site Generation** is the practice of pre-generating HTML pages as static assets to be sent and displayed by the browser.
 
 Contrary to popular belief, the SSR process of modern frameworks such as React, Angular, Vue and Svelte, makes the app render twice: one time on the server and another time on the browser (this is called "hydration"). Without the latter the app will not be interactive and would just act as a "lifeless" web page.
 <br>
-The "hydration" process takes about the same time as a normal render.
+The "hydration" process is not significantly faster than a normal render.
 <br>
 Needless to say that SSG apps have to be "hydrated" aswell.
 
