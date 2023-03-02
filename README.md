@@ -19,10 +19,10 @@ This project is a case study of CSR, it aims to explore the potential of client-
   - [Caching](#caching)
   - [Code Splitting](#code-splitting)
   - [Preloading Async Pages](#preloading-async-pages)
+  - [Generating Static Data](#generating-static-data)
   - [Preventing Duplicate Async Vendors](#preventing-duplicate-async-vendors)
   - [Preloading Data](#preloading-data)
   - [Tweaking Further](#tweaking-further)
-    - [Generating Static Data](#generating-static-data)
     - [Preloading Other Pages Data](#preloading-other-pages-data)
     - [Preventing Sequenced Rendering](#preventing-sequenced-rendering)
     - [Transitioning Async Pages](#transitioning-async-pages)
@@ -276,6 +276,62 @@ _Please note that other types of assets can be preloaded the same way (like styl
 This way, the browser is able to fetch the page-related script chunk **in parallel** with render-critical assets:
 
 ![With Async Preload](images/with-async-preload.png)
+
+### Generating Static Data
+
+If we take a closer look, here is what SSG essentially does: it creates a cacheable HTML file and injects static data into it.
+<br>
+This can be useful for data that is not highly dynamic, such as content from CMS.
+
+So how can we create static data?
+<br>
+We will execute the following script during build time:
+
+_[fetch-static.mjs](scripts/fetch-static.mjs)_
+
+```js
+import { mkdir, writeFile } from 'fs/promises'
+import axios from 'axios'
+
+const path = 'public/json'
+const axiosOptions = { transformResponse: res => res }
+
+mkdir(path, { recursive: true })
+
+const fetchLoremIpsum = async () => {
+  const { data } = await axios.get('https://loripsum.net/api/100/long/plaintext', axiosOptions)
+
+  writeFile(`${path}/lorem-ipsum.json`, JSON.stringify(data))
+}
+
+fetchLoremIpsum()
+```
+
+_[package.json](package.json)_
+
+```json
+"scripts": {
+  "postinstall": "npm run fetch-static",
+  "prebuild": "npm run fetch-static",
+  "fetch-static": "node scripts/fetch-static.mjs"
+}
+```
+
+The above script would create a `json/lorem-ipsum.json` file that will be stored in the CDN.
+
+Then we simply fetch the static data in our app:
+
+```js
+fetch('json/lorem-ipsum.json')
+```
+
+There are numerous advantages to this approach:
+
+- We generate static data so we won't bother our server or CMS for every user request.
+- The data will be fetched a lot faster from a nearby CDN edge than from a remote server.
+- Since this script runs on our server during build time, we can authenticate with services however we want, there is no limit to what can be sent (secret tokens for example).
+
+Whenever we need to update the static data we simply rebuild the app or, if we have control over our build files in production, just rerun the script.
 
 ### Preventing Duplicate Async Vendors
 
@@ -579,62 +635,6 @@ to:
 ```
 
 ## Tweaking Further
-
-### Generating Static Data
-
-If we take a closer look, here is what SSG essentially does: it creates a cacheable HTML file and injects static data into it.
-<br>
-This can be useful for data that is not highly dynamic, such as content from CMS.
-
-So how can we create static data?
-<br>
-We will execute the following script during build time:
-
-_[fetch-static.mjs](scripts/fetch-static.mjs)_
-
-```js
-import { mkdir, writeFile } from 'fs/promises'
-import axios from 'axios'
-
-const path = 'public/json'
-const axiosOptions = { transformResponse: res => res }
-
-mkdir(path, { recursive: true })
-
-const fetchLoremIpsum = async () => {
-  const { data } = await axios.get('https://loripsum.net/api/100/long/plaintext', axiosOptions)
-
-  writeFile(`${path}/lorem-ipsum.json`, JSON.stringify(data))
-}
-
-fetchLoremIpsum()
-```
-
-_[package.json](package.json)_
-
-```json
-"scripts": {
-  "postinstall": "npm run fetch-static",
-  "prebuild": "npm run fetch-static",
-  "fetch-static": "node scripts/fetch-static.mjs"
-}
-```
-
-The above script would create a `json/lorem-ipsum.json` file that will be stored in the CDN.
-
-Then we simply fetch the static data in our app:
-
-```js
-fetch('json/lorem-ipsum.json')
-```
-
-There are numerous advantages to this approach:
-
-- We generate static data so we won't bother our server or CMS for every user request.
-- The data will be fetched a lot faster from a nearby CDN edge than from a remote server.
-- Since this script runs on our server during build time, we can authenticate with services however we want, there is no limit to what can be sent (secret tokens for example).
-
-Whenever we need to update the static data we simply rebuild the app or, if we have control over our build files in production, just rerun the script.
 
 ### Preloading Other Pages Data
 
