@@ -57,6 +57,6 @@
     "chunk": "comparison",
     "path": "/comparison",
     "title": "Comparison",
-    "description": "This page compares all rendering methods, listing their pros and cons.\nYou can click on each one to view a detailed explanation."
+    "description": "This page compares all rendering methods, listing their pros and cons.\nYou can click on each point to view a detailed explanation."
   }
 ]
