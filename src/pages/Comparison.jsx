@@ -37,7 +37,7 @@ const listData = {
       {
         value: 'Page transitions are instantaneous',
         description:
-          'Since the entire app (shell) is downloaded, page transitions require no additional requests to the server and are immediately served from the browser cache.\nThe data itself does require additional requsts, however these have no effect on how fast the page will transition.\nTransitions will even work when there is no internet connection at all'
+          'Since the entire app (shell) is downloaded, page transitions require no additional assets from the CDN since those are immediately served from the browser cache.\nThe data itself does require additional requsts, however these have no effect on how fast the page will transition.\nTransitions will even work when there is no internet connection at all'
       },
       {
         value: 'Unmatched performance with SWR',
@@ -133,12 +133,12 @@ const listData = {
       {
         value: 'Great for SEO',
         description:
-          'Pages initially contain all of their data, thus all web crawlers will be able to properly crawl and index them'
+          'Pages initially contain all of their data, so all web crawlers will be able to properly crawl and index them'
       },
       {
-        value: 'The website becomes visible quickly',
+        value: 'Potentially loads fast',
         description:
-          "When the page arrives, it will be visible quickly (if the data is fetched swiftly and the CSS is inlined in the document), since it's independent of JS.\nThis means that the FCP will be generally low"
+          'Page have the potential to load quickly (provided their data fetches swiftly and the CSS is inlined in the document), since their visibility is independent of JS.\nIn such cases, the FCP will be generally low'
       }
     ],
     cons: [
@@ -234,6 +234,11 @@ const listData = {
     title: 'Static Site Generation',
     pros: [
       {
+        value: 'Great for SEO',
+        description:
+          'Pages initially contain all of their data, so all web crawlers will be able to properly crawl and index them'
+      },
+      {
         value: 'Loads very quickly',
         description:
           'Since pages are pre-generated, they are immediately served from the CDN.\nAnd since they require no JS to be visible, they show up very quickly (especially when CSS is inlined)'
@@ -296,6 +301,11 @@ const listData = {
     title: 'Streaming SSR (React Server Components)',
     pros: [
       {
+        value: 'Great for SEO',
+        description:
+          'The rendering server does not return a status code until all data is fetched and streamed to the browser.\nThus all web crawlers will be able to properly crawl and index the pages'
+      },
+      {
         value: 'Loads independently from its data',
         description:
           'Since the document is streamed even before the data fetches on the server, the page load is completely decoupled from the API server response times'
@@ -310,17 +320,20 @@ const listData = {
             </a>
           </p>
         )
-      },
-      {
-        value: 'All SSR pros',
-        description: 'Since they are very similar, Streaming SSR has all of SSR pros'
       }
     ],
     cons: [
       {
         value: 'More complicated',
-        description:
-          'More complicated than regular SSR (requires conceptual separation between client components and server components)'
+        description: (
+          <p>
+            More complicated than regular SSR (requires conceptual separation between client components and server
+            components).{' '}
+            <a href="https://phryneas.de/react-server-components-controversy" target="_blank">
+              Article
+            </a>
+          </p>
+        )
       },
       {
         value: '"Infinite Bundle Size"',
