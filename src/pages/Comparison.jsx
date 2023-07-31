@@ -290,6 +290,54 @@ const listData = {
         description: 'While some pages can be prefetched, surely not all pages in large websites can be'
       }
     ]
+  },
+  streamingSsr: {
+    name: 'Streaming SSR (RSC)',
+    title: 'Streaming SSR (React Server Components)',
+    pros: [
+      {
+        value: 'Loads independently from its data',
+        description:
+          'Since the document is streamed even before the data fetches on the server, the page load is completely decoupled from the API server response times'
+      },
+      {
+        value: '"Zero Bundle Size"',
+        description: (
+          <p>
+            The JS sent will not include the framework (about 48kb).{' '}
+            <a href="https://react.dev/blog/2020/12/21/data-fetching-with-react-server-components" target="_blank">
+              Article
+            </a>
+          </p>
+        )
+      },
+      {
+        value: 'All SSR pros',
+        description: 'Since they are very similar, Streaming SSR has all of SSR pros'
+      }
+    ],
+    cons: [
+      {
+        value: 'More complicated',
+        description:
+          'More complicated than regular SSR (requires conceptual separation between client components and server components)'
+      },
+      {
+        value: '"Infinite Bundle Size"',
+        description: (
+          <p>
+            The entire code-split JS template is downloaded upon each navigation.{' '}
+            <a href="https://remix.run/blog/react-server-components#zero-bundle-or-infinite-bundle" target="_blank">
+              Article
+            </a>
+          </p>
+        )
+      },
+      {
+        value: 'All SSR cons except for #1 and #3',
+        description: 'Since they are very similar, Streaming SSR has most of SSR cons'
+      }
+    ]
   }
 }
 
