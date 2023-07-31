@@ -40,7 +40,7 @@ const listData = {
       {
         value: 'Requires no dedicated server',
         description:
-          'Since all assets are static, there is no need for a sophisticated server to render our app, and it can be served freely and limitlessly from a CDN'
+          'Since all assets are static, there is no need for a sophisticated server to render the app, and it can be served freely and limitlessly from a CDN'
       },
       {
         value: 'Is not affected by load',

@@ -6,7 +6,7 @@ const Tooltip: FC<TooltipProps> = props => {
   const [open, setOpen] = useState(false)
 
   return (
-    <ClickAwayListener onClickAway={() => setOpen(false)}>
+    <ClickAwayListener onClickAway={() => setTimeout(() => setOpen(false), 1)}>
       <MuiTooltip
         {...props}
         PopperProps={{ disablePortal: true }}
@@ -28,10 +28,11 @@ injectGlobal`
     
     .MuiTooltip-tooltip {
       padding: 10px;
-      white-space: pre-wrap;
       box-shadow: rgba(17, 17, 26, 0.1) 0px 4px 16px, rgba(17, 17, 26, 0.05) 0px 8px 32px;
+      white-space: pre-wrap;
+      line-height: 1.3;
       font-family: inherit;
-      font-size: 14px;
+      font-size: 15px;
       font-weight: 400;
       background-color: var(--primary-color);
     }
