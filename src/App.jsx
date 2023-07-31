@@ -11,8 +11,9 @@ const Pokemon = lazy(() => import(/* webpackChunkName: "pokemon" */ 'pages/Pokem
 const PokemonInfo = lazy(() => import(/* webpackChunkName: "pokemon-info" */ 'pages/PokemonInfo'))
 const WebVitals = lazy(() => import(/* webpackChunkName: "core-web-vitals" */ 'pages/WebVitals'))
 const PeriodicSync = lazy(() => import(/* webpackChunkName: "periodic-sync" */ 'pages/PeriodicSync'))
+const Comparison = lazy(() => import(/* webpackChunkName: "comparison" */ 'pages/Comparison'))
 
-const pages = [Home, LoremIpsum, Pokemon, PokemonInfo, WebVitals, PeriodicSync]
+const pages = [Home, LoremIpsum, Pokemon, PokemonInfo, WebVitals, PeriodicSync, Comparison]
 const routes = pagesManifest.map(({ path }, ind) => {
   const Element = pages[ind]
 

@@ -52,5 +52,11 @@
     "path": "/periodic-sync",
     "title": "Periodic Sync",
     "description": "This page specifies the time of the last periodic background sync."
+  },
+  {
+    "chunk": "comparison",
+    "path": "/comparison",
+    "title": "Comparison",
+    "description": "This page compares all rendering methods, listing their pros and cons.\nYou can click on each one to view a detailed explanation."
   }
 ]

@@ -14,6 +14,7 @@ const style = {
     display: inline-block;
     padding: 8px 10px;
     border-radius: 4px;
+    white-space: pre-wrap;
     color: white;
     background-color: dodgerblue;
   `
