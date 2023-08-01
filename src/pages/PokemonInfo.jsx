@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { useParams } from 'react-router-dom'
+import { useState } from 'react'
+import { useParams, useLocation } from 'react-router-dom'
 import { Meta, useFetch } from 'frontend-essentials'
 import startCase from 'lodash/startCase'
 import toLower from 'lodash/toLower'
@@ -7,7 +7,6 @@ import { css, cx } from '@emotion/css'
 import { Skeleton } from '@mui/material'
 
 import pagesManifest from 'pages-manifest.json'
-import preconnect from 'utils/preconnect'
 import Title from 'components/common/Title'
 import Info from 'components/common/Info'
 
@@ -24,27 +23,21 @@ const { description, data } = pagesManifest.find(({ chunk }) => chunk === 'pokem
 
 const PokemonInfo = () => {
   const { name: nameParam } = useParams()
+  const { state: selectedPokemon } = useLocation()
 
   const [imageLoading, setImageLoading] = useState(true)
 
-  const { data: pokemonInfo = {} } = useFetch(data.url.replace('$', nameParam), {
-    uuid: `${nameParam}Info`,
-    immutable: true,
+  const { data: pokemonInfo } = useFetch(data.url.replace('$', nameParam), {
+    manual: selectedPokemon?.id,
     camelCased: true
   })
 
-  const { id, name, sprites } = pokemonInfo
-
-  useEffect(() => {
-    preconnect(data.preconnectURL)
-  }, [])
+  const { id, name, img, sprites } = pokemonInfo || selectedPokemon || {}
+  const image = img || sprites?.other.officialArtwork.frontDefault
 
   return (
     <div>
-      <Meta
-        title={`${startCase(toLower(name || 'loading'))} | Pokémon Info`}
-        image={sprites?.other.officialArtwork.frontDefault}
-      />
+      <Meta title={`${startCase(toLower(name || 'loading'))} | Pokémon Info`} image={image} />
 
       <Title back>Pokémon Info</Title>
 
@@ -59,7 +52,7 @@ const PokemonInfo = () => {
 
             <img
               className={cx(style.image, { hidden: imageLoading })}
-              src={sprites.other.officialArtwork.frontDefault}
+              src={image}
               onLoad={() => setImageLoading(false)}
             />
           </>

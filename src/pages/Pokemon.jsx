@@ -8,7 +8,6 @@ import { Skeleton } from '@mui/material'
 
 import pagesManifest from 'pages-manifest.json'
 import preconnect from 'utils/preconnect'
-import preload from 'utils/preload'
 import { DESKTOP_VIEWPORT } from 'styles/constants'
 import Title from 'components/common/Title'
 import Info from 'components/common/Info'
@@ -31,13 +30,9 @@ const Pokemon = () => {
     immutable: true
   })
 
-  useEffect(() => preconnect(pokemonInfoData.preconnectURL), [])
-
-  const onPokemonHover = name => {
-    const { url, crossorigin } = pokemonInfoData
-
-    preload(url.replace('$', name), { crossorigin })
-  }
+  useEffect(() => {
+    preconnect(pokemonInfoData.preconnectURL)
+  }, [])
 
   return (
     <div>
@@ -54,13 +49,18 @@ const Pokemon = () => {
       <main className={style.main}>
         <ul className={style.list}>
           {pokemon ? (
-            pokemon.results.map(({ name }) => (
+            pokemon.results.map(({ name, url }) => (
               <li key={name}>
                 <NavLink
                   className={style.pokemon}
                   to={`/pokemon/${name}`}
-                  onMouseEnter={() => onPokemonHover(name)}
-                  onFocus={() => onPokemonHover(name)}
+                  state={{
+                    id: url.split('/')[6],
+                    name,
+                    img: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${
+                      url.split('/')[6]
+                    }.png`
+                  }}
                 >
                   {startCase(toLower(name))}
                 </NavLink>
