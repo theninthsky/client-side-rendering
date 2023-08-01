@@ -48,12 +48,6 @@
     "preventReload": true
   },
   {
-    "chunk": "periodic-sync",
-    "path": "/periodic-sync",
-    "title": "Periodic Sync",
-    "description": "This page specifies the time of the last periodic background sync."
-  },
-  {
     "chunk": "comparison",
     "path": "/comparison",
     "title": "Comparison",

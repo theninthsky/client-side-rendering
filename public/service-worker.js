@@ -6,10 +6,8 @@ const preCache = async () => {
   await caches.delete(CACHE_NAME)
 
   const cache = await caches.open(CACHE_NAME)
-  const [windowClient] = await clients.matchAll({ includeUncontrolled: true, type: 'window' })
 
   await cache.addAll(CACHED_URLS)
-  windowClient.postMessage({ type: 'update-available' })
 }
 
 const staleWhileRevalidate = async request => {
@@ -42,15 +40,5 @@ self.addEventListener('install', async event => {
 self.addEventListener('fetch', event => {
   if (['document', 'font', 'script'].includes(event.request.destination)) {
     event.respondWith(staleWhileRevalidate(event.request))
-  }
-})
-
-self.addEventListener('periodicsync', async event => {
-  if (event.tag === 'revalidate-assets') {
-    await event.target.registration.update()
-
-    const [windowClient] = await clients.matchAll({ includeUncontrolled: true, type: 'window' })
-
-    windowClient.postMessage({ type: 'periodic-sync-update-occured', syncTime: new Date().toISOString() })
   }
 })

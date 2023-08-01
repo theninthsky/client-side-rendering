@@ -32,9 +32,7 @@ This project is a case study of CSR, it aims to explore the potential of client-
   - [The Biggest Drawback of SSR](#the-biggest-drawback-of-ssr)
   - [The SWR Approach](#the-swr-approach)
     - [Implementing SWR](#implementing-swr)
-    - [Reloading On Update](#reloading-on-update)
     - [Revalidating Active Apps](#revalidating-active-apps)
-    - [Revalidating Installed Apps](#revalidating-installed-apps)
   - [Summary](#summary)
   - [Deploying](#deploying)
   - [Benchmark](#benchmark)
@@ -1014,80 +1012,25 @@ _[App.jsx](src/App.jsx)_
 
 We define a `MAX_STALE_DURATION` constant to set the maximum duration we are willing for our users to see the (potentially) stale app shell.
 <br>
-This duration can be derived from how often we update (deploy) our app in production. And it's important to remember that native apps, in comparison, can sometimes be "stale" for months without being updated by the app stores.
+This duration can be derived from how often we update (deploy) our app in production. And it's important to remember that native apps, in comparison, can sometimes be stale for months without being updated by the app stores.
+
+In addition, the desktop versions of Chrome and Edge automatically freeze inactive tabs and then reload them upon reactivation:
+<br>
+https://blog.google/products/chrome/new-chrome-features-to-save-battery-and-make-browsing-smoother
+<br>
+https://www.microsoft.com/en-us/edge/features/sleeping-tabs-at-work
+
+![Chrome Memory Saver](images/chrome-memory-saver.png)
+
+This gives our app more chance to be as up-to-date as possible.
 
 The results exceed all expectations:
 
 ![SWR Disk Cache](images/swr-disk-cache.png)
 
-These metrics are coming from a 6-year-old `Intel i3-8130U` laptop when the browser is using the disk cache (not the memory cache which is a lot faster), and are completely independent of network speed or status.
+These metrics are coming from a 6-year-old `Intel i3-8130U` laptop when the browser is using the disk cache (not the memory cache which is a lot faster), and are completely independent of network speed and status.
 
-Now that we've seen that nothing can match SWR in terms of performance, our new goal is to try to keep users' apps as much up-to-date as possible, without compromising on the SWR allowed time period.
-
-### Reloading On Update
-
-When a user opens our app and there's and update, the browser will replace the old cached files with the new ones. The user then will see the update only when they reload the page.
-<br>
-If we wanted the update to be visible right away, we could manually reload the app.
-<br>
-However, reloading the app while the user is viewing it is a very bad idea. Instead, we can reload the app while it is _hidden_:
-
-_[service-worker.js](public/service-worker.js)_
-
-```diff
-const preCache = async () => {
-  await caches.delete(CACHE_NAME)
-
-  const cache = await caches.open(CACHE_NAME)
-+ const [windowClient] = await clients.matchAll({ includeUncontrolled: true, type: 'window' })
-
-  await cache.addAll(CACHED_URLS)
-+ windowClient.postMessage({ type: 'update-available' })
-}
-```
-
-_[service-worker-registration.js](src/utils/service-worker-registration.js)_
-
-```js
-import pagesManifest from 'pages-manifest.json'
-
-const events = ['mousedown', 'keydown']
-let userInteracted = false
-
-events.forEach(event => addEventListener(event, () => (userInteracted = true), { once: true }))
-
-const reloadIfPossible = () => {
-  if (userInteracted || document.visibilityState === 'visible') return
-
-  let { pathname } = window.location
-
-  if (pathname !== '/') pathname = pathname.replace(/\/$/, '')
-
-  const reloadAllowed = !!pagesManifest.find(
-    ({ path, preventReload }) => !preventReload && isStructureEqual(pathname, path)
-  )
-
-  if (reloadAllowed) window.location.reload()
-}
-
-navigator.serviceWorker.addEventListener('message', ({ data }) => {
-  if (data.type === 'update-available') {
-    window.addEventListener('visibilitychange', reloadIfPossible)
-  }
-})
-```
-
-We reload the app only when it is hidden **and** the user did not interact with it. This way the app will self-update even without the user's notice.
-
-_Note that we do not consider the `scroll` event as an interaction, since this action is stateless and in most cases the browser will restore the scroll position upon reload._
-<br>
-_In addition, we can define a `preventReload` property in pages that we wouldn't want to be automatically reloaded (such as a user's feed which potentially changes on every reload)._
-
-And on top of everything, starting from version 110, Chrome (desktop) automatically freezes inactive tabs and then reloads them upon reactivation:
-<br>
-https://blog.google/products/chrome/new-chrome-features-to-save-battery-and-make-browsing-smoother
-
-![Chrome Memory Saver](images/chrome-memory-saver.png)
+It is obvious that nothing can match SWR in terms of performance.
 
 ### Revalidating Active Apps
 
@@ -1112,70 +1055,9 @@ const register = () => {
     }
   })
 }
-
-navigator.serviceWorker.addEventListener('message', ({ data }) => {
-  if (data.type === 'update-available') {
-+   reloadIfPossible()
-+
-    window.addEventListener('visibilitychange', reloadIfPossible)
-  }
-})
 ```
 
 The code above arbitrarily revalidates the app every hour. However, we could implement a more sophisticated revalidation process which will run every time we deploy our app and notify all online users either through _[SSE](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events)_ or _[WebSockets](https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API/Writing_WebSocket_client_applications)_.
-
-### Revalidating Installed Apps
-
-The final method we can use in order to promise our users always have the latest version of our app is called _[Periodic Background Sync](https://developer.mozilla.org/en-US/docs/Web/API/Web_Periodic_Background_Synchronization_API)_.
-
-This method only works for installed PWAs and allows the OS to periodically "wake-up" the service worker when the app is closed.
-
-During its wake-up time, the service worker can perform any task, including revalidating assets:
-
-_[service-worker.js](public/service-worker.js)_
-
-```js
-self.addEventListener('periodicsync', event => {
-  if (event.tag === 'revalidate-assets') event.target.registration.update()
-})
-```
-
-_[service-worker-registration.js](src/utils/service-worker-registration.js)_
-
-```diff
-const ACTIVE_REVALIDATION_INTERVAL = 1 * 60 * 60
-+ const PERIODIC_REVALIDATION_INTERVAL = 12 * 60 * 60
-
-const register = () => {
-  window.addEventListener('load', async () => {
-    try {
-      const registration = await navigator.serviceWorker.register('/service-worker.js')
-
-      console.log('Service worker registered!')
-
-      setInterval(() => registration.update(), ACTIVE_REVALIDATION_INTERVAL * 1000)
-
-+     const { state } = await navigator.permissions.query({ name: 'periodic-background-sync' })
-+
-+     if (state === 'granted') {
-+       await registration.periodicSync.register('revalidate-assets', {
-+         minInterval: PERIODIC_REVALIDATION_INTERVAL * 1000
-+       })
-+     }
-    } catch (err) {
-      console.error(err)
-    }
-  })
-}
-```
-
-![Periodic Background Sync](images/periodic-background-sync.jpg)
-
-This way we ensure that users who installed our app will always see the most recent version when they open it.
-
-_Note that this is currently only working in Chromium-based browsers and in a non-iOS environment._
-
-Further reading: https://developer.chrome.com/articles/periodic-background-sync
 
 ## Summary
 
@@ -1183,7 +1065,7 @@ We've managed to make the initial load of our app extremely fast, only what is n
 <br>
 In addition, we preload other pages (and even their data), which makes it seem as if they were never seperated to begin with.
 <br>
-And finally, we wrapped everything with SWR, so the repeated loads of our app are unbelievably fast, it's literaly impossible to get anything better than that.
+And finally, we wrapped everything with SWR, so the repeated loads of our app are unbelievably fast, it's literally impossible to get any better than that.
 
 All of these were achieved without compromising on the developer experience and without dictating which JS framework we choose or where we deploy our app, it can be on any CDN we choose (more on that in the next section).
 
