@@ -8,6 +8,7 @@ import { Skeleton } from '@mui/material'
 
 import pagesManifest from 'pages-manifest.json'
 import preconnect from 'utils/preconnect'
+import preload from 'utils/preload'
 import { DESKTOP_VIEWPORT } from 'styles/constants'
 import Title from 'components/common/Title'
 import Info from 'components/common/Info'
@@ -49,23 +50,23 @@ const Pokemon = () => {
       <main className={style.main}>
         <ul className={style.list}>
           {pokemon ? (
-            pokemon.results.map(({ name, url }) => (
-              <li key={name}>
-                <NavLink
-                  className={style.pokemon}
-                  to={`/pokemon/${name}`}
-                  state={{
-                    id: url.split('/')[6],
-                    name,
-                    img: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${
-                      url.split('/')[6]
-                    }.png`
-                  }}
-                >
-                  {startCase(toLower(name))}
-                </NavLink>
-              </li>
-            ))
+            pokemon.results.map(({ name, url }) => {
+              const id = url.split('/')[6]
+              const img = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`
+
+              return (
+                <li key={name}>
+                  <NavLink
+                    className={style.pokemon}
+                    to={`/pokemon/${name}`}
+                    state={{ id, name, img }}
+                    onMouseEnter={() => preload({ url: img, as: 'image' })}
+                  >
+                    {startCase(toLower(name))}
+                  </NavLink>
+                </li>
+              )
+            })
           ) : (
             <MainSkeleton />
           )}

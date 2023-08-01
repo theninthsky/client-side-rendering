@@ -21,13 +21,13 @@ export type NavigationLinkProps = NavLinkProps & {
 const onLinkEvent = (data: Data | Data[]) => {
   if (Array.isArray(data)) {
     return data.forEach(({ url, crossorigin, menuPreload }) => {
-      if (menuPreload) preload(url, { crossorigin })
+      if (menuPreload) preload({ url, crossorigin })
     })
   }
 
   const { url, crossorigin, menuPreload } = data
 
-  if (menuPreload) preload(url, { crossorigin })
+  if (menuPreload) preload({ url, crossorigin })
 }
 
 const NavigationLink: FC<NavigationLinkProps> = ({ className, to, data, onClick, children, ...otherProps }) => {
