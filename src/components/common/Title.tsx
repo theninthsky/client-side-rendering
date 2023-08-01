@@ -1,17 +1,16 @@
 import type { FC, HTMLAttributes } from 'react'
-import type { To } from 'react-router-dom'
 import { css, cx } from '@emotion/css'
 
 import Back from './Back'
 
 export type TitleProps = HTMLAttributes<HTMLDivElement> & {
-  redirectTo?: To
+  back?: boolean
 }
 
-const Title: FC<TitleProps> = ({ className, redirectTo, children, ...otherProps }) => {
+const Title: FC<TitleProps> = ({ className, back, children, ...otherProps }) => {
   return (
     <div className="items-center" {...otherProps}>
-      {redirectTo && <Back className={style.back} to={redirectTo} />}
+      {back && <Back className={style.back} />}
 
       <h1 className={cx(style.wrapper, className)}>{children}</h1>
     </div>

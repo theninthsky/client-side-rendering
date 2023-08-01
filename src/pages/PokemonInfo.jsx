@@ -46,7 +46,7 @@ const PokemonInfo = () => {
         image={sprites?.other.officialArtwork.frontDefault}
       />
 
-      <Title redirectTo="/pokemon">Pokémon Info</Title>
+      <Title back>Pokémon Info</Title>
 
       <Info className={style.info}>{description}</Info>
 

@@ -113,8 +113,8 @@ const listData = {
         value: 'Not great for SEO',
         description: (
           <p>
-            The HTML document will contain no data, so SEO is heavily dependant on the ability web crawlers to render JS
-            (currently only <em>Googlebot</em> can do that).
+            The HTML document will contain no data, so SEO is heavily dependant on the ability of web crawlers to render
+            JS (currently only <em>Googlebot</em> can do that).
             <br />
             Thus, a{' '}
             <a href="https://github.com/theninthsky/client-side-rendering#prerendering" target="_blank">

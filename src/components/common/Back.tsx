@@ -1,26 +1,16 @@
-import type { FC } from 'react'
-import { Link, LinkProps } from 'react-router-dom'
-import { useDelayedNavigate } from 'frontend-essentials'
+import type { FC, HTMLAttributes } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { css, cx } from '@emotion/css'
 
 import BackIcon from 'images/back.svg'
 
-const Back: FC<LinkProps> = ({ className, to, onClick, ...otherProps }) => {
-  const navigate = useDelayedNavigate()
+const Back: FC<HTMLAttributes<HTMLButtonElement>> = ({ className, ...otherProps }) => {
+  const navigate = useNavigate()
 
   return (
-    <Link
-      className="flex"
-      to={to}
-      onClick={event => {
-        event.preventDefault()
-        navigate(to)
-        onClick?.(event)
-      }}
-      {...otherProps}
-    >
+    <button className="flex" onClick={() => navigate(-1)} {...otherProps}>
       <BackIcon className={cx(style.backIcon, className)} />
-    </Link>
+    </button>
   )
 }
 
