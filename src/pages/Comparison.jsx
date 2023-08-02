@@ -32,7 +32,7 @@ const listData = {
       {
         value: 'Loads quickly once cached',
         description:
-          'Since all assets static, they can be cached by the browser and load instantly.\nOnly the HTML request goes out to the server'
+          'Since all assets static, they can be cached by the browser and load quickly.\nOnly the HTML request goes out to the server'
       },
       {
         value: 'Page transitions are instantaneous',
@@ -138,7 +138,7 @@ const listData = {
       {
         value: 'Potentially loads fast',
         description:
-          'Page have the potential to load quickly (provided their data fetches swiftly and the CSS is inlined in the document), since their visibility is independent of JS.\nIn such cases, the FCP will be generally low'
+          'Pages have the potential to load quickly (provided their data fetches swiftly and the CSS is inlined in the document), since their visibility is independent of JS.\nIn such cases, the FCP will be generally low'
       }
     ],
     cons: [
@@ -164,7 +164,7 @@ const listData = {
       {
         value: 'Slow page transitions',
         description:
-          'Page transitions are slow since they are data dependant (and data takes time to fetch and render on the server)'
+          'Page transitions are slow since they are data dependant, and data takes time to fetch and render on the server'
       },
       {
         value: 'Cannot prefetch pages',
@@ -174,7 +174,7 @@ const listData = {
       {
         value: 'Cannot be a real PWA',
         description:
-          'As an extension to the previews con, even if we have very few pages, caching them for offline use will make them always show stale data (since no fetch occurs in them, it only occurs in the server)'
+          'As an extension to the previews con, even if we have very few pages, caching them for offline use will make them show potentially stale data (since no fetch occurs in them, it only occurs in the server)'
       },
       {
         value: 'Greatly impacted by load',
@@ -182,7 +182,7 @@ const listData = {
           <p>
             Since rendering is serial (
             <em>
-              <a href="https://react.dev/reference/react-dom/server/renderToString" target="_blank">
+              <a href="https://web.dev/rendering-on-the-web/#server-side-rendering-versus-static-rendering" target="_blank">
                 renderToString
               </a>
             </em>
@@ -314,7 +314,7 @@ const listData = {
         value: '"Zero Bundle Size"',
         description: (
           <p>
-            The JS sent will not include the framework (about 48kb).{' '}
+            Server components will not send any JS to the browser.{' '}
             <a href="https://react.dev/blog/2020/12/21/data-fetching-with-react-server-components" target="_blank">
               Article
             </a>
@@ -327,9 +327,20 @@ const listData = {
         value: 'More complicated',
         description: (
           <p>
-            More complicated than regular SSR (requires conceptual separation between client components and server
+            More complicated than regular SSR (requires actual separation between client components and server
             components).{' '}
             <a href="https://phryneas.de/react-server-components-controversy" target="_blank">
+              Article
+            </a>
+          </p>
+        )
+      },
+      {
+        value: 'Incompatible with many libraries',
+        description: (
+          <p>
+            Many libraries (even fundamental ones) cannot be used with server components.{' '}
+            <a href="https://github.com/emotion-js/emotion/issues/2978#issuecomment-1587020120" target="_blank">
               Article
             </a>
           </p>
