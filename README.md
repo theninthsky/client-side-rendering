@@ -19,6 +19,7 @@ This project is a case study of CSR, it aims to explore the potential of client-
   - [Caching](#caching)
   - [Code Splitting](#code-splitting)
   - [Preloading Async Pages](#preloading-async-pages)
+  - [Prefetching Async Pages](#prefetching-async-pages)
   - [Generating Static Data](#generating-static-data)
   - [Preventing Duplicate Async Vendors](#preventing-duplicate-async-vendors)
   - [Preloading Data](#preloading-data)
@@ -26,7 +27,6 @@ This project is a case study of CSR, it aims to explore the potential of client-
     - [Preloading Other Pages Data](#preloading-other-pages-data)
     - [Preventing Sequenced Rendering](#preventing-sequenced-rendering)
     - [Transitioning Async Pages](#transitioning-async-pages)
-    - [Prefetching Async Pages](#prefetching-async-pages)
     - [Leveraging the 304 Status Code](#leveraging-the-304-status-code)
   - [Interim Summary](#interim-summary)
   - [The Biggest Drawback of SSR](#the-biggest-drawback-of-ssr)
@@ -275,15 +275,56 @@ This way, the browser is able to fetch the page-related script chunk **in parall
 
 ![With Async Preload](images/with-async-preload.png)
 
+### Prefetching Async Pages
+
+Users should have a smooth navigation experience in our app.
+<br>
+However, splitting every page causes a noticeable delay in navigation, since every page has to be downloaded before it can be rendered on screen.
+
+We would want to prefetch all pages ahead of time.
+
+We can do this by writing a wrapper function around React's _lazy_ function:
+
+_[lazy-prefetch.ts](https://github.com/theninthsky/frontend-essentials/blob/main/src/utils/lazy-prefetch.ts)_
+
+```js
+import { lazy } from 'react'
+
+const lazyPrefetch = chunk => {
+  if (window.requestIdleCallback) window.requestIdleCallback(chunk)
+  else window.addEventListener('load', () => setTimeout(chunk, 500), { once: true })
+
+  return lazy(chunk)
+}
+
+export default lazyPrefetch
+```
+
+_[App.jsx](src/App.jsx)_
+
+```diff
+- const Home = lazy(() => import(/* webpackChunkName: "home" */ 'pages/Home'))
+- const LoremIpsum = lazy(() => import(/* webpackChunkName: "lorem-ipsum" */ 'pages/LoremIpsum'))
+- const Pokemon = lazy(() => import(/* webpackChunkName: "pokemon" */ 'pages/Pokemon'))
+
++ const Home = lazyPrefetch(() => import(/* webpackChunkName: "home" */ 'pages/Home'))
++ const LoremIpsum = lazyPrefetch(() => import(/* webpackChunkName: "lorem-ipsum" */ 'pages/LoremIpsum'))
++ const Pokemon = lazyPrefetch(() => import(/* webpackChunkName: "pokemon" */ 'pages/Pokemon'))
+```
+
+Now all pages will be prefetched and parsed (but not executed) before the user even tries to navigate to them.
+
 ### Generating Static Data
 
 If we take a closer look, here is what SSG essentially does: it creates a cacheable HTML file and injects static data into it.
 <br>
 This can be useful for data that is not highly dynamic, such as content from CMS.
 
-So how can we create static data?
-<br>
-We will execute the following script during build time:
+So how can we also create static data?
+
+The preferred method would be to have our API server create JSON files from static data and to serve those when requested.
+
+However, if we wanted to do something similar ourselves, we could execute the following script during build time:
 
 _[fetch-static.mjs](scripts/fetch-static.mjs)_
 
@@ -323,11 +364,10 @@ Then we simply fetch the static data in our app:
 fetch('json/lorem-ipsum.json')
 ```
 
-There are numerous advantages to this approach:
+There are some advantages to this approach:
 
-- We generate static data so we won't bother our server or CMS for every user request.
-- The data will be fetched a lot faster from a nearby CDN edge than from a remote server.
-- Since this script runs on our server during build time, we can authenticate with services however we want, there is no limit to what can be sent (secret tokens for example).
+- We generate static data ourselves so we don't bother our server or CMS for every user request.
+- The data will be fetched faster from a nearby CDN edge than from a remote server.
 
 Whenever we need to update the static data we simply rebuild the app or, if we have control over our build files in production, just rerun the script.
 
@@ -487,7 +527,7 @@ Now all async vendor chunks will be fetched in parallel with their parent async 
 
 ### Preloading Data
 
-One of the disadvantages of CSR over SSR is that data will be fetched only after JS has been downloaded, parsed and executed in the browser:
+One of the presumed disadvantages of CSR over SSR is that data will be fetched only after JS has been downloaded, parsed and executed in the browser:
 
 ![Without Data Preload](images/without-data-preload.png)
 
@@ -759,45 +799,6 @@ export default NavigationLink
 ```
 
 Now async pages will feel like they were never split from the main app.
-
-### Prefetching Async Pages
-
-Users should have a smooth navigation experience in our app.
-<br>
-However, splitting every page causes a noticeable delay in navigation, since every page has to be downloaded before it can be rendered on screen.
-
-That's why I think all pages should be prefetched ahead of time.
-
-We can do this by writing a wrapper function around React's _lazy_ function:
-
-_[lazy-prefetch.ts](https://github.com/theninthsky/frontend-essentials/blob/main/src/utils/lazy-prefetch.ts)_
-
-```js
-import { lazy } from 'react'
-
-const lazyPrefetch = chunk => {
-  if (window.requestIdleCallback) window.requestIdleCallback(chunk)
-  else window.addEventListener('load', () => setTimeout(chunk, 500), { once: true })
-
-  return lazy(chunk)
-}
-
-export default lazyPrefetch
-```
-
-_[App.jsx](src/App.jsx)_
-
-```diff
-- const Home = lazy(() => import(/* webpackChunkName: "home" */ 'pages/Home'))
-- const LoremIpsum = lazy(() => import(/* webpackChunkName: "lorem-ipsum" */ 'pages/LoremIpsum'))
-- const Pokemon = lazy(() => import(/* webpackChunkName: "pokemon" */ 'pages/Pokemon'))
-
-+ const Home = lazyPrefetch(() => import(/* webpackChunkName: "home" */ 'pages/Home'))
-+ const LoremIpsum = lazyPrefetch(() => import(/* webpackChunkName: "lorem-ipsum" */ 'pages/LoremIpsum'))
-+ const Pokemon = lazyPrefetch(() => import(/* webpackChunkName: "pokemon" */ 'pages/Pokemon'))
-```
-
-Now all pages will be prefetched and parsed (but not executed) before the user even tries to navigate to them.
 
 ### Leveraging the 304 Status Code
 
