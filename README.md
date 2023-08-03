@@ -20,7 +20,6 @@ This project is a case study of CSR, it aims to explore the potential of client-
   - [Code Splitting](#code-splitting)
   - [Preloading Async Pages](#preloading-async-pages)
   - [Prefetching Async Pages](#prefetching-async-pages)
-  - [Generating Static Data](#generating-static-data)
   - [Preventing Duplicate Async Vendors](#preventing-duplicate-async-vendors)
   - [Preloading Data](#preloading-data)
   - [Tweaking Further](#tweaking-further)
@@ -28,6 +27,7 @@ This project is a case study of CSR, it aims to explore the potential of client-
     - [Preventing Sequenced Rendering](#preventing-sequenced-rendering)
     - [Transitioning Async Pages](#transitioning-async-pages)
     - [Leveraging the 304 Status Code](#leveraging-the-304-status-code)
+    - [Generating Static Data](#generating-static-data)
   - [Interim Summary](#interim-summary)
   - [The Biggest Drawback of SSR](#the-biggest-drawback-of-ssr)
   - [The SWR Approach](#the-swr-approach)
@@ -283,93 +283,70 @@ However, splitting every page causes a noticeable delay in navigation, since eve
 
 We would want to prefetch all pages ahead of time.
 
-We can do this by writing a wrapper function around React's _lazy_ function:
+We can do this by writing a simple service worker:
 
-_[lazy-prefetch.ts](https://github.com/theninthsky/frontend-essentials/blob/main/src/utils/lazy-prefetch.ts)_
-
-```js
-import { lazy } from 'react'
-
-const lazyPrefetch = chunk => {
-  if (window.requestIdleCallback) window.requestIdleCallback(chunk)
-  else window.addEventListener('load', () => setTimeout(chunk, 500), { once: true })
-
-  return lazy(chunk)
-}
-
-export default lazyPrefetch
-```
-
-_[App.jsx](src/App.jsx)_
-
-```diff
-- const Home = lazy(() => import(/* webpackChunkName: "home" */ 'pages/Home'))
-- const LoremIpsum = lazy(() => import(/* webpackChunkName: "lorem-ipsum" */ 'pages/LoremIpsum'))
-- const Pokemon = lazy(() => import(/* webpackChunkName: "pokemon" */ 'pages/Pokemon'))
-
-+ const Home = lazyPrefetch(() => import(/* webpackChunkName: "home" */ 'pages/Home'))
-+ const LoremIpsum = lazyPrefetch(() => import(/* webpackChunkName: "lorem-ipsum" */ 'pages/LoremIpsum'))
-+ const Pokemon = lazyPrefetch(() => import(/* webpackChunkName: "pokemon" */ 'pages/Pokemon'))
-```
-
-Now all pages will be prefetched and parsed (but not executed) before the user even tries to navigate to them.
-
-### Generating Static Data
-
-If we take a closer look, here is what SSG essentially does: it creates a cacheable HTML file and injects static data into it.
-<br>
-This can be useful for data that is not highly dynamic, such as content from CMS.
-
-So how can we also create static data?
-
-The preferred method would be to have our API server create JSON files from static data and to serve those when requested.
-
-However, if we wanted to do something similar ourselves, we could execute the following script during build time:
-
-_[fetch-static.mjs](scripts/fetch-static.mjs)_
+_[webpack.config.js](webpack.config.js)_
 
 ```js
-import { mkdir, writeFile } from 'fs/promises'
-import axios from 'axios'
-
-const path = 'public/json'
-const axiosOptions = { transformResponse: res => res }
-
-mkdir(path, { recursive: true })
-
-const fetchLoremIpsum = async () => {
-  const { data } = await axios.get('https://loripsum.net/api/100/long/plaintext', axiosOptions)
-
-  writeFile(`${path}/lorem-ipsum.json`, JSON.stringify(data))
-}
-
-fetchLoremIpsum()
+plugins: [
+  ...(production
+    ? [
+        new InjectManifest({
+          include: [/fonts\//, /scripts\/.+\.js$/],
+          swSrc: path.join(__dirname, 'public', 'service-worker.js')
+        })
+      ]
+    : [])
+]
 ```
 
-_[package.json](package.json)_
+_[service-worker.js](public/service-worker.js)_
 
-```json
-"scripts": {
-  "postinstall": "npm run fetch-static",
-  "prebuild": "npm run fetch-static",
-  "fetch-static": "node scripts/fetch-static.mjs"
+```js
+const assets = self.__WB_MANIFEST.map(({ url }) => url)
+
+self.addEventListener('install', () => {
+  assets.forEach(asset => fetch(asset))
+  self.skipWaiting()
+})
+
+self.addEventListener('fetch', () => {})
+```
+
+_[service-worker-registration.js](src/utils/service-worker-registration.js)_
+
+```js
+const register = () => {
+  window.addEventListener('load', async () => {
+    try {
+      await navigator.serviceWorker.register('/service-worker.js')
+
+      console.log('Service worker registered!')
+    } catch (err) {
+      console.error(err)
+    }
+  })
+}
+
+const unregister = async () => {
+  try {
+    const registration = await navigator.serviceWorker.ready
+
+    await registration.unregister()
+
+    console.log('Service worker unregistered!')
+  } catch (err) {
+    console.error(err)
+  }
+}
+
+if ('serviceWorker' in navigator) {
+  if (process.env.NODE_ENV === 'development') unregister()
+  else register()
 }
 ```
 
-The above script would create a `json/lorem-ipsum.json` file that will be stored in the CDN.
-
-Then we simply fetch the static data in our app:
-
-```js
-fetch('json/lorem-ipsum.json')
-```
-
-There are some advantages to this approach:
-
-- We generate static data ourselves so we don't bother our server or CMS for every user request.
-- The data will be fetched faster from a nearby CDN edge than from a remote server.
-
-Whenever we need to update the static data we simply rebuild the app or, if we have control over our build files in production, just rerun the script.
+Now all pages will be prefetched before the user even tries to navigate to them.
 
 ### Preventing Duplicate Async Vendors
 
@@ -393,7 +370,7 @@ optimization: {
       vendors: {
         test: /[\\/]node_modules[\\/]/,
 +       chunks: 'all',
-        name: ({ context }) => (context.match(/[\\/]node_modules[\\/](.*?)([\\/]|$)/) || [])[1]
+        name: ({ context }) => (context.match(/[\\/]node_modules[\\/](.*?)([\\/]|$)/) || [])[1].replace('@', '')
       }
     }
   }
@@ -419,12 +396,12 @@ optimization: {
       vendors: {
         test: /[\\/]node_modules[\\/]/,
         chunks: 'all',
--       name: ({ context }) => (context.match(/[\\/]node_modules[\\/](.*?)([\\/]|$)/) || [])[1]
+-       name: ({ context }) => (context.match(/[\\/]node_modules[\\/](.*?)([\\/]|$)/) || [])[1].replace('@', '')
 +       name: (module, chunks) => {
 +         const allChunksNames = chunks.map(({ name }) => name).join('.')
 +         const moduleName = (module.context.match(/[\\/]node_modules[\\/](.*?)([\\/]|$)/) || [])[1]
 
-+         return `${moduleName}.${allChunksNames}`
++         return `${moduleName}.${allChunksNames}`.replace('@', '')
         }
       }
     }
@@ -825,17 +802,71 @@ The way we can overcome this disadvantage is by redirecting every HTML request t
 
 _[service-worker.js](public/service-worker.js)_
 
-```js
-self.addEventListener('install', self.skipWaiting)
-
-self.addEventListener('fetch', event => {
-  if (event.request.destination === 'document') {
-    event.respondWith(fetch(new Request(self.registration.scope)))
-  }
-})
+```diff
+- self.addEventListener('fetch', () => {})
++ self.addEventListener('fetch', event => {
++   if (event.request.destination === 'document') event.respondWith(fetch(new Request(self.registration.scope)))
++ })
 ```
 
 Now every page we land on will request the root `/` HTML document from the CDN, making the browser send the `If-None-Match` header and get a 304 status code for every single route.
+
+### Generating Static Data
+
+If we take a closer look, here is what SSG essentially does: it creates a cacheable HTML file and injects static data into it.
+<br>
+This can be useful for data that is not highly dynamic, such as content from CMS.
+
+So how can we also create static data?
+
+The preferred method would be to have our API server create JSON files from static data and to serve those when requested.
+
+However, if we wanted to do something similar ourselves, we could execute the following script during build time:
+
+_[fetch-static.mjs](scripts/fetch-static.mjs)_
+
+```js
+import { mkdir, writeFile } from 'fs/promises'
+import axios from 'axios'
+
+const path = 'public/json'
+const axiosOptions = { transformResponse: res => res }
+
+mkdir(path, { recursive: true })
+
+const fetchLoremIpsum = async () => {
+  const { data } = await axios.get('https://loripsum.net/api/100/long/plaintext', axiosOptions)
+
+  writeFile(`${path}/lorem-ipsum.json`, JSON.stringify(data))
+}
+
+fetchLoremIpsum()
+```
+
+_[package.json](package.json)_
+
+```json
+"scripts": {
+  "postinstall": "npm run fetch-static",
+  "prebuild": "npm run fetch-static",
+  "fetch-static": "node scripts/fetch-static.mjs"
+}
+```
+
+The above script would create a `json/lorem-ipsum.json` file that will be stored in the CDN.
+
+Then we simply fetch the static data in our app:
+
+```js
+fetch('json/lorem-ipsum.json')
+```
+
+There are some advantages to this approach:
+
+- We generate static data ourselves so we don't bother our server or CMS for every user request.
+- The data will be fetched faster from a nearby CDN edge than from a remote server.
+
+Whenever we need to update the static data we simply rebuild the app or, if we have control over our build files in production, just rerun the script.
 
 ## Interim Summary
 
@@ -887,7 +918,9 @@ When using SWR, the browser is allowed to use a cached asset or response (usuall
 
 This method completely surpasses any network conditions, it even allows our app to be available while offline (within the SWR allowed time period), and all of this without even compromising on the freshness of the app shell.
 
-Many popular websites such as Twitter, YouTube and CodeSandbox implement SWR in their app shell.
+Many popular websites such as YouTube, Twitter and CodeSandbox implement SWR in their app shell.
+<br>
+Additionally, SWR is absolutely necessary when making a PWA, since it behaves just like native apps do.
 
 There are two ways to achieve SWR in web applications:
 
@@ -901,21 +934,6 @@ Although the first approach is completely usable (and can be set up within secon
 Our SWR service worker needs to cache the HTML document and all of the fonts and scripts (and stylesheets) of all pages.
 <br>
 In addition, it needs to serve these cached assets right when the page loads and then send a request to the CDN, fetch all new assets (if exist) and finally replace the stale cached assets with the new ones.
-
-_[webpack.config.js](webpack.config.js)_
-
-```js
-plugins: [
-  ...(production
-    ? [
-        new InjectManifest({
-          include: [/fonts\//, /scripts\/.+\.js$/],
-          swSrc: path.join(__dirname, 'public', 'service-worker.js')
-        })
-      ]
-    : [])
-]
-```
 
 _[service-worker.js](public/service-worker.js)_
 
@@ -964,51 +982,6 @@ self.addEventListener('fetch', event => {
     event.respondWith(staleWhileRevalidate(event.request))
   }
 })
-```
-
-_[service-worker-registration.js](src/utils/service-worker-registration.js)_
-
-```js
-const register = () => {
-  window.addEventListener('load', async () => {
-    try {
-      await navigator.serviceWorker.register('/service-worker.js')
-
-      console.log('Service worker registered!')
-    } catch (err) {
-      console.error(err)
-    }
-  })
-}
-
-const unregister = async () => {
-  try {
-    const registration = await navigator.serviceWorker.ready
-
-    await registration.unregister()
-
-    console.log('Service worker unregistered!')
-  } catch (err) {
-    console.error(err)
-  }
-}
-
-if ('serviceWorker' in navigator) {
-  if (process.env.NODE_ENV === 'development') unregister()
-  else register()
-}
-```
-
-_[App.jsx](src/App.jsx)_
-
-```diff
-- const Home = lazyPrefetch(() => import(/* webpackChunkName: "home" */ 'pages/Home'))
-- const LoremIpsum = lazyPrefetch(() => import(/* webpackChunkName: "lorem-ipsum" */ 'pages/LoremIpsum'))
-- const Pokemon = lazyPrefetch(() => import(/* webpackChunkName: "pokemon" */ 'pages/Pokemon'))
-
-+ const Home = lazy(() => import(/* webpackChunkName: "home" */ 'pages/Home'))
-+ const LoremIpsum = lazy(() => import(/* webpackChunkName: "lorem-ipsum" */ 'pages/LoremIpsum'))
-+ const Pokemon = lazy(() => import(/* webpackChunkName: "pokemon" */ 'pages/Pokemon'))
 ```
 
 We define a `MAX_STALE_DURATION` constant to set the maximum duration we are willing for our users to see the (potentially) stale app shell.

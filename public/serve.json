@@ -1,5 +1,14 @@
 {
   "rewrites": [
     { "source": "/*", "destination": "/index.html" }
+  ],
+  "headers": [
+    {
+      "source" : "**/*.@(woff2|js)",
+      "headers" : [{
+        "key" : "Cache-Control",
+        "value" : "max-age=7200"
+      }]
+    }
   ]
 }

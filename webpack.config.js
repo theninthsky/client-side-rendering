@@ -76,7 +76,7 @@ module.exports = (_, { mode }) => {
               const allChunksNames = chunks.map(({ name }) => name).join('.')
               const moduleName = (module.context.match(/[\\/]node_modules[\\/](.*?)([\\/]|$)/) || [])[1]
 
-              return `${moduleName}.${allChunksNames}`
+              return `${moduleName}.${allChunksNames}`.replace('@', '')
             }
           }
         }
