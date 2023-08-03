@@ -1,7 +1,7 @@
-const assets = self.__WB_MANIFEST.map(({ url }) => url)
+self.addEventListener('install', event => {
+  const assets = self.__WB_MANIFEST.map(({ url }) => url)
 
-self.addEventListener('install', () => {
-  assets.forEach(asset => fetch(asset))
+  event.waitUntil(Promise.all(assets.map(asset => fetch(asset))))
   self.skipWaiting()
 })
 

@@ -300,19 +300,6 @@ plugins: [
 ]
 ```
 
-_[service-worker.js](public/service-worker.js)_
-
-```js
-const assets = self.__WB_MANIFEST.map(({ url }) => url)
-
-self.addEventListener('install', () => {
-  assets.forEach(asset => fetch(asset))
-  self.skipWaiting()
-})
-
-self.addEventListener('fetch', () => {})
-```
-
 _[service-worker-registration.js](src/utils/service-worker-registration.js)_
 
 ```js
@@ -344,6 +331,19 @@ if ('serviceWorker' in navigator) {
   if (process.env.NODE_ENV === 'development') unregister()
   else register()
 }
+```
+
+_[service-worker.js](public/service-worker.js)_
+
+```js
+self.addEventListener('install', event => {
+  const assets = self.__WB_MANIFEST.map(({ url }) => url)
+
+  event.waitUntil(Promise.all(assets.map(asset => fetch(asset))))
+  self.skipWaiting()
+})
+
+self.addEventListener('fetch', () => {})
 ```
 
 Now all pages will be prefetched before the user even tries to navigate to them.
@@ -658,16 +658,17 @@ We can preload data when hovering over links (desktop) or when links enter the v
 _[NavigationLink.jsx](src/components/NavigationLink.tsx)_
 
 ```js
-const preload = url => {
-  if (document.head.querySelector(`link[href="${url}"]`)) return
-
-  document.head.appendChild(
+const preload = ({ url, as = 'fetch', crossorigin }) => {
+  const preloadElement = document.head.appendChild(
     Object.assign(document.createElement('link'), {
       rel: 'preload',
       href: url,
-      as: 'fetch'
+      as,
+      crossOrigin: crossorigin
     })
   )
+
+  preloadElement.addEventListener('load', () => document.head.removeChild(preloadElement))
 }
 ```
 
@@ -820,7 +821,7 @@ This can be useful for data that is not highly dynamic, such as content from CMS
 So how can we also create static data?
 
 The preferred method would be to have our API server create JSON files from static data and to serve those when requested.
-
+<br>
 However, if we wanted to do something similar ourselves, we could execute the following script during build time:
 
 _[fetch-static.mjs](scripts/fetch-static.mjs)_
