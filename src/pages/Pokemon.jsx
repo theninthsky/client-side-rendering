@@ -60,6 +60,7 @@ const Pokemon = () => {
                     className={style.pokemon}
                     to={`/pokemon/${name}`}
                     state={{ id, name, img }}
+                    onTouchStart={() => preload({ url: img, as: 'image' })}
                     onMouseEnter={() => preload({ url: img, as: 'image' })}
                   >
                     {startCase(toLower(name))}
