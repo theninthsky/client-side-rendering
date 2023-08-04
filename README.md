@@ -26,7 +26,6 @@ This project is a case study of CSR, it aims to explore the potential of client-
     - [Preloading Other Pages Data](#preloading-other-pages-data)
     - [Preventing Sequenced Rendering](#preventing-sequenced-rendering)
     - [Transitioning Async Pages](#transitioning-async-pages)
-    - [Leveraging the 304 Status Code](#leveraging-the-304-status-code)
     - [Generating Static Data](#generating-static-data)
   - [Interim Summary](#interim-summary)
   - [The Biggest Drawback of SSR](#the-biggest-drawback-of-ssr)
@@ -777,40 +776,6 @@ export default NavigationLink
 ```
 
 Now async pages will feel like they were never split from the main app.
-
-### Leveraging the 304 Status Code
-
-When a static asset is returned from a CDN, it includes an `ETag` header. An ETag is the content hash of the resource.
-
-The next time the browser wants to fetch this asset, it first checks if it has stored an ETag for that asset. If it does, it sends that ETag inside an `If-None-Match` header along with the request.
-<br>
-The CDN then compares the received `If-None-Match` header with the asset's current ETag.
-<br>
-If they are different, the CDN will return a `200 Success` status code along with the new asset.
-<br>
-However, if they match, the CDN will return a `304 Not Modified` status code, notifying the browser that it can safely use its stored asset (without having to redownload it).
-
-So in a traditional CSR app, when loading a page and then reloading it, we can see that the HTML request gets a `304 Not Modified` status code (and all other assets are served from cache).
-
-The ETag is stored per route, so `/lorem-ipsum`'s and `/pokemon`'s HTML ETags will be stored under different cache entries in the browser (even if their ETags are equal).
-
-In a CSR SPA we have a single HTML file, and so the ETag that is returned from the CDN is the same for every page request.
-
-However, since the ETag is stored per route (page), the browser won't send the `If-None-Match` if no ETag exists in that route's cache entry.
-This means that for every unvisited page, the browser will get a 200 status code and will have to redownload the HTML, despite that fact that every page is the exact same HTML document.
-
-The way we can overcome this disadvantage is by redirecting every HTML request to the root route using a Service Worker:
-
-_[service-worker.js](public/service-worker.js)_
-
-```diff
-- self.addEventListener('fetch', () => {})
-+ self.addEventListener('fetch', event => {
-+   if (event.request.destination === 'document') event.respondWith(fetch(new Request(self.registration.scope)))
-+ })
-```
-
-Now every page we land on will request the root `/` HTML document from the CDN, making the browser send the `If-None-Match` header and get a 304 status code for every single route.
 
 ### Generating Static Data
 
