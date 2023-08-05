@@ -1,4 +1,5 @@
 const BOT_AGENTS = [
+  'googlebot',
   'bingbot',
   'yahoo! slurp',
   'yandex',
@@ -44,9 +45,9 @@ const fetchPrerendered = async request => {
     redirect: 'manual'
   })
 
-  const { status, body } = await fetch(prerenderRequest)
+  const { body, ...rest } = await fetch(prerenderRequest)
 
-  return new Response(body, { status })
+  return new Response(body, rest)
 }
 
 export default {
