@@ -145,7 +145,7 @@ const listData = {
       {
         value: 'Heavily depends on data to render',
         description:
-          'The initial page response time heavily depends on how fast the API server responds with the data.\nThis means that the page visibility is strongly coupled with data response times (as users will see absolutely nothing until the page fully renders on the server)'
+          'The initial page response time heavily depends on how fast the API server responds with the data.\nThis means that page visibility is strongly coupled with both proximity to the server and query time, as users will see absolutely nothing until the page fully renders on the server and then sent to them'
       },
       {
         value: 'Delayed interactivity',
@@ -182,7 +182,10 @@ const listData = {
           <p>
             Since rendering is serial (
             <em>
-              <a href="https://web.dev/rendering-on-the-web/#server-side-rendering-versus-static-rendering" target="_blank">
+              <a
+                href="https://web.dev/rendering-on-the-web/#server-side-rendering-versus-static-rendering"
+                target="_blank"
+              >
                 renderToString
               </a>
             </em>
