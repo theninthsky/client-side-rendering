@@ -4,9 +4,10 @@ import { css } from '@emotion/css'
 import pagesManifest from 'pages-manifest.json'
 import { DESKTOP_VIEWPORT } from 'styles/constants'
 import Title from 'components/common/Title'
+import Subtitle from 'components/common/Subtitle'
 import Info from 'components/common/Info'
-import Tooltip from 'components/common/Tooltip'
 import List from 'components/common/List'
+import Table from 'components/common/Table'
 
 /* Bloat */
 import { ApolloClient, InMemoryCache } from '@apollo/client'
@@ -368,6 +369,61 @@ const listData = {
   }
 }
 
+const tableNotes = [
+  'Ratings assume deployment on Cloudflare network (with Workers)',
+  'Ratings are relative to what is expected from each network speed and each category (repeated loads are expected to be faster than the initial load. Navigations are expected to be the fastest)',
+  'Ratings consider visibility + intractability (for visibility only and on Slow Network, all non-CSR ratings should be at least B)',
+  'Ratings assume good implementation (low bundle size; route-based code-splitting; prefetch of all scripts)',
+  'Ratings assume the usage of React (48kb gzipped)',
+  'Ratings exclude data fetching (except for SSR which has embedded data)',
+  'SSR ratings heavily depend on server caching, query times and DB server proximity (hence "or lower")',
+  "SSG might show stale data while the others won't",
+  'A+ rating means near-instant load. S rating means instant load'
+]
+
+const columns = [
+  { field: 'id', headerName: '', width: 140 },
+  { field: 'initialLoad', headerName: 'Initial Load', width: 140 },
+  { field: 'repeatedLoads', headerName: 'Repeated Loads', width: 350 },
+  { field: 'navigations', headerName: 'Navigations', width: 300 }
+]
+
+const slowNetworkRows = [
+  { id: 'CSR', initialLoad: 'C', repeatedLoads: 'A (full cache), B (partial cache)', navigations: 'S' },
+  { id: 'CSR (SWR)', initialLoad: 'C', repeatedLoads: 'S', navigations: 'S' },
+  {
+    id: 'SSG',
+    initialLoad: 'C',
+    repeatedLoads: 'A (full cache), B (partial cache)',
+    navigations: 'S (page is cached), A (page is not cached)'
+  },
+  {
+    id: 'SSR',
+    initialLoad: 'C or lower',
+    repeatedLoads: 'A or lower (full cache), B or lower (partial cache)',
+    navigations: 'A or lower'
+  },
+  { id: 'SSSR (RSC)', initialLoad: 'B', repeatedLoads: 'A (full cache), B (partial cache)', navigations: 'A' }
+]
+
+const fastNetworkRows = [
+  { id: 'CSR', initialLoad: 'A', repeatedLoads: 'A+ (full cache), A (partial cache)', navigations: 'S' },
+  { id: 'CSR (SWR)', initialLoad: 'A', repeatedLoads: 'S', navigations: 'S' },
+  {
+    id: 'SSG',
+    initialLoad: 'A',
+    repeatedLoads: 'A+',
+    navigations: 'S (page is cached), A+ (page is not cached)'
+  },
+  {
+    id: 'SSR',
+    initialLoad: 'A or lower',
+    repeatedLoads: 'A or lower',
+    navigations: 'B or lower'
+  },
+  { id: 'SSSR (RSC)', initialLoad: 'A', repeatedLoads: 'A+ (full cache), A (partial cache)', navigations: 'A+' }
+]
+
 const Comparison = () => {
   return (
     <div>
@@ -380,9 +436,9 @@ const Comparison = () => {
       <main className={style.main}>
         {Object.values(listData).map(({ name, title, pros, cons }) => (
           <div key={name} className={style.section}>
-            <Tooltip title={title} placement="top">
-              <h2 className={style.subtitle}>{name}</h2>
-            </Tooltip>
+            <Subtitle className={style.subtitle} title={title} placement="top">
+              {name}
+            </Subtitle>
 
             <div className={style.lists}>
               <List name="Pros" items={pros} />
@@ -390,6 +446,34 @@ const Comparison = () => {
             </div>
           </div>
         ))}
+
+        <h2 className={style.tableTitle}>Speed Comparison</h2>
+
+        <ul className={style.tableNotes}>
+          {tableNotes.map(note => (
+            <li key={note}>- {note}</li>
+          ))}
+        </ul>
+
+        <Table
+          className={style.table}
+          name="Slow Network"
+          columns={columns}
+          rows={slowNetworkRows}
+          disableColumnMenu
+          disableRowSelectionOnClick
+          hideFooter
+        />
+
+        <Table
+          className={style.table}
+          name="Fast Network"
+          columns={columns}
+          rows={fastNetworkRows}
+          disableColumnMenu
+          disableRowSelectionOnClick
+          hideFooter
+        />
       </main>
     </div>
   )
@@ -404,9 +488,6 @@ const style = {
   `,
   subtitle: css`
     margin-bottom: 15px;
-    font-size: 26px;
-    font-weight: 500;
-    cursor: pointer;
   `,
   section: css`
     display: flex;
@@ -434,6 +515,23 @@ const style = {
       margin: 0;
       margin-left: 40px;
     }
+  `,
+  tableTitle: css`
+    font-size: 28px;
+    font-weight: 500;
+    color: var(--primary-color);
+  `,
+  tableNotes: css`
+    margin-top: 10px;
+    list-style: none;
+
+    li {
+      padding: 5px;
+    }
+  `,
+  table: css`
+    max-width: 950px;
+    margin-top: 30px;
   `
 }
 
