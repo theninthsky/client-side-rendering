@@ -19,7 +19,7 @@ const dynamicPaths = Object.keys(dynamicMaps).reduce(
 const paths = [...staticPaths, ...dynamicPaths]
 
 const stream = new SitemapStream({ hostname: 'https://client-side-rendering.pages.dev' })
-const links = paths.map(path => ({ url: path, changefreq: 'daily' }))
+const links = paths.map(path => ({ url: path, changefreq: 'weekly' }))
 
 streamToPromise(Readable.from(links).pipe(stream))
   .then(data => data.toString())
