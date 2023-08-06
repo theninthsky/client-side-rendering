@@ -120,7 +120,7 @@ const listData = {
             <a href="https://github.com/theninthsky/client-side-rendering#prerendering" target="_blank">
               prerendering server
             </a>{' '}
-            has to be set up to serve unsophisticated crawlers (such as <em>Bingbot</em>)
+            has to be set up to serve all crawlers
           </p>
         )
       }
@@ -379,7 +379,7 @@ const Comparison = () => {
 
       <main className={style.main}>
         {Object.values(listData).map(({ name, title, pros, cons }) => (
-          <div className={style.section}>
+          <div key={name} className={style.section}>
             <Tooltip title={title} placement="top">
               <h2 className={style.subtitle}>{name}</h2>
             </Tooltip>

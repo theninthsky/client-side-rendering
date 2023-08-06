@@ -20,7 +20,7 @@ const List: FC<ListProps> = ({ className, name, items, ...otherProps }) => {
 
       <ol className={style.list}>
         {items.map(({ value, description }) => (
-          <Tooltip title={description} placement="top-start">
+          <Tooltip key={value} title={description} placement="top-start">
             <li className={style.item}>{value}</li>
           </Tooltip>
         ))}

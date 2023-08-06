@@ -1063,7 +1063,7 @@ _Note that this benchmark only tests the first load of the page, without even co
 
 It is often said that Google is having trouble properly crawling CSR (JS) apps.
 <br>
-That might have been the case in 2018, but as of 2023, Google crawls CSR apps flawlessly.
+That might have been the case in 2018, but as of 2023, Google crawls CSR apps in a very good manner.
 <br>
 The indexed pages will have a title, description, content and all other SEO-related attributes, as long as we remember to dynamically set them (either manually or using something like _[react-helmet](https://www.npmjs.com/package/react-helmet)_).
 
@@ -1088,12 +1088,13 @@ A detailed explanation of Googlebot's JS crawling process can be found here:
 <br>
 https://developers.google.com/search/docs/crawling-indexing/javascript/javascript-seo-basics
 
-It is important to note that some API servers take very long time to respond to data requests.
-In such extreme cases (which also severely harm the UX), we might prefer not to entirely rely on Googlebot's crawling process. We will discuss what else we can do in the next section.
+However, it is recommended not to entirely rely on Googlebot's crawling process, since sometimes it fails to render JS (although it rarely happens).
+<br>
+We will discuss what else we can do in the next section.
 
 ### Prerendering
 
-Other search engines such as Bing cannot render JS (despite claiming they can). So in order to have them crawl our app properly, we will serve them **prerendered** versions of our pages.
+Other search engines such as Bing cannot render JS, so in order to have them crawl our app properly, we will serve them **prerendered** versions of our pages.
 <br>
 Prerendering is the act of crawling web apps in production (using headless Chromium) and generating a complete HTML file (with data) for each page.
 
@@ -1110,7 +1111,7 @@ Then we redirect web crawlers (identified by their `User-Agent` header string) t
 _[public/\_worker.js](public/_worker.js)_
 
 ```js
-const BOT_AGENTS = ['bingbot', 'yandex', 'twitterbot', 'whatsapp', ...]
+const BOT_AGENTS = ['googlebot', 'bingbot', 'yandex', 'twitterbot', 'whatsapp', ...]
 
 const fetchPrerendered = async request => {
   const { url, headers } = request
@@ -1124,9 +1125,9 @@ const fetchPrerendered = async request => {
     redirect: 'manual'
   })
 
-  const { status, body } = await fetch(prerenderRequest)
+  const { body, ...rest } = await fetch(prerenderRequest)
 
-  return new Response(body, { status })
+  return new Response(body, rest)
 }
 
 export default {
