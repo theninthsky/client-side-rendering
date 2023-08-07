@@ -1318,6 +1318,8 @@ These facts lead to the conclusion that there is no particular reason to use SSR
 
 As time passes, [connection speed is getting faster](https://worldpopulationreview.com/country-rankings/internet-speeds-by-country) and end-user devices get stronger. So the performance differences between all possible website rendering methods are guarenteed to be mitigated even further.
 
-There are some new SSR methods (such as Streaming SSR with Server Components) and frameworks (such as Marko and Qwik) which pretend to reduce the inital JS that has to be downloaded.
+There are some new SSR methods (such as Streaming SSR with Server Components) and frameworks (such as Marko and Qwik) which are able to reduce the inital JS that has to be downloaded.
+<br>
+However, there are also new CSR frameworks such as Svelte and Solid.js which have very small bundle size and are very optimized for performance.
 
 Nevertheless, it's important to note that nothing makes pages load faster than the SWR approach, which is only possible through client-side rendering.

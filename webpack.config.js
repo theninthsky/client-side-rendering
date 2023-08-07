@@ -3,8 +3,9 @@ const ReactRefreshPlugin = require('@pmmmwh/react-refresh-webpack-plugin')
 const ReactRefreshTypeScript = require('react-refresh-typescript')
 const ForkTsCheckerPlugin = require('fork-ts-checker-webpack-plugin')
 const ESLintPlugin = require('eslint-webpack-plugin')
-const HtmlPlugin = require('html-webpack-plugin')
 const { InjectManifest } = require('workbox-webpack-plugin')
+const HtmlPlugin = require('html-webpack-plugin')
+const HtmlInlineScriptPlugin = require('html-inline-script-webpack-plugin')
 const CopyPlugin = require('copy-webpack-plugin')
 
 const pagesManifest = require('./src/pages-manifest.json')
@@ -106,6 +107,7 @@ module.exports = (_, { mode }) => {
           return htmlTemplate(pages)
         }
       }),
+      new HtmlInlineScriptPlugin({ scriptMatchPattern: [/runtime.+[.]js$/] }),
       new CopyPlugin({
         patterns: [
           {
