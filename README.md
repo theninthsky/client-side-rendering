@@ -729,11 +729,11 @@ This would make our app and the async page visually show up at the same time.
 
 ### Transitioning Async Pages
 
-_Note: this technique requires React 18_
+_Note: requires React 18_
 
-We will see a similar effect when we move to another async page: a blank space that remains until the page's script finishes downloading.
+We will see a similar effect when we move to another async page: a blank space that remains until the page is rendered.
 
-React 18 introduced us to the useTransition hook, which allows us to delay a render until some criteria are met.
+React 18 introduced us to the `useTransition` hook, which allows us to delay a render until some criteria are met.
 <br>
 We will use this hook to delay the page's navigation until it is ready:
 
