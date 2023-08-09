@@ -14,60 +14,60 @@ module.exports = pages => `
       <title>Client-side Rendering</title>
 
       <script>
-        if (navigator.userAgent.includes('Prerender')) return
-
-        const isStructureEqual = (pathname, path) => {
-          pathname = pathname.split('/')
-          path = path.split('/')
-
-          if (pathname.length !== path.length) return false
-
-          return pathname.every((segment, ind) => segment === path[ind] || path[ind].includes(':'))
-        }
-
-        let { pathname } = window.location
-
-        if (pathname !== '/') pathname = pathname.replace(/\\/$/, '')
-
-        const pages = ${JSON.stringify(pages)}
-
-        for (const { path, scripts, data } of pages) {
-          const match = pathname === path || (path.includes(':') && isStructureEqual(pathname, path))
-      
-          if (!match) continue
-          
-          scripts.forEach(script => {
-            document.head.appendChild(
-              Object.assign(document.createElement('link'), { rel: 'preload', href: '/' + script, as: 'script' })
-            )
-          })
-
-          if (!data) break
-          
-          data.forEach(({ url, dynamicPathIndexes, crossorigin, preconnectURL }) => {
-            let fullURL = url
+        if (!navigator.userAgent.includes('Prerender')) {
+          const isStructureEqual = (pathname, path) => {
+            pathname = pathname.split('/')
+            path = path.split('/')
+  
+            if (pathname.length !== path.length) return false
+  
+            return pathname.every((segment, ind) => segment === path[ind] || path[ind].includes(':'))
+          }
+  
+          let { pathname } = window.location
+  
+          if (pathname !== '/') pathname = pathname.replace(/\\/$/, '')
+  
+          const pages = ${JSON.stringify(pages)}
+  
+          for (const { path, scripts, data } of pages) {
+            const match = pathname === path || (path.includes(':') && isStructureEqual(pathname, path))
+        
+            if (!match) continue
             
-            if (dynamicPathIndexes) {
-              const pathnameArr = pathname.split('/')
-              const dynamics = dynamicPathIndexes.map(index => pathnameArr[index])
-
-              let counter = 0
-              
-              fullURL = url.replace(/\\$/g, match => dynamics[counter++])
-            }
-
-            document.head.appendChild(
-              Object.assign(document.createElement('link'), { rel: 'preload', href: fullURL, as: 'fetch', crossOrigin: crossorigin })
-            )
-
-            if (preconnectURL) {
+            scripts.forEach(script => {
               document.head.appendChild(
-                Object.assign(document.createElement('link'), { rel: 'preconnect', href: preconnectURL })
+                Object.assign(document.createElement('link'), { rel: 'preload', href: '/' + script, as: 'script' })
               )
-            }
-          })
-
-          break
+            })
+  
+            if (!data) break
+            
+            data.forEach(({ url, dynamicPathIndexes, crossorigin, preconnectURL }) => {
+              let fullURL = url
+              
+              if (dynamicPathIndexes) {
+                const pathnameArr = pathname.split('/')
+                const dynamics = dynamicPathIndexes.map(index => pathnameArr[index])
+  
+                let counter = 0
+                
+                fullURL = url.replace(/\\$/g, match => dynamics[counter++])
+              }
+  
+              document.head.appendChild(
+                Object.assign(document.createElement('link'), { rel: 'preload', href: fullURL, as: 'fetch', crossOrigin: crossorigin })
+              )
+  
+              if (preconnectURL) {
+                document.head.appendChild(
+                  Object.assign(document.createElement('link'), { rel: 'preconnect', href: preconnectURL })
+                )
+              }
+            })
+  
+            break
+          }
         }
       </script>
     </head>
