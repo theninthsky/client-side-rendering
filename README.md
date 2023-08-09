@@ -22,10 +22,11 @@ This project is a case study of CSR, it aims to explore the potential of client-
   - [Prefetching Async Pages](#prefetching-async-pages)
   - [Preventing Duplicate Async Vendors](#preventing-duplicate-async-vendors)
   - [Preloading Data](#preloading-data)
+  - [Accelerating Unchanged Pages](#accelerating-unchanged-pages)
   - [Tweaking Further](#tweaking-further)
-    - [Preloading Other Pages Data](#preloading-other-pages-data)
     - [Preventing Sequenced Rendering](#preventing-sequenced-rendering)
     - [Transitioning Async Pages](#transitioning-async-pages)
+    - [Preloading Other Pages Data](#preloading-other-pages-data)
     - [Generating Static Data](#generating-static-data)
   - [Interim Summary](#interim-summary)
   - [The Biggest Drawback of SSR](#the-biggest-drawback-of-ssr)
@@ -648,28 +649,27 @@ to:
 }
 ```
 
-## Tweaking Further
+### Accelerating Unchanged Pages
 
-### Preloading Other Pages Data
+Our build process produces a `runtime.[hash].js` file which is an "initial" (critical) script that contains all of the other script mappings.
+<br>
+So when any file changes in our app, the `runtime` file changes aswell.
 
-We can preload data when hovering over links (desktop) or when links enter the viewport (mobile):
+The problem is, even when users land on a page that did not change since they last visited our app (neither its dependencies changed), so that all of its page-related scripts are fully cached - since the `runtime` script did change, it has to be redownload, thus slightly delaying the entire load of the page.
 
-_[NavigationLink.jsx](src/components/NavigationLink.tsx)_
+We can easily overcome this issue by inlining the `runtime` script in the HTML:
+
+_[webpack.config.js](webpack.config.js)_
 
 ```js
-const preload = ({ url, as = 'fetch', crossorigin }) => {
-  const preloadElement = document.head.appendChild(
-    Object.assign(document.createElement('link'), {
-      rel: 'preload',
-      href: url,
-      as,
-      crossOrigin: crossorigin
-    })
-  )
-
-  preloadElement.addEventListener('load', () => document.head.removeChild(preloadElement))
-}
+plugins: [
+  new HtmlInlineScriptPlugin({ scriptMatchPattern: [/runtime.+[.]js$/] })
+]
 ```
+
+This will only add about 2kb to our HTML file, but will ensure that unchanged (and unaffected) pages will be loaded immediately from the cache, without requiring an extra roundtrip.
+
+## Tweaking Further
 
 ### Preventing Sequenced Rendering
 
@@ -729,11 +729,11 @@ This would make our app and the async page visually show up at the same time.
 
 ### Transitioning Async Pages
 
-_Note: this technique requires React 18_
+_Note: requires React 18_
 
-We will see a similar effect when we move to another async page: a blank space that remains until the page's script finishes downloading.
+We will see a similar effect when we move to another async page: a blank space that remains until the page is rendered.
 
-React 18 introduced us to the useTransition hook, which allows us to delay a render until some criteria are met.
+React 18 introduced us to the `useTransition` hook, which allows us to delay a render until some criteria are met.
 <br>
 We will use this hook to delay the page's navigation until it is ready:
 
@@ -776,6 +776,27 @@ export default NavigationLink
 ```
 
 Now async pages will feel like they were never split from the main app.
+
+### Preloading Other Pages Data
+
+We can preload data when hovering over links (desktop) or when links enter the viewport (mobile):
+
+_[NavigationLink.jsx](src/components/NavigationLink.tsx)_
+
+```js
+const preload = ({ url, as = 'fetch', crossorigin }) => {
+  const preloadElement = document.head.appendChild(
+    Object.assign(document.createElement('link'), {
+      rel: 'preload',
+      href: url,
+      as,
+      crossOrigin: crossorigin
+    })
+  )
+
+  preloadElement.addEventListener('load', () => document.head.removeChild(preloadElement))
+}
+```
 
 ### Generating Static Data
 
