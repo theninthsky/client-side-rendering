@@ -14,6 +14,8 @@ module.exports = pages => `
       <title>Client-side Rendering</title>
 
       <script>
+        if (/googlebot|bingbot/i.test(navigator.userAgent)) return
+
         const isStructureEqual = (pathname, path) => {
           pathname = pathname.split('/')
           path = path.split('/')
