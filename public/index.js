@@ -15,7 +15,7 @@ module.exports = pages => `
 
       <script>
         const isStructureEqual = (pathname, path) => {
-          if (navigator.userAgent.includes('Prerender')) return
+          if (/googlebot|bingbot/i.test(navigator.userAgent)) return
           
           pathname = pathname.split('/')
           path = path.split('/')
