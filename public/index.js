@@ -14,9 +14,9 @@ module.exports = pages => `
       <title>Client-side Rendering</title>
 
       <script>
+        if (navigator.userAgent.includes('Prerender')) return
+
         const isStructureEqual = (pathname, path) => {
-          if (/googlebot|bingbot/i.test(navigator.userAgent)) return
-          
           pathname = pathname.split('/')
           path = path.split('/')
 
