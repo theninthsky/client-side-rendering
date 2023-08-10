@@ -662,9 +662,7 @@ We can easily overcome this issue by inlining the `runtime` script in the HTML:
 _[webpack.config.js](webpack.config.js)_
 
 ```js
-plugins: [
-  new HtmlInlineScriptPlugin({ scriptMatchPattern: [/runtime.+[.]js$/] })
-]
+plugins: [new HtmlInlineScriptPlugin({ scriptMatchPattern: [/runtime.+[.]js$/] })]
 ```
 
 This will only add about 2kb to our HTML file, but will ensure that unchanged (and unaffected) pages will be loaded immediately from the cache, without requiring an extra roundtrip.
@@ -1166,14 +1164,21 @@ export default {
 
 _Prerendering_, also called _Dynamic Rendering_, is encouraged by _[Google](https://developers.google.com/search/docs/advanced/javascript/dynamic-rendering)_ and _[Microsoft](https://blogs.bing.com/webmaster/october-2018/bingbot-Series-JavaScript,-Dynamic-Rendering,-and-Cloaking-Oh-My)_ and is heavily used by many popular websites including Twitter.
 
-Using prerendering produces the **exact same** SEO results as using SSR in all search engines.
+The results are as expected:
 
 https://www.bing.com/search?q=site%3Ahttps%3A%2F%2Fclient-side-rendering.pages.dev
 
 ![Bing Search Results](images/bing-search-results.png)
 
-In addition, cached prerendered pages will have unbelievably low response times, which may (or may not) positively affect their SEO score.
+In addition, it appears as if search engines do not consider the TTFB metric at all when ranking websites (some say it just has a very small impact):
+https://www.seroundtable.com/google-time-to-first-byte-24847.html
 <br>
+https://support.google.com/webmasters/thread/46038656/how-much-does-ttfb-matter-s-for-google-ranking?hl=en
+
+If this is really the case, then _prerendering gets the highest rankings out of all rendering methods by far_.
+<br>
+Since script tags are filtered out in the process, it means that the crawler has no more work to do after it fetches the page (the HTML which only weighs a few kilobytes), thus making all the important metrics (such as FCP, LCP, TBT and TTI) insanely good.
+
 This is also a good solution for API servers that are slow to respond to data requests.
 
 _Note that when using CSS-in-JS, we should [disable the speedy optimization](src/utils/disable-speedy.ts) during prerendering in order to have our styles omitted to the DOM._
