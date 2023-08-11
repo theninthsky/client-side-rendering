@@ -1171,11 +1171,12 @@ https://www.bing.com/search?q=site%3Ahttps%3A%2F%2Fclient-side-rendering.pages.d
 ![Bing Search Results](images/bing-search-results.png)
 
 In addition, it appears as if search engines do not consider the TTFB metric at all when ranking websites (some say it just has a very small impact):
+<br>
 https://www.seroundtable.com/google-time-to-first-byte-24847.html
 <br>
 https://support.google.com/webmasters/thread/46038656/how-much-does-ttfb-matter-s-for-google-ranking?hl=en
 
-If this is really the case, then _prerendering gets the highest rankings out of all rendering methods by far_.
+If this is really the case, then **prerendering gets the highest rankings out of all rendering methods by far**.
 <br>
 Since script tags are filtered out in the process, it means that the crawler has no more work to do after it fetches the page (the HTML which only weighs a few kilobytes), thus making all the important metrics (such as FCP, LCP, TBT and TTI) insanely good.
 

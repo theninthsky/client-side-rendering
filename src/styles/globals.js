@@ -3,6 +3,7 @@ import { injectGlobal } from '@emotion/css'
 injectGlobal`
 	:root {
 		--primary-color: dodgerblue;
+    --secondary-color: #654597;
 		--text-color: #24292e;
 		--bg-color: #fff;
 	}

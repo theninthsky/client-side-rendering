@@ -379,46 +379,46 @@ const tableNotes = [
 ]
 
 const columns = [
-  { field: 'id', headerName: '', width: 140 },
-  { field: 'initialLoad', headerName: 'Initial Load', width: 140 },
-  { field: 'repeatedLoads', headerName: 'Repeated Loads', width: 350 },
-  { field: 'navigations', headerName: 'Navigations', width: 300 }
+  { accessorKey: 'type', header: 'Type', cell: type => <span className={style.typeCell}>{type.getValue()}</span> },
+  { accessorKey: 'initialLoad', header: 'Initial Load' },
+  { accessorKey: 'repeatedLoads', header: 'Repeated Loads' },
+  { accessorKey: 'navigations', header: 'Navigations' }
 ]
 
-const slowNetworkRows = [
-  { id: 'CSR', initialLoad: 'C', repeatedLoads: 'A (full cache), B (partial cache)', navigations: 'S' },
-  { id: 'CSR (SWR)', initialLoad: 'C', repeatedLoads: 'S', navigations: 'S' },
+const slowNetworkData = [
+  { type: 'CSR', initialLoad: 'C', repeatedLoads: 'A (full cache), B (partial cache)', navigations: 'S' },
+  { type: 'CSR (SWR)', initialLoad: 'C', repeatedLoads: 'S', navigations: 'S' },
   {
-    id: 'SSG',
+    type: 'SSG',
     initialLoad: 'C',
     repeatedLoads: 'A (full cache), B (partial cache)',
     navigations: 'S (page is cached), A (page is not cached)'
   },
   {
-    id: 'SSR',
+    type: 'SSR',
     initialLoad: 'C or lower',
     repeatedLoads: 'A or lower (full cache), B or lower (partial cache)',
     navigations: 'A or lower'
   },
-  { id: 'SSSR (RSC)', initialLoad: 'B', repeatedLoads: 'A (full cache), B (partial cache)', navigations: 'A' }
+  { type: 'SSSR (RSC)', initialLoad: 'B', repeatedLoads: 'A (full cache), B (partial cache)', navigations: 'A' }
 ]
 
-const fastNetworkRows = [
-  { id: 'CSR', initialLoad: 'A', repeatedLoads: 'A+ (full cache), A (partial cache)', navigations: 'S' },
-  { id: 'CSR (SWR)', initialLoad: 'A', repeatedLoads: 'S', navigations: 'S' },
+const fastNetworkData = [
+  { type: 'CSR', initialLoad: 'A', repeatedLoads: 'A+ (full cache), A (partial cache)', navigations: 'S' },
+  { type: 'CSR (SWR)', initialLoad: 'A', repeatedLoads: 'S', navigations: 'S' },
   {
-    id: 'SSG',
+    type: 'SSG',
     initialLoad: 'A',
     repeatedLoads: 'A+',
     navigations: 'S (page is cached), A+ (page is not cached)'
   },
   {
-    id: 'SSR',
+    type: 'SSR',
     initialLoad: 'A or lower',
     repeatedLoads: 'A or lower',
     navigations: 'B or lower'
   },
-  { id: 'SSSR (RSC)', initialLoad: 'A', repeatedLoads: 'A+ (full cache), A (partial cache)', navigations: 'A+' }
+  { type: 'SSSR (RSC)', initialLoad: 'A', repeatedLoads: 'A+ (full cache), A (partial cache)', navigations: 'A+' }
 ]
 
 const Comparison = () => {
@@ -452,25 +452,9 @@ const Comparison = () => {
           ))}
         </ul>
 
-        <Table
-          className={style.table}
-          name="Slow Network"
-          columns={columns}
-          rows={slowNetworkRows}
-          disableColumnMenu
-          disableRowSelectionOnClick
-          hideFooter
-        />
+        <Table className={style.table} name="Slow Network" columns={columns} data={slowNetworkData} />
 
-        <Table
-          className={style.table}
-          name="Fast Network"
-          columns={columns}
-          rows={fastNetworkRows}
-          disableColumnMenu
-          disableRowSelectionOnClick
-          hideFooter
-        />
+        <Table className={style.table} name="Fast Network" columns={columns} data={fastNetworkData} />
       </main>
     </div>
   )
@@ -529,6 +513,10 @@ const style = {
   table: css`
     max-width: 950px;
     margin-top: 30px;
+  `,
+  typeCell: css`
+    font-weight: 500;
+    color: var(--secondary-color);
   `
 }
 

@@ -12,7 +12,7 @@ const Subtitle: FC<HTMLAttributes<HTMLHeadingElement>> = ({ className, title, ch
 
 const style = {
   wrapper: css`
-    font-size: 26px;
+    font-size: 24px;
     font-weight: 500;
     cursor: pointer;
   `
