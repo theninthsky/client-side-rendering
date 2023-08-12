@@ -201,7 +201,7 @@ const Pokemon = lazy(() => import(/* webpackChunkName: "pokemon" */ 'pages/Pokem
 
 So when the user visits the Lorem Ipsum page, they only download the main chunk script (which includes all shared dependencies such as the framework) and the `lorem-ipsum.[hash].js` chunk.
 
-_Note: it is completely fine (and even encouraged) to have the user download our entire app, so they can have a smooth **app-like** navigation experience. But it is **very wrong** to make all assets load **initially**, delaying the first render of the page.
+_Note: it is encouraged to make our users download the entire app so they can have an instant, app-like, navigation experience. But it is a bad idea to batch all assets into a single script, delaying the first render of the page.
 <br>
 These assets should be downloaded after the user-requested page has finished rendering and is entirely visible._
 
@@ -648,6 +648,8 @@ to:
   "description": "A test request"
 }
 ```
+
+_Note that in order for the preload to work, the server has to send a `Cache-Control` header with a `max-age` of at least a few seconds._
 
 ### Accelerating Unchanged Pages
 
@@ -1182,7 +1184,7 @@ Since script tags are filtered out in the process, it means that the crawler has
 
 This is also a good solution for API servers that are slow to respond to data requests.
 
-_Note that when using CSS-in-JS, we should [disable the speedy optimization](src/utils/disable-speedy.ts) during prerendering in order to have our styles omitted to the DOM._
+_Note that when using CSS-in-JS, we should [disable the speedy optimization](src/components/PrerenderProvider.tsx) during prerendering in order to have our styles omitted to the DOM._
 
 ### Social Media Share Previews
 

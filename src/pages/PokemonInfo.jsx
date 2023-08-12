@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { useParams, useLocation } from 'react-router-dom'
 import { Meta, useFetch } from 'frontend-essentials'
 import startCase from 'lodash/startCase'
@@ -21,8 +20,6 @@ const { description, data } = pagesManifest.find(({ chunk }) => chunk === 'pokem
 const PokemonInfo = () => {
   const { name: nameParam } = useParams()
   const { state: selectedPokemon } = useLocation()
-
-  const [imageLoading, setImageLoading] = useState(true)
 
   const { data: pokemonInfo } = useFetch(data.url.replace('$', nameParam), {
     manual: selectedPokemon?.id,
@@ -47,18 +44,14 @@ const PokemonInfo = () => {
               {id}. <strong>{startCase(toLower(name))}</strong>
             </p>
 
-            <img
-              className={cx(style.image, { hidden: imageLoading })}
-              src={image}
-              onLoad={() => setImageLoading(false)}
-            />
+            <img className={style.image} src={image} />
           </>
         ) : (
-          <Skeleton className={style.skeleton} variant="text" width={100} height={24} animation={false} />
-        )}
+          <>
+            <Skeleton className={style.skeleton} variant="text" width={100} height={24} animation={false} />
 
-        {imageLoading && (
-          <Skeleton className={cx(style.skeleton, style.image)} variant="rectangular" width={475} height={475} />
+            <Skeleton className={cx(style.skeleton, style.image)} variant="rectangular" width={475} height={475} />
+          </>
         )}
       </main>
     </div>
