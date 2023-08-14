@@ -16,13 +16,13 @@ import $ from 'jquery'
 import moment from 'moment'
 $(`#${_.isDate(moment().toDate())}`)
 
-const { description, data } = pagesManifest.find(({ chunk }) => chunk === 'pokemon-info') as any
+const { description, data } = pagesManifest.find(({ chunk }) => chunk === 'pokemon-info')!
 
 const PokemonInfo: FC<{}> = () => {
   const { name: nameParam } = useParams()
   const { state: selectedPokemon } = useLocation()
 
-  const { data: pokemonInfo } = useFetch(data.url.replace('$', nameParam), {
+  const { data: pokemonInfo } = useFetch(data[0].url.replace('$', nameParam!), {
     manual: selectedPokemon?.id,
     camelCased: true
   })

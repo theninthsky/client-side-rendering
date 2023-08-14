@@ -99,8 +99,6 @@ module.exports = (_, { mode }) => {
           const pages = pagesManifest.map(({ chunk, path, data }) => {
             const scripts = assets.filter(name => new RegExp(`[/.]${chunk}\\.(.+)\\.js$`).test(name))
 
-            if (data && !Array.isArray(data)) data = [data]
-
             return { path, scripts, data }
           })
 

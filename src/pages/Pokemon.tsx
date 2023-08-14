@@ -17,8 +17,8 @@ import $ from 'jquery'
 import moment from 'moment'
 $(`#${_.isDate(moment().toDate())}`)
 
-const { title, description, data } = pagesManifest.find(({ chunk }) => chunk === 'pokemon') as any
-const { data: pokemonInfoData } = pagesManifest.find(({ chunk }) => chunk === 'pokemon-info') as any
+const { title, description, data } = pagesManifest.find(({ chunk }) => chunk === 'pokemon')!
+const { data: pokemonInfoData } = pagesManifest.find(({ chunk }) => chunk === 'pokemon-info')!
 
 const Pokemon: FC<{}> = () => {
   const { data: pokemon } = useFetch(data[0].url, {
@@ -27,7 +27,7 @@ const Pokemon: FC<{}> = () => {
   })
 
   useEffect(() => {
-    preconnect(pokemonInfoData.preconnectURL)
+    preconnect(pokemonInfoData[0].preconnectURL)
   }, [])
 
   return (
@@ -67,7 +67,7 @@ const Pokemon: FC<{}> = () => {
 }
 
 const MainSkeleton = () => {
-  return new Array(100)
+  return new Array(50)
     .fill(undefined)
     .map((_, ind) => (
       <Skeleton className={style.skeleton} key={ind} variant="rectangular" width={200} height={222} animation={false} />

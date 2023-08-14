@@ -3,7 +3,28 @@ declare module 'react/jsx-runtime' {
 }
 
 declare module '*.svg' {
-  const content: any
+  export default any
+}
 
-  export default content
+declare module 'pages-manifest.json' {
+  const pages: [
+    {
+      chunk: string
+      path: string
+      title: string
+      description: string
+      data: [
+        {
+          url: string
+          dynamicPathIndexes: number[]
+          crossorigin: string
+          preconnectURL: string
+          menuPreload: boolean
+        }
+      ]
+      menuItem: boolean
+    }
+  ]
+
+  export default pages
 }

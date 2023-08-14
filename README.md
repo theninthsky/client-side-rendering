@@ -419,8 +419,6 @@ plugins: [
 -       const script = assets.find(name => name.includes(`/${chunk}.`) && name.endsWith('.js'))
 +       const scripts = assets.filter(name => new RegExp(`[/.]${chunk}\\.(.+)\\.js$`).test(name))
 
-        if (data && !Array.isArray(data)) data = [data]
-
 -       return { path, script, data }
 +       return { path, scripts, data }
       })
@@ -521,8 +519,6 @@ plugins: [
 -     const pages = pagesManifest.map(({ chunk, path }) => {
 +     const pages = pagesManifest.map(({ chunk, path, data }) => {
         const script = assets.find(name => name.includes(`/${chunk}.`) && name.endsWith('.js'))
-
-+       if (data && !Array.isArray(data)) data = [data]
 
 -       return { path, script }
 +       return { path, script, data }

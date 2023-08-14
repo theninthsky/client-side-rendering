@@ -21,7 +21,7 @@ type Metrics = {
 }
 
 const METRICS_ORDER = ['TTFB', 'FCP', 'LCP', 'CLS', 'FID', 'INP']
-const { title, description } = pagesManifest.find(({ chunk }) => chunk === 'core-web-vitals') as any
+const { title, description } = pagesManifest.find(({ chunk }) => chunk === 'core-web-vitals')!
 
 const WebVitals: FC<{}> = () => {
   const [metrics, setMetrics] = useState<Metrics>({})

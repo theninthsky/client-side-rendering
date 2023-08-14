@@ -10,10 +10,12 @@
     "path": "/lorem-ipsum",
     "title": "Lorem Ipsum",
     "description": "This page demonstrates a large amount of static text that is pre-generated and fetched in parallel with other assets.",
-    "data": {
-      "url": "/json/lorem-ipsum.json",
-      "menuPreload": true
-    }
+    "data": [
+      {
+        "url": "/json/lorem-ipsum.json",
+        "menuPreload": true
+      }
+    ]
   },
   {
     "chunk": "pokemon",
@@ -32,20 +34,21 @@
     "chunk": "pokemon-info",
     "path": "/pokemon/:name",
     "description": "This page demonstrates a dynamic path data that is fetched in parallel with other assets.",
-    "data": {
+    "data": [
+      {
         "url": "https://pokeapi.co/api/v2/pokemon/$",
         "dynamicPathIndexes": [2],
         "crossorigin": "anonymous",
         "preconnectURL": "https://raw.githubusercontent.com"
-      },
+      }
+    ],
     "menuItem": false
   },
   {
     "chunk": "core-web-vitals",
     "path": "/web-vitals",
     "title": "Web Vitals",
-    "description": "This page specifies the values of core web vitals.",
-    "preventReload": true
+    "description": "This page specifies the values of core web vitals."
   },
   {
     "chunk": "comparison",
