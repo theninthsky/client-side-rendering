@@ -2,7 +2,7 @@
   "compilerOptions": {
     "target": "es2017",
     "jsx": "react-jsx",
-    "module": "es2015",
+    "module": "esnext",
     "moduleResolution": "node",
     "baseUrl": "src",
     "allowJs": true,
@@ -13,5 +13,6 @@
     "skipLibCheck": true,
     "sourceMap": true
   },
-  "include": ["src"]
+  "include": ["src"],
+  "files": ["src/index.d.ts"]
 }

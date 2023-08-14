@@ -300,7 +300,7 @@ plugins: [
 ]
 ```
 
-_[service-worker-registration.js](src/utils/service-worker-registration.js)_
+_[service-worker-registration.ts](src/utils/service-worker-registration.ts)_
 
 ```js
 const register = () => {
@@ -997,7 +997,7 @@ It is obvious that nothing can match SWR in terms of performance.
 
 Some users leave the app open for extended periods of time, so another thing we can do is revalidate the app while it is running:
 
-_[service-worker-registration.js](src/utils/service-worker-registration.js)_
+_[service-worker-registration.ts](src/utils/service-worker-registration.ts)_
 
 ```diff
 + const ACTIVE_REVALIDATION_INTERVAL = 1 * 60 * 60

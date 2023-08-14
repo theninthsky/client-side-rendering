@@ -1,3 +1,4 @@
+import type { FC } from 'react'
 import { useParams, useLocation } from 'react-router-dom'
 import { Meta, useFetch } from 'frontend-essentials'
 import startCase from 'lodash/startCase'
@@ -15,9 +16,9 @@ import $ from 'jquery'
 import moment from 'moment'
 $(`#${_.isDate(moment().toDate())}`)
 
-const { description, data } = pagesManifest.find(({ chunk }) => chunk === 'pokemon-info')
+const { description, data } = pagesManifest.find(({ chunk }) => chunk === 'pokemon-info') as any
 
-const PokemonInfo = () => {
+const PokemonInfo: FC<{}> = () => {
   const { name: nameParam } = useParams()
   const { state: selectedPokemon } = useLocation()
 

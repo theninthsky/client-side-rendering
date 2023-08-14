@@ -1,3 +1,4 @@
+import type { FC } from 'react'
 import { Meta } from 'frontend-essentials'
 import { css } from '@emotion/css'
 
@@ -15,7 +16,7 @@ import $ from 'jquery'
 import moment from 'moment'
 $(`#${_.isDate(moment().toDate())}`)
 
-const { title, description } = pagesManifest.find(({ chunk }) => chunk === 'comparison')
+const { title, description } = pagesManifest.find(({ chunk }) => chunk === 'comparison') as any
 
 const listData = {
   csr: {
@@ -421,7 +422,7 @@ const fastNetworkData = [
   { type: 'SSSR (RSC)', initialLoad: 'A', repeatedLoads: 'A+ (full cache), A (partial cache)', navigations: 'A+' }
 ]
 
-const Comparison = () => {
+const Comparison: FC<{}> = () => {
   return (
     <div>
       <Meta title={`${title} | Client-side Rendering`} description={description} />
@@ -433,7 +434,7 @@ const Comparison = () => {
       <main className={style.main}>
         {Object.values(listData).map(({ name, title, pros, cons }) => (
           <div key={name} className={style.section}>
-            <Subtitle className={style.subtitle} title={title} placement="top">
+            <Subtitle className={style.subtitle} title={title}>
               {name}
             </Subtitle>
 

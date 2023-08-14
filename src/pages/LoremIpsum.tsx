@@ -1,3 +1,4 @@
+import type { FC } from 'react'
 import { Meta, useFetch } from 'frontend-essentials'
 import { css } from '@emotion/css'
 
@@ -11,9 +12,9 @@ import $ from 'jquery'
 import moment from 'moment'
 $(`#${_.isDate(moment().toDate())}`)
 
-const { title, description, data } = pagesManifest.find(({ chunk }) => chunk === 'lorem-ipsum')
+const { title, description, data } = pagesManifest.find(({ chunk }) => chunk === 'lorem-ipsum') as any
 
-const LoremIpsum = () => {
+const LoremIpsum: FC<{}> = () => {
   const { data: loremIpsum } = useFetch(data.url, {
     credentials: 'include',
     mode: 'no-cors',

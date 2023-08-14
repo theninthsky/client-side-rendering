@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, FC } from 'react'
 import { Meta } from 'frontend-essentials'
 import { onCLS, onFCP, onFID, onINP, onLCP, onTTFB } from 'web-vitals'
 import { css } from '@emotion/css'
@@ -13,11 +13,18 @@ import $ from 'jquery'
 import moment from 'moment'
 $(`#${_.isDate(moment().toDate())}`)
 
-const METRICS_ORDER = ['TTFB', 'FCP', 'LCP', 'CLS', 'FID', 'INP']
-const { title, description } = pagesManifest.find(({ chunk }) => chunk === 'core-web-vitals')
+type Metrics = {
+  [name: string]: {
+    value: number
+    rating: string
+  }
+}
 
-const WebVitals = () => {
-  const [metrics, setMetrics] = useState({})
+const METRICS_ORDER = ['TTFB', 'FCP', 'LCP', 'CLS', 'FID', 'INP']
+const { title, description } = pagesManifest.find(({ chunk }) => chunk === 'core-web-vitals') as any
+
+const WebVitals: FC<{}> = () => {
+  const [metrics, setMetrics] = useState<Metrics>({})
 
   useEffect(() => {
     onCLS(addMetric)

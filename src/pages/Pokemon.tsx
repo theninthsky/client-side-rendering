@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, FC } from 'react'
 import { NavLink } from 'react-router-dom'
 import { Meta, LazyRender, useFetch } from 'frontend-essentials'
 import startCase from 'lodash/startCase'
@@ -17,10 +17,10 @@ import $ from 'jquery'
 import moment from 'moment'
 $(`#${_.isDate(moment().toDate())}`)
 
-const { title, description, data } = pagesManifest.find(({ chunk }) => chunk === 'pokemon')
-const { data: pokemonInfoData } = pagesManifest.find(({ chunk }) => chunk === 'pokemon-info')
+const { title, description, data } = pagesManifest.find(({ chunk }) => chunk === 'pokemon') as any
+const { data: pokemonInfoData } = pagesManifest.find(({ chunk }) => chunk === 'pokemon-info') as any
 
-const Pokemon = () => {
+const Pokemon: FC<{}> = () => {
   const { data: pokemon } = useFetch(data[0].url, {
     uuid: 'pokemon',
     immutable: true
@@ -68,7 +68,7 @@ const Pokemon = () => {
 
 const MainSkeleton = () => {
   return new Array(100)
-    .fill()
+    .fill(undefined)
     .map((_, ind) => (
       <Skeleton className={style.skeleton} key={ind} variant="rectangular" width={200} height={222} animation={false} />
     ))

@@ -1,3 +1,4 @@
+import type { FC } from 'react'
 import { css, cx } from '@emotion/css'
 import { Meta } from 'frontend-essentials'
 import { Button, Switch, TextField, Select, MenuItem, Slider, Rating } from '@mui/material'
@@ -6,9 +7,9 @@ import pagesManifest from 'pages-manifest.json'
 import Title from 'components/common/Title'
 import Info from 'components/common/Info'
 
-const { title, description } = pagesManifest.find(({ chunk }) => chunk === 'home')
+const { title, description } = pagesManifest.find(({ chunk }) => chunk === 'home') as any
 
-const Home = () => {
+const Home: FC<{}> = () => {
   return (
     <div>
       <Meta

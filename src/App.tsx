@@ -1,3 +1,4 @@
+import type { FC } from 'react'
 import { lazy, Suspense } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 
@@ -19,7 +20,7 @@ const routes = pagesManifest.map(({ path }, ind) => {
   return <Route key={path} path={path} element={<Element />} />
 })
 
-const App = () => {
+const App: FC<{}> = () => {
   return (
     <>
       <Navigation />
