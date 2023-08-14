@@ -44,7 +44,7 @@ const Pokemon = () => {
 
       <main className={style.main}>
         {pokemon ? (
-          <LazyRender items={pokemon.results} batch={window['prerender'] ? Infinity : 50}>
+          <LazyRender uuid="pokemon" items={pokemon.results} batch={window['prerender'] ? Infinity : 50}>
             {({ name, url }) => {
               const id = url.split('/')[6]
               const img = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`
@@ -70,7 +70,7 @@ const MainSkeleton = () => {
   return new Array(100)
     .fill()
     .map((_, ind) => (
-      <Skeleton className={style.skeleton} key={ind} variant="rectangular" width={150} height={172} animation={false} />
+      <Skeleton className={style.skeleton} key={ind} variant="rectangular" width={200} height={222} animation={false} />
     ))
 }
 
@@ -98,8 +98,8 @@ const style = {
     color: inherit;
   `,
   pokemonImage: css`
-    width: 150px;
-    height: 150px;
+    width: 200px;
+    height: 200px;
   `
 }
 
