@@ -194,9 +194,9 @@ The way we achieve this is (preferably) by route-based code splitting:
 _[App.jsx](src/App.jsx)_
 
 ```js
-const Home = lazy(() => import(/* webpackChunkName: "home" */ 'pages/Home'))
-const LoremIpsum = lazy(() => import(/* webpackChunkName: "lorem-ipsum" */ 'pages/LoremIpsum'))
-const Pokemon = lazy(() => import(/* webpackChunkName: "pokemon" */ 'pages/Pokemon'))
+const Home = lazy(() => import(/* webpackChunkName: 'home' */ 'pages/Home'))
+const LoremIpsum = lazy(() => import(/* webpackChunkName: 'lorem-ipsum' */ 'pages/LoremIpsum'))
+const Pokemon = lazy(() => import(/* webpackChunkName: 'pokemon' */ 'pages/Pokemon'))
 ```
 
 So when the user visits the Lorem Ipsum page, they only download the main chunk script (which includes all shared dependencies such as the framework) and the `lorem-ipsum.[hash].js` chunk.
@@ -725,7 +725,7 @@ This would make our app and the async page visually show up at the same time.
 
 ### Transitioning Async Pages
 
-_Note: requires React 18_
+_Note: requires React (v18) or Solid.js_
 
 We will see a similar effect when we move to another async page: a blank space that remains until the page is rendered.
 
@@ -1300,7 +1300,7 @@ https://vercel.com/guides?topics=analytics
 
 This is caused by the fact that there are `65536 (2^16)` possible filter combinations, and storing every combination as a full HTML file takes a lot of storage on the server.
 <br>
-So they only generate a single `guides.html` file which contains all of the data of all pages (157kb), but this static file doesn't know which filters are applied until JS is loaded, so we see this layout shift.
+So they only generate a single `guides.html` file which contains all of the data of all pages, but this static file doesn't know which filters are applied until JS is loaded, so we see this layout shift.
 
 It is important to note that even when using _[Incremental Static Regeneration](https://nextjs.org/docs/pages/building-your-application/data-fetching/incremental-static-regeneration)_, users will have to wait for server response when visiting uncached pages (just like in SSR).
 
