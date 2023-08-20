@@ -1117,11 +1117,10 @@ Prerendering is the act of crawling web apps in production (using headless Chrom
 
 We have two options when it comes to prerendering:
 
-1. We can use a dedicated service such as _[prerender.io](https://prerender.io)_.
-
-![Prerender.io Table](images/prerender-io-table.png)
-
-2. We can deploy our own prerender server using free open-source tools such as _[Prerender](https://github.com/prerender/prerender)_ (a fully working example can be found _[here](https://github.com/theninthsky/prerender-server)_).
+1. We can use a dedicated service such as _[prerender.io](https://prerender.io)_ which offers 1000 free prerenders a month.
+2. We can deploy our own prerender server using _[Prerender](https://github.com/prerender/prerender)_ (a fully working setup can be found _[here](https://github.com/theninthsky/prerender-server)_).
+   <br>
+   **This is the recommended approach**, since is offers an infinite number of prerenders for as low as 7$ a month (on _[Render.com](https://render.com/free)_).
 
 Then we redirect web crawlers (identified by their `User-Agent` header string) to our prerendered pages using a Cloudflare worker (in the following example we redirect to _prerender.io_):
 
