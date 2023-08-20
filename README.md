@@ -27,12 +27,12 @@ This project is a case study of CSR, it aims to explore the potential of client-
     - [Preventing Sequenced Rendering](#preventing-sequenced-rendering)
     - [Transitioning Async Pages](#transitioning-async-pages)
     - [Preloading Other Pages Data](#preloading-other-pages-data)
+    - [Revalidating Active Apps](#revalidating-active-apps)
     - [Generating Static Data](#generating-static-data)
   - [Interim Summary](#interim-summary)
   - [The Biggest Drawback of SSR](#the-biggest-drawback-of-ssr)
   - [The SWR Approach](#the-swr-approach)
     - [Implementing SWR](#implementing-swr)
-    - [Revalidating Active Apps](#revalidating-active-apps)
   - [Summary](#summary)
   - [Deploying](#deploying)
   - [Benchmark](#benchmark)
@@ -794,6 +794,37 @@ const preload = ({ url, as = 'fetch', crossorigin }) => {
 }
 ```
 
+### Revalidating Active Apps
+
+Some users leave the app open for extended periods of time, so another thing we can do is revalidate the app while it is running:
+
+_[service-worker-registration.ts](src/utils/service-worker-registration.ts)_
+
+```diff
++ const ACTIVE_REVALIDATION_INTERVAL = 10 * 60
+
+const register = () => {
+  window.addEventListener('load', async () => {
+    try {
+-     await navigator.serviceWorker.register('/service-worker.js')
++     const registration = await navigator.serviceWorker.register('/service-worker.js')
+
+      console.log('Service worker registered!')
+
++     setInterval(() => registration.update(), ACTIVE_REVALIDATION_INTERVAL * 1000)
+    } catch (err) {
+      console.error(err)
+    }
+  })
+}
+```
+
+The code above revalidates the app every 10 minutes.
+
+The revalidation process is extremely cheap, since it only involves refetching the service worker (which will return a _304 Not Modified_ status code if not changed).
+<br>
+When the service worker **does** change, it means that new assets are available, and so they will be selectively downloaded and saved in the browser's cache.
+
 ### Generating Static Data
 
 If we take a closer look, here is what SSG essentially does: it creates a cacheable HTML file and injects static data into it.
@@ -910,7 +941,7 @@ There are two ways to achieve SWR in web applications:
 - The _[stale-while-revalidate](https://web.dev/stale-while-revalidate/#what-shipped)_ attribute.
 - A custom service worker.
 
-Although the first approach is completely usable (and can be set up within seconds), the second approach will give us a more granular control of how and when assets are cached and updated, so this is the approach we choose to implement.
+Although the first approach is completely usable (and can be set up within seconds), the second approach will give us a more granular control of how and when assets are cached and updated, in addition to giving us _[immediate code cache](https://v8.dev/blog/code-caching-for-devs#use-service-worker-caches)_. So this is the approach we choose to implement.
 
 ### Implementing SWR
 
@@ -988,33 +1019,6 @@ The results exceed all expectations:
 These metrics are coming from a 6-year-old `Intel i3-8130U` laptop when the browser is using the disk cache (not the memory cache which is a lot faster), and are completely independent of network speed and status.
 
 It is obvious that nothing can match SWR in terms of performance.
-
-### Revalidating Active Apps
-
-Some users leave the app open for extended periods of time, so another thing we can do is revalidate the app while it is running:
-
-_[service-worker-registration.ts](src/utils/service-worker-registration.ts)_
-
-```diff
-+ const ACTIVE_REVALIDATION_INTERVAL = 1 * 60 * 60
-
-const register = () => {
-  window.addEventListener('load', async () => {
-    try {
--     await navigator.serviceWorker.register('/service-worker.js')
-+     const registration = await navigator.serviceWorker.register('/service-worker.js')
-
-      console.log('Service worker registered!')
-
-+     setInterval(() => registration.update(), ACTIVE_REVALIDATION_INTERVAL * 1000)
-    } catch (err) {
-      console.error(err)
-    }
-  })
-}
-```
-
-The code above arbitrarily revalidates the app every hour. However, we could implement a more sophisticated revalidation process which will run every time we deploy our app and notify all online users either through _[SSE](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events)_ or _[WebSockets](https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API/Writing_WebSocket_client_applications)_.
 
 ## Summary
 

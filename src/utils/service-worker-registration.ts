@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 
-const ACTIVE_REVALIDATION_INTERVAL = 1 * 60 * 60
+const ACTIVE_REVALIDATION_INTERVAL = 10 * 60
 
 const register = () => {
   window.addEventListener('load', async () => {
