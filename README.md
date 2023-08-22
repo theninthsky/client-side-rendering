@@ -725,7 +725,7 @@ This would make our app and the async page visually show up at the same time.
 
 ### Transitioning Async Pages
 
-_Note: requires React (v18) or Solid.js_
+_Note: requires React (v18), Svelte or Solid.js_
 
 We will see a similar effect when we move to another async page: a blank space that remains until the page is rendered.
 
