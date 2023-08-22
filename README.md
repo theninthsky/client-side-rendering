@@ -2,6 +2,8 @@
 
 This project is a case study of CSR, it aims to explore the potential of client-side rendered apps compared to server-side rendering.
 
+The conclusions of this project led to the creation of the _[ultimate-csr-boilerplate](https://github.com/theninthsky/ultimate-csr-boilerplate)_.
+
 ### Legend
 
 **CSR**: Client-side Rendering
