@@ -113,6 +113,7 @@ const style = {
     margin: 10px 0;
   `,
   skeleton: css`
+    max-width: 80vw;
     margin-top: 5px;
     background-color: rgba(0, 0, 0, 0.05);
   `
