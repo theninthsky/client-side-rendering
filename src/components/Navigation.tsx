@@ -35,7 +35,7 @@ const Navigation = () => {
       <Media query={MOBILE_VIEWPORT}>
         <MenuIcon className={style.menuIcon} onClick={() => setDrawerOpen(true)} />
 
-        <Drawer className={style.drawer} open={drawerOpen} onClose={() => setDrawerOpen(false)}>
+        <Drawer className={style.drawer} open={drawerOpen} keepMounted onClose={() => setDrawerOpen(false)}>
           {links}
         </Drawer>
       </Media>
