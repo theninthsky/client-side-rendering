@@ -193,7 +193,7 @@ For Example, we wouldn't want users to download, parse and execute the _[react-b
 
 The way we achieve this is (preferably) by route-based code splitting:
 
-_[App.jsx](src/App.jsx)_
+_[App.tsx](src/App.tsx)_
 
 ```js
 const Home = lazy(() => import(/* webpackChunkName: 'home' */ 'pages/Home'))
@@ -715,7 +715,7 @@ new MutationObserver((_, observer) => {
 }).observe(root, { childList: true, subtree: true })
 ```
 
-_[index.jsx](src/index.jsx)_
+_[index.tsx](src/index.tsx)_
 
 ```js
 import 'utils/delay-page-visibility'
@@ -751,7 +751,7 @@ const useTransitionNavigate = () => {
 export default useTransitionNavigate
 ```
 
-_[NavigationLink.jsx](src/components/NavigationLink.tsx)_
+_[NavigationLink.tsx](src/components/NavigationLink.tsx)_
 
 ```js
 const NavigationLink = ({ to, onClick, children }) => {
@@ -779,7 +779,7 @@ Now async pages will feel like they were never split from the main app.
 
 We can preload data when hovering over links (desktop) or when links enter the viewport (mobile):
 
-_[NavigationLink.jsx](src/components/NavigationLink.tsx)_
+_[NavigationLink.tsx](src/components/NavigationLink.tsx)_
 
 ```js
 const preload = ({ url, as = 'fetch', crossorigin }) => {
@@ -1176,6 +1176,8 @@ export default {
 
 ```
 
+Here is an up-to-date list of all bot agnets (web crawlers): https://docs.prerender.io/docs/how-to-add-additional-bots#cloudflare
+
 _Prerendering_, also called _Dynamic Rendering_, is encouraged by _[Google](https://developers.google.com/search/docs/advanced/javascript/dynamic-rendering)_ and _[Microsoft](https://blogs.bing.com/webmaster/october-2018/bingbot-Series-JavaScript,-Dynamic-Rendering,-and-Cloaking-Oh-My)_ and is heavily used by many popular websites including Twitter.
 
 The results are as expected:
@@ -1206,7 +1208,7 @@ This happens because most CSR apps have only one HTML file, and social share pre
 <br>
 This is where prerendering comes to our aid once again, we only need to make sure to set the correct meta tags dynamically:
 
-_[Home.jsx](src/pages/Home.jsx)_
+_[Home.tsx](src/pages/Home.tsx)_
 
 ```js
 const Home = props => {
@@ -1223,7 +1225,7 @@ const Home = props => {
 }
 ```
 
-The `Meta` component can be found [here](https://github.com/theninthsky/frontend-essentials/blob/main/src/components/Meta.tsx).
+The simple `Meta` component can be found [here](https://github.com/theninthsky/frontend-essentials/blob/main/src/components/Meta.tsx).
 
 This, after going through prerendering, gives us the correct preview for every page:
 
@@ -1249,7 +1251,7 @@ import { SitemapStream, streamToPromise } from 'sitemap'
 import pagesManifest from '../src/pages-manifest.json' assert { type: 'json' }
 
 const stream = new SitemapStream({ hostname: 'https://client-side-rendering.pages.dev' })
-const links = pagesManifest.map(({ path }) => ({ url: path, changefreq: 'daily' }))
+const links = pagesManifest.map(({ path }) => ({ url: path, changefreq: 'weekly' }))
 
 streamToPromise(Readable.from(links).pipe(stream))
   .then(data => data.toString())
@@ -1264,15 +1266,15 @@ This will emit the following sitemap:
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1" xmlns:news="http://www.google.com/schemas/sitemap-news/0.9" xmlns:video="http://www.google.com/schemas/sitemap-video/1.1" xmlns:xhtml="http://www.w3.org/1999/xhtml">
    <url>
       <loc>https://client-side-rendering.pages.dev/</loc>
-      <changefreq>daily</changefreq>
+      <changefreq>weekly</changefreq>
    </url>
    <url>
       <loc>https://client-side-rendering.pages.dev/lorem-ipsum</loc>
-      <changefreq>daily</changefreq>
+      <changefreq>weekly</changefreq>
    </url>
    <url>
       <loc>https://client-side-rendering.pages.dev/pokemon</loc>
-      <changefreq>daily</changefreq>
+      <changefreq>weekly</changefreq>
    </url>
 </urlset>
 ```
