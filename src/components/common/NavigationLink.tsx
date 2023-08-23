@@ -1,6 +1,6 @@
 import { useRef, useEffect, FC } from 'react'
 import { NavLink, NavLinkProps } from 'react-router-dom'
-import { useDelayedNavigate, useMedia } from 'frontend-essentials'
+import { useTransitionNavigate, useMedia } from 'frontend-essentials'
 import { css, cx } from '@emotion/css'
 
 import preload from 'utils/preload'
@@ -33,7 +33,7 @@ const onLinkEvent = (data: Data | Data[]) => {
 const NavigationLink: FC<NavigationLinkProps> = ({ className, to, data, onClick, children, ...otherProps }) => {
   const ref = useRef<HTMLAnchorElement>(null)
 
-  const navigate = useDelayedNavigate()
+  const navigate = useTransitionNavigate()
 
   const { hoverable } = useMedia({ hoverable: '(hover: hover) and (pointer: fine)' })
 

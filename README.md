@@ -735,27 +735,27 @@ React 18 introduced us to the `useTransition` hook, which allows us to delay a r
 <br>
 We will use this hook to delay the page's navigation until it is ready:
 
-_[useDelayedNavigate.ts](https://github.com/theninthsky/frontend-essentials/blob/main/src/hooks/useDelayedNavigate.ts)_
+_[useTransitionNavigate.ts](https://github.com/theninthsky/frontend-essentials/blob/main/src/hooks/useTransitionNavigate.ts)_
 
 ```js
 import { useTransition } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-const useDelayedNavigate = () => {
+const useTransitionNavigate = () => {
   const [, startTransition] = useTransition()
   const navigate = useNavigate()
 
-  return to => startTransition(() => navigate(to))
+  return (to, options) => startTransition(() => navigate(to, options))
 }
 
-export default useDelayedNavigate
+export default useTransitionNavigate
 ```
 
 _[NavigationLink.jsx](src/components/NavigationLink.tsx)_
 
 ```js
 const NavigationLink = ({ to, onClick, children }) => {
-  const navigate = useDelayedNavigate()
+  const navigate = useTransitionNavigate()
 
   const onLinkClick = event => {
     event.preventDefault()

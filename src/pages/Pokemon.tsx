@@ -1,5 +1,4 @@
 import { useEffect, FC } from 'react'
-import { NavLink } from 'react-router-dom'
 import { Meta, LazyRender, useFetch } from 'frontend-essentials'
 import startCase from 'lodash/startCase'
 import toLower from 'lodash/toLower'
@@ -10,6 +9,7 @@ import pagesManifest from 'pages-manifest.json'
 import preconnect from 'utils/preconnect'
 import Title from 'components/common/Title'
 import Info from 'components/common/Info'
+import Link from 'components/common/Link'
 
 /* Bloat */
 import _ from 'lodash'
@@ -50,11 +50,11 @@ const Pokemon: FC<{}> = () => {
               const img = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`
 
               return (
-                <NavLink key={name} className={style.pokemon} to={`/pokemon/${name}`} state={{ id, name, img }}>
+                <Link key={name} className={style.pokemon} to={`/pokemon/${name}`} state={{ id, name, img }}>
                   <img className={style.pokemonImage} src={img} loading="lazy" />
 
                   <span>{startCase(toLower(name))}</span>
-                </NavLink>
+                </Link>
               )
             }}
           </LazyRender>
