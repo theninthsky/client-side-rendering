@@ -40,6 +40,11 @@
         "dynamicPathIndexes": [2],
         "crossorigin": "anonymous",
         "preconnectURL": "https://raw.githubusercontent.com"
+      },
+      {
+        "url": "https://pokeapi.co/api/v2/pokemon-species/$",
+        "dynamicPathIndexes": [2],
+        "crossorigin": "anonymous"
       }
     ],
     "menuItem": false

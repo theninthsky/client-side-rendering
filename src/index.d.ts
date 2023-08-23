@@ -13,15 +13,13 @@ declare module 'pages-manifest.json' {
       path: string
       title: string
       description: string
-      data: [
-        {
-          url: string
-          dynamicPathIndexes: number[]
-          crossorigin: string
-          preconnectURL: string
-          menuPreload: boolean
-        }
-      ]
+      data: {
+        url: string
+        dynamicPathIndexes: number[]
+        crossorigin: string
+        preconnectURL: string
+        menuPreload: boolean
+      }[]
       menuItem: boolean
     }
   ]

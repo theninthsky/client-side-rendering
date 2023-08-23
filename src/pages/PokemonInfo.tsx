@@ -1,4 +1,4 @@
-import type { FC } from 'react'
+import { FC } from 'react'
 import { useParams, useLocation } from 'react-router-dom'
 import { Meta, useFetch } from 'frontend-essentials'
 import startCase from 'lodash/startCase'
@@ -23,12 +23,20 @@ const PokemonInfo: FC<{}> = () => {
   const { state: selectedPokemon } = useLocation()
 
   const { data: pokemonInfo } = useFetch(data[0].url.replace('$', nameParam!), {
-    manual: selectedPokemon?.id,
+    // manual: selectedPokemon?.id,
     camelCased: true
   })
 
-  const { id, name, img, sprites } = pokemonInfo || selectedPokemon || {}
+  const { data: pokemonSpecies } = useFetch(data[1].url.replace('$', nameParam!), {
+    camelCased: true
+  })
+
+  const { id, name, img, sprites, types } = pokemonInfo || selectedPokemon || {}
+
   const image = img || sprites?.other.officialArtwork.frontDefault
+  const flavorText = pokemonSpecies?.flavorTextEntries
+    .find(({ language }) => language.name === 'en')
+    ?.flavorText.replace('\f', ' ')
 
   return (
     <div>
@@ -41,18 +49,38 @@ const PokemonInfo: FC<{}> = () => {
       <main className={style.main}>
         {id ? (
           <>
-            <p>
-              {id}. <strong>{startCase(toLower(name))}</strong>
-            </p>
+            <div className={style.head}>
+              <p>
+                {id}. <strong>{startCase(toLower(name))}</strong>
+              </p>
+
+              <div className="items-center">
+                {types?.map(({ type: { name } }) => (
+                  <img
+                    key={name}
+                    className={style.type}
+                    title={startCase(name)}
+                    src={`https://raw.githubusercontent.com/msikma/pokeresources/master/resources/types/gen8/${name}.svg`}
+                    alt={startCase(name)}
+                  />
+                ))}
+              </div>
+            </div>
 
             <img className={style.image} src={image} />
           </>
         ) : (
           <>
-            <Skeleton className={style.skeleton} variant="text" width={100} height={24} animation={false} />
+            <Skeleton className={style.skeleton} variant="text" width={100} height={30} animation={false} />
 
             <Skeleton className={cx(style.skeleton, style.image)} variant="rectangular" width={475} height={475} />
           </>
+        )}
+
+        {flavorText ? (
+          <div>{flavorText}</div>
+        ) : (
+          <Skeleton className={style.skeleton} variant="text" width={1000} height={30} animation={false} />
         )}
       </main>
     </div>
@@ -67,9 +95,22 @@ const style = {
     margin-top: 20px;
     font-size: 20px;
   `,
+  head: css`
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 100%;
+    width: 475px;
+    height: 30px;
+  `,
+  type: css`
+    width: 30px;
+    margin-left: 5px;
+  `,
   image: css`
     max-width: 100%;
-    margin-top: 10px;
+    height: minmax(475px, 100vw);
+    margin: 10px 0;
   `,
   skeleton: css`
     margin-top: 5px;
