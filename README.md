@@ -1123,24 +1123,32 @@ Prerendering is the act of crawling web apps in production (using headless Chrom
 
 We have two options when it comes to prerendering:
 
-1. We can use a dedicated service such as _[prerender.io](https://prerender.io)_ which offers 1000 free prerenders a month.
+1. We can use a dedicated service such as _[Prerender.io](https://prerender.io)_ which offers 1000 free prerenders a month.
 2. We can deploy our own prerender server using _[Prerender](https://github.com/prerender/prerender)_ (a fully working setup can be found _[here](https://github.com/theninthsky/prerender-server)_).
    <br>
-   **This is the recommended approach**, since is offers an infinite number of prerenders for as low as 7$ a month (on _[Render.com](https://render.com/free)_).
+   **This is the recommended approach**, since it offers an infinite number of prerenders for as low as 7$ a month (on _[Render.com](https://render.com/free)_).
 
-Then we redirect web crawlers (identified by their `User-Agent` header string) to our prerendered pages using a Cloudflare worker (in the following example we redirect to _prerender.io_):
+Then we redirect web crawlers, identified by their `User-Agent` header string, using a Cloudflare worker (in the following example we redirect to our own _Prerender_ server):
 
 _[public/\_worker.js](public/_worker.js)_
 
 ```js
 const BOT_AGENTS = ['googlebot', 'bingbot', 'yandex', 'twitterbot', 'whatsapp', ...]
 
-const fetchPrerendered = async request => {
-  const { url, headers } = request
-  const prerenderUrl = `https://service.prerender.io/${url}`
+const fetchPrerendered = async ({ url, headers }, userAgent) => {
   const headersToSend = new Headers(headers)
 
-  headersToSend.set('X-Prerender-Token', YOUR_PRERENDER_TOKEN)
+  /* Prerender.io */
+  // const prerenderUrl = `https://service.prerender.io/${url}`
+  //
+  // headersToSend.set('X-Prerender-Token', YOUR_PRERENDER_IO_TOKEN)
+  /****************/
+
+  /* Prerender */
+  const prerenderUrl = new URL(`${YOUR_PRERENDER_SERVER_URL}?url=${url}`)
+
+  if (userAgent.includes('android')) prerenderUrl.searchParams.append('width', 375)
+  /*************/
 
   const prerenderRequest = new Request(prerenderUrl, {
     headers: headersToSend,
@@ -1157,7 +1165,10 @@ export default {
     const pathname = new URL(request.url).pathname.toLowerCase()
     const userAgent = (request.headers.get('User-Agent') || '').toLowerCase()
 
-    if (BOT_AGENTS.some(agent => userAgent.includes(agent)) && !pathname.includes('.')) return fetchPrerendered(request)
+    // a crawler that requests the document
+    if (BOT_AGENTS.some(agent => userAgent.includes(agent)) && !pathname.includes('.')) {
+      return fetchPrerendered(request, userAgent)
+    }
 
     return env.ASSETS.fetch(request)
   }

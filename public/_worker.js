@@ -64,8 +64,9 @@ export default {
     const userAgent = (request.headers.get('User-Agent') || '').toLowerCase()
 
     // a crawler that requests the document
-    if (BOT_AGENTS.some(agent => userAgent.includes(agent)) && !pathname.includes('.'))
+    if (BOT_AGENTS.some(agent => userAgent.includes(agent)) && !pathname.includes('.')) {
       return fetchPrerendered(request, userAgent)
+    }
 
     return env.ASSETS.fetch(request)
   }
