@@ -9,10 +9,10 @@ const Home = lazy(() => import(/* webpackChunkName: 'home' */ 'pages/Home'))
 const LoremIpsum = lazy(() => import(/* webpackChunkName: 'lorem-ipsum' */ 'pages/LoremIpsum'))
 const Pokemon = lazy(() => import(/* webpackChunkName: 'pokemon' */ 'pages/Pokemon'))
 const PokemonInfo = lazy(() => import(/* webpackChunkName: 'pokemon-info' */ 'pages/PokemonInfo'))
-const WebVitals = lazy(() => import(/* webpackChunkName: 'core-web-vitals' */ 'pages/WebVitals'))
 const Comparison = lazy(() => import(/* webpackChunkName: 'comparison' */ 'pages/Comparison'))
+const WebVitals = lazy(() => import(/* webpackChunkName: 'core-web-vitals' */ 'pages/WebVitals'))
 
-const pages = [Home, LoremIpsum, Pokemon, PokemonInfo, WebVitals, Comparison]
+const pages = [Home, LoremIpsum, Pokemon, PokemonInfo, Comparison, WebVitals]
 const routes = pagesManifest.map(({ path }, ind) => {
   const Element = pages[ind]
 

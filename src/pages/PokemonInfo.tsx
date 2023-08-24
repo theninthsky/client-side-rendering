@@ -55,7 +55,7 @@ const PokemonInfo: FC<{}> = () => {
               </p>
 
               <div className="items-center">
-                {types.map(({ type: { name } }) => (
+                {types?.map(({ type: { name } }) => (
                   <img
                     key={name}
                     className={style.type}
