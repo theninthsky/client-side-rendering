@@ -1,9 +1,10 @@
 import { FC } from 'react'
 import { Link as ReactRouterLink, LinkProps } from 'react-router-dom'
-import { useTransitionNavigate } from 'frontend-essentials'
+
+import useViewTransitionNavigate from 'hooks/useViewTransitionNavigate'
 
 const Link: FC<LinkProps> = ({ to, replace, state, preventScrollReset, relative, onClick, children, ...otheProps }) => {
-  const navigate = useTransitionNavigate()
+  const navigate = useViewTransitionNavigate()
 
   const onLinkClick = event => {
     event.preventDefault()

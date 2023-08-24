@@ -1,5 +1,7 @@
 import { injectGlobal } from '@emotion/css'
 
+import { DESKTOP_VIEWPORT } from './constants'
+
 injectGlobal`
 	:root {
 		--primary-color: dodgerblue;
@@ -12,6 +14,42 @@ injectGlobal`
 		--text-color: #fff;
 		--bg-color: #0f0e0e;
 	}
+
+  ::view-transition-old(root) {
+    animation: slide-out 0.2s;
+
+    @media(${DESKTOP_VIEWPORT}) {
+      animation: fade-out 0.2s;
+    }
+  }
+
+  ::view-transition-new(root) {
+    animation: slide-in 0.2s;
+
+    @media(${DESKTOP_VIEWPORT}) {
+      animation: fade-in 0.2s;
+    }
+  }
+
+  @keyframes slide-out {
+    from { transform: translateX(0); }
+    to { transform: translateX(-100%); }
+  }
+
+  @keyframes slide-in {
+    from { transform: translateX(100%); }
+    to { transform: translateX(0); }
+  }
+
+  @keyframes fade-out {
+    from { opacity: 1; }
+    to { opacity: 0; }
+  }
+
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
 
 	body {
 		font-family: 'Montserrat', sans-serif;
