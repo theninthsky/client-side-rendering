@@ -22,14 +22,9 @@ const PokemonInfo: FC<{}> = () => {
   const { name: nameParam } = useParams()
   const { state: selectedPokemon } = useLocation()
 
-  const { data: pokemonInfo } = useFetch(data[0].url.replace('$', nameParam!), {
-    // manual: selectedPokemon?.id,
-    camelCased: true
-  })
+  const { data: pokemonInfo } = useFetch(data[0].url.replace('$', nameParam!), { camelCased: true })
 
-  const { data: pokemonSpecies } = useFetch(data[1].url.replace('$', nameParam!), {
-    camelCased: true
-  })
+  const { data: pokemonSpecies } = useFetch(data[1].url.replace('$', nameParam!), { camelCased: true })
 
   const { id, name, img, sprites, types } = pokemonInfo || selectedPokemon || {}
 
@@ -71,17 +66,17 @@ const PokemonInfo: FC<{}> = () => {
           </>
         ) : (
           <>
-            <Skeleton className={style.skeleton} variant="text" width={100} height={30} animation={false} />
+            <Skeleton className={style.skeleton} variant="text" width={100} height={40} animation={false} />
 
             <Skeleton className={cx(style.skeleton, style.image)} variant="rectangular" width={475} height={475} />
           </>
         )}
 
-        {flavorText ? (
-          <div>{flavorText}</div>
-        ) : (
-          <Skeleton className={style.skeleton} variant="text" width={1000} height={30} animation={false} />
-        )}
+        <div>
+          {flavorText || (
+            <Skeleton className={style.skeleton} variant="text" width={1000} height={40} animation={false} />
+          )}
+        </div>
       </main>
     </div>
   )
@@ -109,12 +104,12 @@ const style = {
   `,
   image: css`
     max-width: 100%;
-    height: minmax(475px, 100vw);
+    max-height: calc(100vw - 40px);
+    height: 475px;
     margin: 10px 0;
   `,
   skeleton: css`
     max-width: 80vw;
-    margin-top: 5px;
     background-color: rgba(0, 0, 0, 0.05);
   `
 }
