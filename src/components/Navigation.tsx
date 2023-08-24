@@ -1,6 +1,6 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef, useEffect } from 'react'
 import { Media } from 'frontend-essentials'
-import { css } from '@emotion/css'
+import { css, cx } from '@emotion/css'
 import { Drawer } from '@mui/material'
 
 import { MOBILE_VIEWPORT, DESKTOP_VIEWPORT } from 'styles/constants'
@@ -15,6 +15,24 @@ const Navigation = () => {
   const { theme, setTheme } = useStore(({ theme, setTheme }) => ({ theme, setTheme }))
 
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [stickyPosition, setStickyPosition] = useState(-55)
+
+  const prevScrollY = useRef(window.scrollY)
+
+  useEffect(() => {
+    window.addEventListener('scroll', () => {
+      const { scrollY } = window
+      const scrollingUp = scrollY < prevScrollY.current
+
+      prevScrollY.current = scrollY
+
+      setStickyPosition(prevStickyPosition => {
+        if (scrollingUp) return prevStickyPosition < -1 ? prevStickyPosition + 2 : 0
+
+        return prevStickyPosition > -54 ? prevStickyPosition - 2 : -55
+      })
+    })
+  }, [])
 
   const links = useMemo(
     () =>
@@ -28,8 +46,12 @@ const Navigation = () => {
     [pagesManifest]
   )
 
+  const positionStyle = css`
+    top: ${stickyPosition}px;
+  `
+
   return (
-    <div className={style.wrapper}>
+    <div className={cx(style.wrapper, positionStyle)}>
       <Media query={DESKTOP_VIEWPORT}>{links}</Media>
 
       <Media query={MOBILE_VIEWPORT}>
@@ -53,10 +75,13 @@ const Navigation = () => {
 
 const style = {
   wrapper: css`
+    z-index: 1;
     display: flex;
     align-items: center;
+    position: sticky;
     padding: 15px;
     box-shadow: 3px 0px 6px 0px #00000029;
+    background-color: var(--bg-color);
   `,
   menuIcon: css`
     width: 26px;

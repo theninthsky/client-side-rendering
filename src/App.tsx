@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 
 import pagesManifest from 'pages-manifest.json'
 import Navigation from 'components/Navigation'
+import ScrollToTop from 'components/common/ScrollToTop'
 import Layout from 'components/Layout'
 
 const Home = lazy(() => import(/* webpackChunkName: 'home' */ 'pages/Home'))
@@ -23,6 +24,8 @@ const App: FC<{}> = () => {
   return (
     <>
       <Navigation />
+
+      <ScrollToTop />
 
       <Layout>
         <Suspense>
