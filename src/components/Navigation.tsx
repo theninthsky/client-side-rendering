@@ -11,11 +11,13 @@ import MenuIcon from 'images/menu.svg'
 import SunIcon from 'images/sun.svg'
 import MoonIcon from 'images/moon.svg'
 
+const NAVIGATION_HEIGHT = 55
+
 const Navigation = () => {
   const { theme, setTheme } = useStore(({ theme, setTheme }) => ({ theme, setTheme }))
 
   const [drawerOpen, setDrawerOpen] = useState(false)
-  const [stickyPosition, setStickyPosition] = useState(-55)
+  const [stickyPosition, setStickyPosition] = useState(-NAVIGATION_HEIGHT)
 
   const prevScrollY = useRef(window.scrollY)
 
@@ -27,9 +29,9 @@ const Navigation = () => {
       prevScrollY.current = scrollY
 
       setStickyPosition(prevStickyPosition => {
-        if (scrollingUp) return prevStickyPosition < -1 ? prevStickyPosition + 2 : 0
+        if (scrollingUp) return prevStickyPosition <= -4 ? prevStickyPosition + 4 : 0
 
-        return prevStickyPosition > -54 ? prevStickyPosition - 2 : -55
+        return prevStickyPosition >= -(NAVIGATION_HEIGHT - 4) ? prevStickyPosition - 4 : -NAVIGATION_HEIGHT
       })
     })
   }, [])
@@ -84,7 +86,7 @@ const style = {
     background-color: var(--bg-color);
   `,
   menuIcon: css`
-    width: 26px;
+    width: 25px;
     color: var(--text-color);
   `,
   drawer: css`
