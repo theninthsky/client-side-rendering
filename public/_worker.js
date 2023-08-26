@@ -43,7 +43,7 @@ const fetchPrerendered = async ({ url, headers }, userAgent) => {
   /****************/
 
   /* Prerender */
-  const prerenderUrl = new URL(`https://prerender-server.onrender.com/render?url=${url}`)
+  const prerenderUrl = new URL(`https://renderprime.onrender.com?url=${url}`)
 
   if (userAgent.includes('android')) prerenderUrl.searchParams.append('width', 375)
   /*************/
