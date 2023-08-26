@@ -33,7 +33,7 @@ const BOT_AGENTS = [
   'telegrambot'
 ]
 
-const fetchPrerendered = async (request, userAgent) => {
+const fetchPrerendered = async (request, env, userAgent) => {
   const { url, headers } = request
   const headersToSend = new Headers(headers)
 
@@ -68,7 +68,7 @@ export default {
 
     // a crawler that requests the document
     if (BOT_AGENTS.some(agent => userAgent.includes(agent)) && !pathname.includes('.')) {
-      return fetchPrerendered(request, userAgent)
+      return fetchPrerendered(request, env, userAgent)
     }
 
     return env.ASSETS.fetch(request)
