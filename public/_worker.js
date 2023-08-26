@@ -33,7 +33,8 @@ const BOT_AGENTS = [
   'telegrambot'
 ]
 
-const fetchPrerendered = async ({ url, headers }, userAgent) => {
+const fetchPrerendered = async (request, userAgent) => {
+  const { url, headers } = request
   const headersToSend = new Headers(headers)
 
   /* Prerender.io */
