@@ -37,13 +37,13 @@ const fetchPrerendered = async ({ url, headers }, userAgent) => {
   const headersToSend = new Headers(headers)
 
   /* Prerender.io */
-  // const prerenderUrl = `https://service.prerender.io/${url}`
+  // const prerenderUrl = `https://service.prerender.io/${decodeURIComponent(url)}`
   //
   // headersToSend.set('X-Prerender-Token', '7vGsiwq4BB5avp2mXVfq')
   /****************/
 
   /* Prerender */
-  const prerenderUrl = new URL(`https://renderprime.onrender.com?url=${url}`)
+  const prerenderUrl = new URL(`https://renderprime.onrender.com?url=${decodeURIComponent(url)}`)
 
   if (userAgent.includes('android')) prerenderUrl.searchParams.append('width', 375)
   /*************/
