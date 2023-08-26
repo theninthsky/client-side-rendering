@@ -37,13 +37,13 @@ const fetchPrerendered = async ({ url, headers }, userAgent) => {
   const headersToSend = new Headers(headers)
 
   /* Prerender.io */
-  // const prerenderUrl = `https://service.prerender.io/${decodeURIComponent(url)}`
+  // const prerenderUrl = `https://service.prerender.io/${url}`
   //
   // headersToSend.set('X-Prerender-Token', '7vGsiwq4BB5avp2mXVfq')
   /****************/
 
   /* Prerender */
-  const prerenderUrl = new URL(`https://renderprime.onrender.com?url=${decodeURIComponent(url)}`)
+  const prerenderUrl = new URL(`https://renderprime.onrender.com?url=${url}`)
 
   if (userAgent.includes('android')) prerenderUrl.searchParams.append('width', 375)
   /*************/
@@ -54,6 +54,8 @@ const fetchPrerendered = async ({ url, headers }, userAgent) => {
   })
 
   const { body, ...rest } = await fetch(prerenderRequest)
+
+  if (!rest.ok && userAgent.includes('googlebot')) return env.ASSETS.fetch(request)
 
   return new Response(body, rest)
 }
