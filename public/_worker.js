@@ -1,5 +1,4 @@
 const BOT_AGENTS = [
-  'googlebot',
   'bingbot',
   'yahoo! slurp',
   'yandex',
@@ -37,17 +36,15 @@ const fetchPrerendered = async (request, env, userAgent) => {
   const { url, headers } = request
   const headersToSend = new Headers(headers)
 
+  /* Custom Server */
+  const prerenderUrl = new URL(`https://renderprime.onrender.com?url=${url}`)
+  /*************/
+
   /* Prerender.io */
   // const prerenderUrl = `https://service.prerender.io/${url}`
   //
   // headersToSend.set('X-Prerender-Token', '7vGsiwq4BB5avp2mXVfq')
   /****************/
-
-  /* Prerender */
-  const prerenderUrl = new URL(`https://renderprime.onrender.com?url=${url}`)
-
-  if (userAgent.includes('android')) prerenderUrl.searchParams.append('width', 375)
-  /*************/
 
   const prerenderRequest = new Request(prerenderUrl, {
     headers: headersToSend,
@@ -55,8 +52,6 @@ const fetchPrerendered = async (request, env, userAgent) => {
   })
 
   const { body, ...rest } = await fetch(prerenderRequest)
-
-  if (!rest.ok && userAgent.includes('googlebot')) return env.ASSETS.fetch(request)
 
   return new Response(body, rest)
 }

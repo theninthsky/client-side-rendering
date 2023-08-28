@@ -1086,9 +1086,9 @@ _Note that this benchmark only tests the first load of the page, without even co
 
 It is often said that Google is having trouble properly crawling CSR (JS) apps.
 <br>
-That might have been the case in 2018, but as of 2023, Google crawls CSR apps in a very good manner.
+That might have been the case in 2018, but as of 2023, Google crawls CSR apps almost flawlessly.
 <br>
-The indexed pages will have a title, description, content and all other SEO-related attributes, as long as we remember to dynamically set them (either manually or using something like _[react-helmet](https://www.npmjs.com/package/react-helmet)_).
+Indexed pages will have a title, description, content and all other SEO-related attributes, as long as we remember to dynamically set them (either manually or using something like _[react-helmet](https://www.npmjs.com/package/react-helmet)_).
 
 https://www.google.com/search?q=site:https://client-side-rendering.pages.dev
 
@@ -1111,9 +1111,7 @@ A detailed explanation of Googlebot's JS crawling process can be found here:
 <br>
 https://developers.google.com/search/docs/crawling-indexing/javascript/javascript-seo-basics
 
-However, it is recommended not to entirely rely on Googlebot's crawling process, since sometimes it fails to render JS (although it rarely happens).
-<br>
-We will discuss what else we can do in the next section.
+_Note that Googlebot sometimes fails to render pages (this happens in less than 1% of cases), but it is expected to only improve over time._
 
 ### Prerendering
 
@@ -1133,22 +1131,22 @@ Then we redirect web crawlers, identified by their `User-Agent` header string, u
 _[public/\_worker.js](public/_worker.js)_
 
 ```js
-const BOT_AGENTS = ['googlebot', 'bingbot', 'yandex', 'twitterbot', 'whatsapp', ...]
+const BOT_AGENTS = ['bingbot', 'yandex', 'twitterbot', 'whatsapp', ...]
 
 const fetchPrerendered = async ({ url, headers }, userAgent) => {
   const headersToSend = new Headers(headers)
 
-  /* Prerender.io */
-  // const prerenderUrl = `https://service.prerender.io/${url}`
-  //
-  // headersToSend.set('X-Prerender-Token', YOUR_PRERENDER_IO_TOKEN)
-  /****************/
-
-  /* Prerender */
+  /* Custom Server */
   const prerenderUrl = new URL(`${YOUR_PRERENDER_SERVER_URL}?url=${url}`)
-
-  if (userAgent.includes('android')) prerenderUrl.searchParams.append('width', 375)
   /*************/
+
+  /* OR */
+
+  /* Prerender.io */
+  const prerenderUrl = `https://service.prerender.io/${url}`
+
+  headersToSend.set('X-Prerender-Token', YOUR_PRERENDER_IO_TOKEN)
+  /****************/
 
   const prerenderRequest = new Request(prerenderUrl, {
     headers: headersToSend,
@@ -1178,7 +1176,7 @@ export default {
 
 Here is an up-to-date list of all bot agnets (web crawlers): https://docs.prerender.io/docs/how-to-add-additional-bots#cloudflare
 
-_Prerendering_, also called _Dynamic Rendering_, is encouraged by _[Google](https://developers.google.com/search/docs/advanced/javascript/dynamic-rendering)_ and _[Microsoft](https://blogs.bing.com/webmaster/october-2018/bingbot-Series-JavaScript,-Dynamic-Rendering,-and-Cloaking-Oh-My)_ and is heavily used by many popular websites including Twitter.
+_Prerendering_, also called _Dynamic Rendering_, is encouraged by _[Microsoft](https://blogs.bing.com/webmaster/october-2018/bingbot-Series-JavaScript,-Dynamic-Rendering,-and-Cloaking-Oh-My)_ and is heavily used by many popular websites including Twitter.
 
 The results are as expected:
 
@@ -1186,25 +1184,13 @@ https://www.bing.com/search?q=site%3Ahttps%3A%2F%2Fclient-side-rendering.pages.d
 
 ![Bing Search Results](images/bing-search-results.png)
 
-In addition, it appears as if search engines do not consider the TTFB metric at all when ranking websites (some say it just has a very small impact):
-<br>
-https://www.seroundtable.com/google-time-to-first-byte-24847.html
-<br>
-https://support.google.com/webmasters/thread/46038656/how-much-does-ttfb-matter-s-for-google-ranking?hl=en
-
-If this is really the case, then **prerendering gets the highest rankings out of all rendering methods by far**.
-<br>
-Since script tags are filtered out in the process, it means that the crawler has no more work to do after it fetches the page (the HTML which only weighs a few kilobytes), thus making all the important metrics (such as FCP, LCP, TBT and TTI) insanely good.
-
-This is also a good solution for API servers that are slow to respond to data requests.
-
 _Note that when using CSS-in-JS, we should [disable the speedy optimization](src/components/PrerenderProvider.tsx) during prerendering in order to have our styles omitted to the DOM._
 
 ### Social Media Share Previews
 
 When we share a CSR app link in social media, we can see that no matter what page we link to, the preview will remain the same.
 <br>
-This happens because most CSR apps have only one HTML file, and social share previews do not render JS.
+This happens because most CSR apps have only one HTML file, and social media crawlers do not render JS.
 <br>
 This is where prerendering comes to our aid once again, we only need to make sure to set the correct meta tags dynamically:
 
@@ -1361,7 +1347,7 @@ It is impossible for this issue to occur in CSR apps, since the moment they rend
 
 We saw that client-side rendering performance is on par and sometimes even better than SSR in terms of loading times.
 <br>
-We also learned that prerendering produces perfect SEO results, and that we don't even need to think about it once it is set up.
+We also learned that Googlebot can easily index client-side rendered apps, and that we can set up a prerender server the serve all other crawlers.
 <br>
 And above all - we have achieved all this mainly by modifiying 2 files (Webpack config and HTML template) and using a prerender service, so every existing CSR app should be able to quickly and easily implement these modifications and benefit from them.
 

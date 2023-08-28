@@ -25,6 +25,8 @@ const App: FC<{}> = () => {
   // @ts-ignore
   window.navigateTo = (url: string) => navigate(url.replace(window.location.origin, ''), { replace: true })
 
+  const x = 5
+
   return (
     <>
       <Navigation />
