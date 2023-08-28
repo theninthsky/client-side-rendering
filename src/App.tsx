@@ -1,5 +1,5 @@
 import { lazy, Suspense, FC } from 'react'
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom'
 
 import pagesManifest from 'pages-manifest.json'
 import Navigation from 'components/Navigation'
@@ -21,6 +21,10 @@ const routes = pagesManifest.map(({ path }, ind) => {
 })
 
 const App: FC<{}> = () => {
+  const navigate = useNavigate()
+  // @ts-ignore
+  window.navigateTo = (url: string) => navigate(url.replace(window.location.origin, ''), { replace: true })
+
   return (
     <>
       <Navigation />
