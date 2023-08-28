@@ -1084,10 +1084,10 @@ _Note that this benchmark only tests the first load of the page, without even co
 
 ### Google
 
-It is often said that Google is having trouble properly crawling CSR (JS) apps.
+It is often said that Google is having trouble properly indexing CSR (JS) apps.
 <br>
-That might have been the case in 2018, but as of 2023, Google crawls CSR apps almost flawlessly.
-<br>
+That might have been the case in 2018, but as of today: Google indexes CSR apps almost flawlessly.
+
 Indexed pages will have a title, description, content and all other SEO-related attributes, as long as we remember to dynamically set them (either manually or using something like _[react-helmet](https://www.npmjs.com/package/react-helmet)_).
 
 https://www.google.com/search?q=site:https://client-side-rendering.pages.dev
@@ -1101,7 +1101,7 @@ Googlebot's ability the render JS can be easily demonstrated by performing a liv
 
 Googlebot uses the latest version of Chromium to crawl apps, so the only thing we should do is make sure our app loads fast and that it is quick to fetch data.
 
-Even when data takes long time to fetch, Googlebot (in most cases) will wait for it before taking a snapshot of the page:
+Even when data takes long time to fetch, Googlebot, in most cases, will wait for it before taking a snapshot of the page:
 <br>
 https://support.google.com/webmasters/thread/202552760/for-how-long-does-googlebot-wait-for-the-last-http-request
 <br>
@@ -1111,7 +1111,7 @@ A detailed explanation of Googlebot's JS crawling process can be found here:
 <br>
 https://developers.google.com/search/docs/crawling-indexing/javascript/javascript-seo-basics
 
-_Note that Googlebot sometimes fails to render pages (this happens in less than 1% of cases), but it is expected to only improve over time._
+_Note that Googlebot sometimes fails to render pages (this happens in about 1% of all cases as far as I've seen), but it is expected to only improve over time._
 
 ### Prerendering
 
