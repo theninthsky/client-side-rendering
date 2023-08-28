@@ -1,4 +1,4 @@
-import { FC } from 'react'
+import { useEffect, FC } from 'react'
 import { useParams, useLocation } from 'react-router-dom'
 import { Meta, useFetch } from 'frontend-essentials'
 import startCase from 'lodash/startCase'
@@ -22,9 +22,14 @@ const PokemonInfo: FC<{}> = () => {
   const { name: nameParam } = useParams()
   const { state: selectedPokemon } = useLocation()
 
-  const { data: pokemonInfo } = useFetch(data[0].url.replace('$', nameParam!), { camelCased: true })
+  const { data: pokemonInfo, activate: fetchPokemonInfo } = useFetch('', { manual: true, camelCased: true })
 
-  const { data: pokemonSpecies } = useFetch(data[1].url.replace('$', nameParam!), { camelCased: true })
+  const { data: pokemonSpecies, activate: fetchPokemonSpecies } = useFetch('', { manual: true, camelCased: true })
+
+  useEffect(() => {
+    fetchPokemonInfo({ url: data[0].url.replace('$', nameParam!) })
+    fetchPokemonSpecies({ url: data[1].url.replace('$', nameParam!) })
+  }, [nameParam])
 
   const { id, name, img, sprites, types } = pokemonInfo || selectedPokemon || {}
 
