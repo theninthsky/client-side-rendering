@@ -60,7 +60,7 @@ const PokemonInfo: FC<{}> = () => {
                     key={name}
                     className={style.type}
                     title={startCase(name)}
-                    src={`https://raw.githubusercontent.com/msikma/pokeresources/master/resources/types/gen8/${name}.svg`}
+                    src={`/icons/pokemon-types/${name}.svg`}
                     alt={startCase(name)}
                   />
                 ))}
@@ -104,8 +104,7 @@ const style = {
     height: 30px;
   `,
   type: css`
-    width: 30px;
-    margin-left: 5px;
+    width: 34px;
   `,
   image: css`
     max-width: 100%;

@@ -21,11 +21,10 @@ const routes = pagesManifest.map(({ path }, ind) => {
 })
 
 const App: FC<{}> = () => {
+  // Exposes the navigation function to the prerenderer
   const navigate = useNavigate()
   // @ts-ignore
   window.navigateTo = (url: string) => navigate(url.replace(window.location.origin, ''), { replace: true })
-
-  const x = 5
 
   return (
     <>
