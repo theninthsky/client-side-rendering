@@ -29,9 +29,9 @@ const Navigation = () => {
       prevScrollY.current = scrollY
 
       setStickyPosition(prevStickyPosition => {
-        if (scrollingUp) return prevStickyPosition <= -4 ? prevStickyPosition + 4 : 0
+        if (scrollingUp) return prevStickyPosition <= -3 ? prevStickyPosition + 3 : 0
 
-        return prevStickyPosition >= -(NAVIGATION_HEIGHT - 4) ? prevStickyPosition - 4 : -NAVIGATION_HEIGHT
+        return prevStickyPosition >= -(NAVIGATION_HEIGHT - 3) ? prevStickyPosition - 3 : -NAVIGATION_HEIGHT
       })
     })
   }, [])
@@ -84,6 +84,7 @@ const style = {
     padding: 15px;
     box-shadow: 3px 0px 6px 0px #00000029;
     background-color: var(--bg-color);
+    transition: background-color 0.2s;
   `,
   menuIcon: css`
     width: 25px;

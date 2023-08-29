@@ -73,7 +73,13 @@ const PokemonInfo: FC<{}> = () => {
           <>
             <Skeleton className={style.skeleton} variant="text" width={100} height={40} animation={false} />
 
-            <Skeleton className={cx(style.skeleton, style.image)} variant="rectangular" width={475} height={475} />
+            <Skeleton
+              className={cx(style.skeleton, style.image)}
+              variant="rectangular"
+              width={475}
+              height={475}
+              animation={false}
+            />
           </>
         )}
 
@@ -111,10 +117,12 @@ const style = {
     max-height: calc(100vw - 40px);
     height: 475px;
     margin: 10px 0;
+    border-radius: 4px;
   `,
   skeleton: css`
     max-width: 80vw;
-    background-color: rgba(0, 0, 0, 0.05);
+    opacity: 0.1;
+    background-color: var(--text-color);
   `
 }
 

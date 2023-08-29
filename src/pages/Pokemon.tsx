@@ -87,7 +87,9 @@ const style = {
   `,
   skeleton: css`
     margin: 25px;
-    background-color: rgba(0, 0, 0, 0.05);
+    border-radius: 4px;
+    opacity: 0.1;
+    background-color: var(--text-color);
   `,
   pokemon: css`
     display: flex;
