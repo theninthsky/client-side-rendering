@@ -1,4 +1,4 @@
-import { useRef, useEffect, FC } from 'react'
+import { useRef, FC } from 'react'
 import { NavLink, NavLinkProps } from 'react-router-dom'
 import { useTransitionNavigate, useMedia } from 'frontend-essentials'
 import { css, cx } from '@emotion/css'
@@ -15,7 +15,6 @@ export type Data = {
 export type NavigationLinkProps = NavLinkProps & {
   to: string
   data?: Data | Data[]
-  onClick?: () => void
 }
 
 const onLinkEvent = (data: Data | Data[]) => {
@@ -30,7 +29,18 @@ const onLinkEvent = (data: Data | Data[]) => {
   if (menuPreload) preload({ url, crossorigin })
 }
 
-const NavigationLink: FC<NavigationLinkProps> = ({ className, to, data, onClick, children, ...otherProps }) => {
+const NavigationLink: FC<NavigationLinkProps> = ({
+  className,
+  to,
+  replace,
+  state,
+  preventScrollReset,
+  relative,
+  data,
+  onClick,
+  children,
+  ...otherProps
+}) => {
   const ref = useRef<HTMLAnchorElement>(null)
 
   const navigate = useTransitionNavigate()
@@ -39,24 +49,10 @@ const NavigationLink: FC<NavigationLinkProps> = ({ className, to, data, onClick,
 
   const baseURL = to.replace('/*', '')
 
-  useEffect(() => {
-    if (hoverable || !data) return
-
-    const observer = new IntersectionObserver(
-      (_, observer) => {
-        onLinkEvent(data)
-        if (ref.current) observer.unobserve(ref.current)
-      },
-      { root: document.body }
-    )
-
-    observer.observe(ref.current as HTMLAnchorElement)
-  }, [hoverable])
-
   const onLinkClick = event => {
     event.preventDefault()
-    navigate(baseURL)
-    onClick?.()
+    navigate(baseURL, { replace, state, preventScrollReset, relative })
+    onClick?.(event)
   }
 
   return (
@@ -66,11 +62,7 @@ const NavigationLink: FC<NavigationLinkProps> = ({ className, to, data, onClick,
       to={baseURL}
       end
       onClick={onLinkClick}
-      {...(hoverable &&
-        data && {
-          onMouseEnter: () => onLinkEvent(data),
-          onFocus: () => onLinkEvent(data)
-        })}
+      onMouseEnter={hoverable && data ? () => onLinkEvent(data) : undefined}
       {...otherProps}
     >
       {children}

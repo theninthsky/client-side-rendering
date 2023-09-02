@@ -1,7 +1,8 @@
 import { lazy, Suspense, FC } from 'react'
-import { Routes, Route, Navigate, useNavigate } from 'react-router-dom'
+import { Routes, Route, Navigate } from 'react-router-dom'
 
 import pagesManifest from 'pages-manifest.json'
+import useExposeNavigationFunction from 'hooks/useExposeNavigationFunction'
 import Navigation from 'components/Navigation'
 import ScrollToTop from 'components/common/ScrollToTop'
 import Layout from 'components/Layout'
@@ -21,10 +22,7 @@ const routes = pagesManifest.map(({ path }, ind) => {
 })
 
 const App: FC<{}> = () => {
-  // Exposes the navigation function to the prerenderer
-  const navigate = useNavigate()
-  // @ts-ignore
-  window.navigateTo = (url: string) => navigate(url.replace(window.location.origin, ''), { replace: true })
+  useExposeNavigationFunction()
 
   return (
     <>
