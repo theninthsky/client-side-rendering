@@ -1,4 +1,4 @@
-import { useEffect, FC } from 'react'
+import { useLayoutEffect, FC } from 'react'
 import { useParams, useLocation } from 'react-router-dom'
 import { Meta, useFetch } from 'frontend-essentials'
 import startCase from 'lodash/startCase'
@@ -26,7 +26,7 @@ const PokemonInfo: FC<{}> = () => {
 
   const { data: pokemonSpecies, activate: fetchPokemonSpecies } = useFetch('', { manual: true, camelCased: true })
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     fetchPokemonInfo({ url: data[0].url.replace('$', nameParam!) })
     fetchPokemonSpecies({ url: data[1].url.replace('$', nameParam!) })
   }, [nameParam])
