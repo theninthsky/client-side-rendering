@@ -40,7 +40,7 @@ const PokemonInfo: FC<{}> = () => {
 
   return (
     <div>
-      <Meta title={`${startCase(toLower(name || 'loading'))} | Pokémon Info`} image={image} />
+      <Meta title={`${startCase(toLower(name || 'loading'))} | Pokémon Info`} image={image} description={flavorText} />
 
       <Title back>Pokémon Info</Title>
 
@@ -83,7 +83,7 @@ const PokemonInfo: FC<{}> = () => {
           </>
         )}
 
-        <div>
+        <div className={style.flavorText}>
           {flavorText || (
             <Skeleton className={style.skeleton} variant="text" width={1000} height={40} animation={false} />
           )}
@@ -118,6 +118,10 @@ const style = {
     height: 475px;
     margin: 10px 0;
     border-radius: 4px;
+  `,
+  flavorText: css`
+    max-width: 475px;
+    text-align: center;
   `,
   skeleton: css`
     max-width: 80vw;
