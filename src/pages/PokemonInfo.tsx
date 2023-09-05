@@ -60,7 +60,7 @@ const PokemonInfo: FC<{}> = () => {
                     key={name}
                     className={style.type}
                     title={startCase(name)}
-                    src={`/icons/pokemon-types/${name}.svg`}
+                    src={`https://raw.githubusercontent.com/msikma/pokeresources/master/resources/type-icons/gen8/${name}.svg`}
                     alt={startCase(name)}
                   />
                 ))}
@@ -85,7 +85,7 @@ const PokemonInfo: FC<{}> = () => {
 
         <div className={style.flavorText}>
           {flavorText || (
-            <Skeleton className={style.skeleton} variant="text" width={1000} height={40} animation={false} />
+            <Skeleton className={style.skeleton} variant="text" width={475} height={40} animation={false} />
           )}
         </div>
       </main>
