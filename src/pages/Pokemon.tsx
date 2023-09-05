@@ -44,7 +44,11 @@ const Pokemon: FC<{}> = () => {
 
       <main className={style.main}>
         {pokemon ? (
-          <LazyRender uuid="pokemon" items={pokemon.results} batch={window['prerender'] ? Infinity : 50}>
+          <LazyRender
+            uuid="pokemon"
+            items={pokemon.results}
+            batch={window['prerender'] || window['googlebot'] ? Infinity : 50}
+          >
             {({ name, url }) => {
               const id = url.split('/')[6]
               const img = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`

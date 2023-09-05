@@ -1,4 +1,5 @@
 window['prerender'] = navigator.userAgent.includes('Prerender')
+window['googlebot'] = navigator.userAgent.includes('Googlebot')
 
 import { sheet } from '@emotion/css'
 
