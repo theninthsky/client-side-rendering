@@ -1086,7 +1086,7 @@ _Note that this benchmark only tests the first load of the page, without even co
 
 It is often said that Google is having trouble properly indexing CSR (JS) apps.
 <br>
-That might have been the case in 2018, but as of today: Google indexes CSR apps almost flawlessly.
+That might have been the case in 2017, but as of today: Google indexes CSR apps mostly flawlessly.
 
 Indexed pages will have a title, description, content and all other SEO-related attributes, as long as we remember to dynamically set them (either manually or using something like _[react-helmet](https://www.npmjs.com/package/react-helmet)_).
 
@@ -1111,7 +1111,9 @@ A detailed explanation of Googlebot's JS crawling process can be found here:
 <br>
 https://developers.google.com/search/docs/crawling-indexing/javascript/javascript-seo-basics
 
-_Note that Googlebot sometimes fails to render pages (this happens in about 1% of all cases as far as I've seen), but it is expected to only improve over time._
+_Note that Googlebot sometimes fails to render pages (by refusing to fetch scripts). In most cases, this happens due to Google's unwillingness to spend the required resources to crawl that specific website (aka Crawl Budget).
+<br>
+More information can be found here: https://support.google.com/webmasters/thread/4425254?hl=en&msgid=4426601_
 
 ### Prerendering
 
