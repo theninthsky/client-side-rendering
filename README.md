@@ -1111,9 +1111,14 @@ A detailed explanation of Googlebot's JS crawling process can be found here:
 <br>
 https://developers.google.com/search/docs/crawling-indexing/javascript/javascript-seo-basics
 
-_Note that Googlebot sometimes fails to render pages (by refusing to fetch scripts). In most cases, this happens due to Google's unwillingness to spend the required resources to crawl that specific website (aka Crawl Budget).
-<br>
-More information can be found here: https://support.google.com/webmasters/thread/4425254?hl=en&msgid=4426601_
+If Googlebot fails to render some pages, it is mostly due to Google's unwillingness to spend the required resources to crawl the website, which means it has a low _[Crawl Budget](https://developers.google.com/search/blog/2017/01/what-crawl-budget-means-for-googlebot)_.
+This can be confirmed by inspecting the crawled page (by clicking _View Crawled Page_ in the search console) and making sure all failed requests have the _Other error_ alert (which means those requests were intentionally aborted by Googlebot):
+
+![Google Search Console Insufficient Fetch Quota](images/google-search-console-insufficient-fetch-quota.png)
+
+This should only happen to websites that Google deems to have no interesting content or have very low traffic.
+
+More information can be found here: https://support.google.com/webmasters/thread/4425254?hl=en&msgid=4426601
 
 ### Prerendering
 
@@ -1124,7 +1129,7 @@ Prerendering is the act of crawling web apps in production (using headless Chrom
 We have two options when it comes to prerendering:
 
 1. We can use a dedicated service such as _[Prerender.io](https://prerender.io)_ which offers 1000 free prerenders a month.
-2. We can deploy our own prerender server using _[Prerender](https://github.com/prerender/prerender)_ (a fully working setup can be found _[here](https://github.com/theninthsky/prerender-server)_).
+2. We can deploy our own prerender server using _[Prerender](https://github.com/prerender/prerender)_ (or my own _[Renderprime](https://github.com/theninthsky/renderprime)_).
    <br>
    **This is the recommended approach**, since it offers an infinite number of prerenders for as low as 7$ a month (on _[Render.com](https://render.com/free)_).
 
@@ -1217,11 +1222,11 @@ The simple `Meta` component can be found [here](https://github.com/theninthsky/f
 
 This, after going through prerendering, gives us the correct preview for every page:
 
-![Facebook Preview Home](images/facebook-preview-home.png)
-<br>
-![Facebook Preview Pokemon](images/facebook-preview-pokemon.png)
-<br>
-![Facebook Preview Pokemon Info](images/facebook-preview-pokemon-info.png)
+_Facebook_
+![Facebook Share Preview](images/facebook-share-preview.png)
+
+_Whatsapp_
+![Whatsapp Share Preview](images/whatsapp-share-preview.png)
 
 ## Sitemaps
 
