@@ -1223,9 +1223,11 @@ The simple `Meta` component can be found [here](https://github.com/theninthsky/f
 This, after going through prerendering, gives us the correct preview for every page:
 
 _Facebook_
+<br>
 ![Facebook Share Preview](images/facebook-share-preview.png)
 
 _Whatsapp_
+<br>
 ![Whatsapp Share Preview](images/whatsapp-share-preview.png)
 
 ## Sitemaps
