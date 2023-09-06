@@ -1112,6 +1112,7 @@ A detailed explanation of Googlebot's JS crawling process can be found here:
 https://developers.google.com/search/docs/crawling-indexing/javascript/javascript-seo-basics
 
 If Googlebot fails to render some pages, it is mostly due to Google's unwillingness to spend the required resources to crawl the website, which means it has a low _[Crawl Budget](https://developers.google.com/search/blog/2017/01/what-crawl-budget-means-for-googlebot)_.
+<br>
 This can be confirmed by inspecting the crawled page (by clicking _View Crawled Page_ in the search console) and making sure all failed requests have the _Other error_ alert (which means those requests were intentionally aborted by Googlebot):
 
 ![Google Search Console Insufficient Fetch Quota](images/google-search-console-insufficient-fetch-quota.png)
@@ -1220,15 +1221,15 @@ const Home = props => {
 
 The simple `Meta` component can be found [here](https://github.com/theninthsky/frontend-essentials/blob/main/src/components/Meta.tsx).
 
-This, after going through prerendering, gives us the correct preview for every page:
-
-_**Facebook**:_
-
-![Facebook Share Preview](images/facebook-share-preview.png)
+This, after going through prerendering, gives us the correct preview for every page.
 
 _**Whatsapp:**_
 
 ![Whatsapp Share Preview](images/whatsapp-share-preview.png)
+
+_**Facebook**:_
+
+![Facebook Share Preview](images/facebook-share-preview.png)
 
 ## Sitemaps
 
