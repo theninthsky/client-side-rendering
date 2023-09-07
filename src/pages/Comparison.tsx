@@ -176,7 +176,7 @@ const listData = {
           'As an extension to the previews con, even if we have very few pages, caching them for offline use will make them show potentially stale data (since no fetch occurs in them, it only occurs in the server)'
       },
       {
-        value: 'Greatly impacted by load',
+        value: 'Might be greatly impacted by load',
         description: (
           <p>
             Since rendering is serial (
@@ -188,7 +188,8 @@ const listData = {
                 renderToString
               </a>
             </em>
-            ), the rendering of concurrent requests will not be handled in parallel
+            ), if the app is not served via serverless functions, the rendering of concurrent requests will not be
+            handled in parallel
           </p>
         )
       },
@@ -217,9 +218,9 @@ const listData = {
         description: (
           <p>
             Since an SSR page consists of both complete HTML page and the scripts to render it (used for hydration),
-            users are downloading more data than they should.
+            users download more data than they should.
             <br />
-            Additionally, SSR pages cannot return a <em>304 Not Modified</em> status code, every page has to be
+            Additionally, SSR pages cannot return a <em>304 Not Modified</em> status code, so every page has to be
             downloaded entirely on every single navigation
           </p>
         )

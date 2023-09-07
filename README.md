@@ -1279,18 +1279,15 @@ We can manually submit our sitemap to _[Google Search Console](https://search.go
 
 # CSR vs. SSR
 
+An in-depth comparison of all rendering methods can be found here: https://client-side-rendering.pages.dev/comparison
+
 ## SSR Disadvantages
 
-Here's a list of some SSR drawbacks to consider:
+Here's a list of additional (minor) SSR drawbacks to consider:
 
-- Server-side data fetching might be a bad idea in many cases, since some queries may take several hundreds of milliseconds to return (many will exceed that), and while pending, the user sees **absolutely nothing** in their browser.
-- When using client-side data fetching, SSR will **always** be slower than CSR, since its document is always bigger and takes longer to download. In addition, all web crawlers (except for Googlebot) will index the page without its data.
-- Streaming SSR also has _[some major drawbacks](https://remix.run/blog/react-server-components#zero-bundle-or-infinite-bundle)_.
 - SSR apps are always heavier than CSR apps, since every page is composed of both a fully-constructed HTML document and its scripts (used for hydration).
 - When _[hydration fails](https://stackoverflow.com/questions/71706064/react-18-hydration-failed-because-the-initial-ui-does-not-match-what-was-render)_, the app will render twice in the browser, increasing the _[TTI](https://web.dev/tti)_ and _[TBT](https://web.dev/tbt)_ of the page.
 - Since all images are initially included in the document, scripts and images will compete for bandwidth, causing delayed interactivity on slow networks.
-- Since accessing browser-related objects during the server render phase throws an error, some very helpful tools become unusable, while others (such as _[react-media](https://www.npmjs.com/package/react-media#server-side-rendering-ssr)_) require SSR-specific customizations.
-- SSR pages cannot respond with a _[304 Not Modified](https://blog.hubspot.com/marketing/http-304-not-modified#:~:text=An%20HTTP%20304%20not%20modified%20status%20code%20means%20that%20the,to%20speed%20up%20page%20delivery)_ status.
 
 ## Why Not SSG?
 
@@ -1372,3 +1369,19 @@ There are some new SSR methods (such as Streaming SSR with Server Components) an
 However, there are also new CSR frameworks such as Svelte and Solid.js which have very small bundle size and are very optimized for performance.
 
 Nevertheless, it's important to note that nothing makes pages load faster than the SWR approach, which is only possible through client-side rendering.
+
+## Achieving Perfection
+
+If we try to define what a perfect rendering solution would look like, it would be server-rendering the initial page request but then allowing the app to fully take over its navigations.
+<br>
+So SSR for the initial request, full CSR after that.
+
+This would allow us to combine (potentially\*) fast initial (and repeated) loads with instant navigations.
+<br>
+It would even spare the need to set up a prerendering server, since all page requests are already fully-rendered.
+
+However, [no such solution](https://github.com/vercel/next.js/discussions/37055) exists at the moment, since such behavior requires great complexity.
+<br>
+Until it does, there's no doubt that instant navigations (CSR) are far more important than potentially\* faster initial load (SSR).
+
+_\*potentially - depends on DB query response times. Streaming SSR could overcome this shortcoming._
