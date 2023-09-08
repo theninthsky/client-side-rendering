@@ -132,7 +132,7 @@ const listData = {
       {
         value: 'Great for SEO',
         description:
-          'Pages initially contain all of their data, so all web crawlers will be able to properly crawl and index them'
+          'Pages initially contain all of their data, so all bots and web crawlers will be able to properly crawl and index them'
       },
       {
         value: 'Potentially loads fast',
@@ -145,6 +145,30 @@ const listData = {
         value: 'Heavily depends on data to render',
         description:
           'The initial page response time heavily depends on how fast the API server responds with the data.\nThis means that page visibility is strongly coupled with both proximity to the server and query time, as users will see absolutely nothing until the page fully renders on the server and then sent to them'
+      },
+      {
+        value: 'Slow page transitions',
+        description:
+          'Page transitions are slow since they are server-dependant. So a page request is sent to the server for each navigation, and the app has to wait for the server-rendered page before performing the navigation'
+      },
+      {
+        value: 'Inaccurate initial viewport renders',
+        description: (
+          <p>
+            Since the server has no way of telling the current viewport of the user's browser, it has to infer it from
+            its User Agent string, which can only inform the server if the viewport is{' '}
+            <a href="https://edge-user-agent-based-rendering.vercel.app" target="_blank">
+              desktop or mobile
+            </a>
+            .
+            <br />
+            This might lead to severe CLS when performing viewport-based rendering (like when using a{' '}
+            <a href="https://github.com/theninthsky/frontend-essentials/tree/main#media" target="_blank">
+              Media
+            </a>{' '}
+            component).
+          </p>
+        )
       },
       {
         value: 'Delayed interactivity',
@@ -161,37 +185,9 @@ const listData = {
         )
       },
       {
-        value: 'Slow page transitions',
-        description:
-          'Page transitions are slow since they are data dependant, and data takes time to fetch and render on the server'
-      },
-      {
         value: 'Cannot prefetch pages',
         description:
           "Since pages have embedded data, it's impossible to prefetch or cache all pages without applying excessive load on the rendering and API servers"
-      },
-      {
-        value: 'Cannot be a real PWA',
-        description:
-          'As an extension to the previews con, even if we have very few pages, caching them for offline use will make them show potentially stale data (since no fetch occurs in them, it only occurs in the server)'
-      },
-      {
-        value: 'Might be greatly impacted by load',
-        description: (
-          <p>
-            Since rendering is serial (
-            <em>
-              <a
-                href="https://web.dev/rendering-on-the-web/#server-side-rendering-versus-static-rendering"
-                target="_blank"
-              >
-                renderToString
-              </a>
-            </em>
-            ), if the app is not served via serverless functions, the rendering of concurrent requests will not be
-            handled in parallel
-          </p>
-        )
       },
       {
         value: 'Is more complicated to develop',
@@ -214,6 +210,29 @@ const listData = {
         )
       },
       {
+        value: 'Might be greatly impacted by load',
+        description: (
+          <p>
+            Since rendering is serial (
+            <em>
+              <a
+                href="https://web.dev/rendering-on-the-web/#server-side-rendering-versus-static-rendering"
+                target="_blank"
+              >
+                renderToString
+              </a>
+            </em>
+            ), if the app is not served via serverless functions, the rendering of concurrent requests will not be
+            handled in parallel
+          </p>
+        )
+      },
+      {
+        value: 'Cannot be a real PWA',
+        description:
+          'As an extension to the previews con, even if we have very few pages, caching them for offline use will make them show potentially stale data (since no fetch occurs in them, it only occurs in the server)'
+      },
+      {
         value: 'Uses more data',
         description: (
           <p>
@@ -224,11 +243,6 @@ const listData = {
             downloaded entirely on every single navigation
           </p>
         )
-      },
-      {
-        value: 'Requires a dedicated server',
-        description:
-          'While there are many platforms that allow for easy deployment of servers (such as Vercel), these services are limited of what they can offer freely'
       }
     ]
   },
@@ -294,7 +308,7 @@ const listData = {
           'Since all pages are pre-generated (or incrementaly generated), they have to be stored in the CDN, which may lead to extra fees'
       },
       {
-        value: 'Same SSR cons as #2, #4 and #5',
+        value: 'Same SSR cons as #3, #4 and #8',
         description: 'While some pages can be prefetched, surely not all pages in large websites can be'
       }
     ]
@@ -361,7 +375,7 @@ const listData = {
         )
       },
       {
-        value: 'All SSR cons except for #1 and #3',
+        value: 'All SSR cons except for #1 and #2',
         description: 'Since they are very similar, Streaming SSR has most of SSR cons'
       }
     ]

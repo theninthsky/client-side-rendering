@@ -1354,34 +1354,18 @@ It is impossible for this issue to occur in CSR apps, since the moment they rend
 
 We saw that client-side rendering performance is on par and sometimes even better than SSR in terms of loading times.
 <br>
-We also learned that Googlebot can easily index client-side rendered apps, and that we can set up a prerender server the serve all other crawlers.
+We also learned that Googlebot can easily index client-side rendered apps, and that we can set up a prerender server the serve all other bots and crawlers.
 <br>
 And above all - we have achieved all this mainly by modifiying 2 files (Webpack config and HTML template) and using a prerender service, so every existing CSR app should be able to quickly and easily implement these modifications and benefit from them.
 
-These facts lead to the conclusion that there is no particular reason to use SSR, it would only add a lot of complexity and limitations to our project and degrade the developer experience.
+These facts lead to the conclusion that there is no particular reason to use SSR, it would only add a lot of complexity and limitations to our app and degrade the developer and user experience.
 
 ## What Might Change in the Future
 
 As time passes, [connection speed is getting faster](https://worldpopulationreview.com/country-rankings/internet-speeds-by-country) and end-user devices get stronger. So the performance differences between all possible website rendering methods are guarenteed to be mitigated even further.
 
-There are some new SSR methods (such as Streaming SSR with Server Components) and frameworks (such as Marko and Qwik) which are able to reduce the inital JS that has to be downloaded.
+There is the new SSR method called _Streaming SSR_ (with Server Components) and frameworks (such as Qwik) which are able to reduce the amount of JS that has to be downloaded initially.
 <br>
-However, there are also new CSR frameworks such as Svelte and Solid.js which have very small bundle size and are very optimized for performance.
+However, there are also better CSR frameworks such as Svelte and Solid.js which have very small bundle size and are very optimized for rendering performance (thus greatly improving the FCP on slow networks).
 
 Nevertheless, it's important to note that nothing makes pages load faster than the SWR approach, which is only possible through client-side rendering.
-
-## Achieving Perfection
-
-If we try to define what a perfect rendering solution would look like, it would be server-rendering the initial page request but then allowing the app to fully take over its navigations.
-<br>
-So SSR for the initial request, full CSR after that.
-
-This would allow us to combine (potentially\*) fast initial (and repeated) loads with instant navigations.
-<br>
-It would even spare the need to set up a prerendering server, since all page requests are already fully-rendered.
-
-However, [no such solution](https://github.com/vercel/next.js/discussions/37055) exists at the moment, since such behavior requires great complexity.
-<br>
-Until it does, there's no doubt that instant navigations (CSR) are far more important than potentially\* faster initial load (SSR).
-
-_\*potentially - depends on DB query response times. Streaming SSR could overcome this shortcoming._
