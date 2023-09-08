@@ -1,5 +1,4 @@
 window['prerender'] = navigator.userAgent.includes('Prerender')
-window['googlebot'] = navigator.userAgent.includes('Googlebot')
 
 import { sheet } from '@emotion/css'
 
@@ -10,6 +9,7 @@ import createCache from '@emotion/cache'
 
 const cache = createCache({ key: 'emotion-cache-no-speedy', speedy: false })
 
+// This should wrap the <App /> component
 const PrerenderProvider = ({ children }) => {
   return window['prerender'] ? <CacheProvider value={cache}>{children}</CacheProvider> : children
 }

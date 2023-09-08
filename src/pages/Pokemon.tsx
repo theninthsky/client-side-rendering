@@ -19,6 +19,7 @@ $(`#${_.isDate(moment().toDate())}`)
 
 const { title, description, data } = pagesManifest.find(({ chunk }) => chunk === 'pokemon')!
 const { data: pokemonInfoData } = pagesManifest.find(({ chunk }) => chunk === 'pokemon-info')!
+const disableLazyRender = /prerender|googlebot/.test(navigator.userAgent)
 
 const Pokemon: FC<{}> = () => {
   const { data: pokemon } = useFetch(data[0].url, {
@@ -44,11 +45,7 @@ const Pokemon: FC<{}> = () => {
 
       <main className={style.main}>
         {pokemon ? (
-          <LazyRender
-            uuid="pokemon"
-            items={pokemon.results}
-            batch={window['prerender'] || window['googlebot'] ? Infinity : 50}
-          >
+          <LazyRender uuid="pokemon" items={pokemon.results} batch={disableLazyRender ? Infinity : 50}>
             {({ name, url }) => {
               const id = url.split('/')[6]
               const img = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`
