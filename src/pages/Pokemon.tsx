@@ -19,7 +19,7 @@ $(`#${_.isDate(moment().toDate())}`)
 
 const { title, description, data } = pagesManifest.find(({ chunk }) => chunk === 'pokemon')!
 const { data: pokemonInfoData } = pagesManifest.find(({ chunk }) => chunk === 'pokemon-info')!
-const disableLazyRender = /prerender|googlebot/.test(navigator.userAgent)
+const disableLazyRender = /prerender|googlebot/i.test(navigator.userAgent)
 
 const Pokemon: FC<{}> = () => {
   const { data: pokemon } = useFetch(data[0].url, {
