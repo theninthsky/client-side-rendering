@@ -91,7 +91,11 @@ module.exports = (_, { mode }) => {
               swSrc: path.join(__dirname, 'public', 'service-worker.js')
             })
           ]
-        : [new ReactRefreshPlugin(), new ForkTsCheckerPlugin(), new ESLintPlugin({ extensions: ['ts', 'tsx'] })]),
+        : [
+            new ReactRefreshPlugin(),
+            new ForkTsCheckerPlugin(),
+            new ESLintPlugin({ extensions: ['js', 'ts', ' jsx', 'tsx'] })
+          ]),
       new HtmlPlugin({
         scriptLoading: 'module',
         templateContent: ({ compilation }) => {

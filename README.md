@@ -26,7 +26,7 @@ The conclusions of this project led to the creation of the _[ultimate-csr-boiler
   - [Preloading Data](#preloading-data)
   - [Accelerating Unchanged Pages](#accelerating-unchanged-pages)
   - [Tweaking Further](#tweaking-further)
-    - [Preventing Sequenced Rendering](#preventing-sequenced-rendering)
+    - [Preventing Incremental Rendering](#preventing-incremental-rendering)
     - [Transitioning Async Pages](#transitioning-async-pages)
     - [Preloading Other Pages Data](#preloading-other-pages-data)
     - [Revalidating Active Apps](#revalidating-active-apps)
@@ -669,7 +669,7 @@ This will only add about 2kb to our HTML file, but will ensure that unchanged (a
 
 ## Tweaking Further
 
-### Preventing Sequenced Rendering
+### Preventing Incremental Rendering
 
 When we split a page from the main app, we separate its render phase, meaning the app will render before the page renders:
 
