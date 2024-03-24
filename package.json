@@ -2,7 +2,7 @@
   "name": "client-side-rendering",
   "version": "1.0.0",
   "engines": {
-    "node": ">=18.12.0"
+    "node": ">=20.0.0"
   },
   "scripts": {
     "postinstall": "npm run fetch-static",
@@ -34,8 +34,8 @@
     "@svgr/webpack": "^8.0.1",
     "@types/react": "^18.0.8",
     "@types/react-dom": "^18.0.3",
-    "@typescript-eslint/eslint-plugin": "^6.2.1",
-    "@typescript-eslint/parser": "^6.2.1",
+    "@typescript-eslint/eslint-plugin": "^7.3.1",
+    "@typescript-eslint/parser": "^7.3.1",
     "copy-webpack-plugin": "^12.0.2",
     "css-loader": "^6.7.1",
     "eslint": "^8.13.0",
