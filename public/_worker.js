@@ -37,7 +37,7 @@ const fetchPrerendered = async request => {
   const headersToSend = new Headers(headers)
 
   /* Custom Server */
-  const prerenderUrl = new URL(`https://me-west1-renderprime-418121.cloudfunctions.net/prerender?url=${url}`)
+  const prerenderUrl = new URL(`https://us-central1-renderprime-418121.cloudfunctions.net/prerender?url=${url}`)
   /*************/
 
   /* Prerender.io */
