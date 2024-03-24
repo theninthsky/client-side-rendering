@@ -1130,7 +1130,7 @@ Prerendering is the act of crawling web apps in production (using headless Chrom
 We have two options when it comes to prerendering:
 
 1. We can use a dedicated service such as _[Prerender.io](https://prerender.io)_ which offers 1000 free prerenders a month.
-2. We can deploy our own prerender server using _[Prerender](https://github.com/prerender/prerender)_ (or my own _[Renderprime](https://github.com/theninthsky/renderprime)_).
+2. We can deploy our own prerender server using _[Prerender](https://github.com/prerender/prerender)_ (or my own _[Renderprime](https://github.com/theninthsky/renderprime)_ serverless function).
    <br>
    **This is the recommended approach**, since it offers an infinite number of prerenders for as low as 7$ a month (on _[Render.com](https://render.com/free)_).
 
