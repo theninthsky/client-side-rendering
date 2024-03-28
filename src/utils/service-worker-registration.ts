@@ -1,6 +1,7 @@
 /* eslint-disable no-console */
 
 const ACTIVE_REVALIDATION_INTERVAL = 10 * 60
+const shouldRegisterServiceWorker = process.env.NODE_ENV !== 'development' && navigator.userAgent !== 'Prerender'
 
 const register = () => {
   window.addEventListener('load', async () => {
@@ -29,6 +30,6 @@ const unregister = async () => {
 }
 
 if ('serviceWorker' in navigator) {
-  if (process.env.NODE_ENV === 'development') unregister()
-  else register()
+  if (shouldRegisterServiceWorker) register()
+  else unregister()
 }

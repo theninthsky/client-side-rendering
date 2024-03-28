@@ -37,13 +37,13 @@ const fetchPrerendered = async request => {
   const headersToSend = new Headers(headers)
 
   /* Custom Server */
-  const prerenderUrl = new URL(`https://us-central1-renderprime-418121.cloudfunctions.net/prerender?url=${url}`)
+  const prerenderUrl = new URL(`https://renderprime.theninthsky.workers.dev?url=${url}`)
   /*************/
 
   /* Prerender.io */
   // const prerenderUrl = `https://service.prerender.io/${url}`
   //
-  // headersToSend.set('X-Prerender-Token', '7vGsiwq4BB5avp2mXVfq')
+  // headersToSend.set('X-Prerender-Token', '8vGsiwq4BB5bsp2mXVfq')
   /****************/
 
   const prerenderRequest = new Request(prerenderUrl, {
