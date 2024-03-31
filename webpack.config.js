@@ -1,6 +1,4 @@
 const path = require('path')
-const ReactRefreshPlugin = require('@pmmmwh/react-refresh-webpack-plugin')
-const ReactRefreshTypeScript = require('react-refresh-typescript')
 const ForkTsCheckerPlugin = require('fork-ts-checker-webpack-plugin')
 const ESLintPlugin = require('eslint-webpack-plugin')
 const { InjectManifest } = require('workbox-webpack-plugin')
@@ -35,9 +33,6 @@ module.exports = (_, { mode }) => {
             {
               loader: 'ts-loader',
               options: {
-                getCustomTransformers: () => ({
-                  before: production ? [] : [ReactRefreshTypeScript()]
-                }),
                 transpileOnly: true
               }
             }
@@ -91,11 +86,7 @@ module.exports = (_, { mode }) => {
               swSrc: path.join(__dirname, 'public', 'service-worker.js')
             })
           ]
-        : [
-            new ReactRefreshPlugin(),
-            new ForkTsCheckerPlugin(),
-            new ESLintPlugin({ extensions: ['js', 'ts', ' jsx', 'tsx'] })
-          ]),
+        : [new ForkTsCheckerPlugin(), new ESLintPlugin({ extensions: ['js', 'ts', ' jsx', 'tsx'] })]),
       new HtmlPlugin({
         scriptLoading: 'module',
         templateContent: ({ compilation }) => {
