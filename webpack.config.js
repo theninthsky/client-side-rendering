@@ -1,23 +1,26 @@
-const path = require('path')
-const ReactRefreshPlugin = require('@pmmmwh/react-refresh-webpack-plugin')
-const ReactRefreshTypeScript = require('react-refresh-typescript')
-const ForkTsCheckerPlugin = require('fork-ts-checker-webpack-plugin')
-const ESLintPlugin = require('eslint-webpack-plugin')
-const { InjectManifest } = require('workbox-webpack-plugin')
-const HtmlPlugin = require('html-webpack-plugin')
-const HtmlInlineScriptPlugin = require('html-inline-script-webpack-plugin')
-const CopyPlugin = require('copy-webpack-plugin')
+import path from 'node:path'
+import ReactRefreshPlugin from '@pmmmwh/react-refresh-webpack-plugin'
+import ReactRefreshTypeScript from 'react-refresh-typescript'
+import ForkTsCheckerPlugin from 'fork-ts-checker-webpack-plugin'
+import ESLintPlugin from 'eslint-webpack-plugin'
+import { InjectManifest } from 'workbox-webpack-plugin'
+import HtmlPlugin from 'html-webpack-plugin'
+import HtmlInlineScriptPlugin from 'html-inline-script-webpack-plugin'
+import CopyPlugin from 'copy-webpack-plugin'
 
-const pagesManifest = require('./src/pages-manifest.json')
-const htmlTemplate = require('./public/index')
+import pagesManifest from './src/pages-manifest.json' assert { type: 'json' }
+import htmlTemplate from './public/index.js'
 
-module.exports = (_, { mode }) => {
+const __dirname = import.meta.dirname
+
+export default (_, { mode }) => {
   const production = mode === 'production'
 
   return {
     devServer: {
       historyApiFallback: true,
-      port: 3000
+      port: 3000,
+      devMiddleware: { stats: 'errors-warnings' }
     },
     cache: { type: 'filesystem' },
     devtool: production ? 'source-map' : 'inline-source-map',

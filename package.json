@@ -2,8 +2,9 @@
   "name": "client-side-rendering",
   "version": "1.0.0",
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=20.11.0"
   },
+  "type": "module",
   "scripts": {
     "postinstall": "npm run fetch-static",
     "start": "webpack serve --mode development",
