@@ -30,6 +30,7 @@
     "zustand": "^4.0.0"
   },
   "devDependencies": {
+    "@pmmmwh/react-refresh-webpack-plugin": "^0.5.11",
     "@svgr/webpack": "^8.0.1",
     "@types/react": "^18.0.8",
     "@types/react-dom": "^18.0.3",
@@ -43,6 +44,7 @@
     "html-inline-script-webpack-plugin": "^3.2.0",
     "html-webpack-plugin": "^5.5.0",
     "npm-run-all": "^4.1.5",
+    "react-refresh-typescript": "^2.0.9",
     "serve": "^14.0.1",
     "sitemap": "^7.1.1",
     "style-loader": "^3.3.1",
@@ -52,5 +54,10 @@
     "webpack-cli": "^5.0.1",
     "webpack-dev-server": "^5.0.2",
     "workbox-webpack-plugin": "^7.0.0"
+  },
+  "overrides": {
+    "@pmmmwh/react-refresh-webpack-plugin": {
+      "webpack-dev-server": "^5.0.2"
+    }
   }
 }
