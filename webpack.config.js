@@ -1,6 +1,5 @@
 import path from 'node:path'
 import ReactRefreshPlugin from '@pmmmwh/react-refresh-webpack-plugin'
-import ReactRefreshTypeScript from 'react-refresh-typescript'
 import ForkTsCheckerPlugin from 'fork-ts-checker-webpack-plugin'
 import ESLintPlugin from 'eslint-webpack-plugin'
 import { InjectManifest } from 'workbox-webpack-plugin'
@@ -32,18 +31,20 @@ export default (_, { mode }) => {
       rules: [
         {
           test: /\.(t|j)sx?$/i,
-          exclude: /node_modules/,
-          use: [
-            {
-              loader: 'ts-loader',
-              options: {
-                getCustomTransformers: () => ({
-                  before: production ? [] : [ReactRefreshTypeScript()]
-                }),
-                transpileOnly: true
+          exclude: /(node_modules)/,
+          use: {
+            loader: 'swc-loader',
+            options: {
+              jsc: {
+                parser: { syntax: 'typescript', tsx: true },
+                transform: {
+                  react: { runtime: 'automatic', refresh: true }
+                },
+                target: 'es2017',
+                preserveAllComments: true
               }
             }
-          ]
+          }
         },
         {
           test: /\.css$/i,
