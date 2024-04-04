@@ -11,8 +11,8 @@
     "prebuild": "npm-run-all -p fetch-static create-sitemap",
     "build": "webpack --mode production",
     "serve": "serve build",
-    "fetch-static": "node scripts/fetch-static.mjs",
-    "create-sitemap": "node scripts/create-sitemap.mjs"
+    "fetch-static": "node scripts/fetch-static",
+    "create-sitemap": "node scripts/create-sitemap"
   },
   "dependencies": {
     "@emotion/css": "^11.9.0",
