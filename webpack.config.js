@@ -22,7 +22,7 @@ export default (_, { mode }) => {
       devMiddleware: { stats: 'errors-warnings' }
     },
     cache: { type: 'filesystem' },
-    experiments: { lazyCompilation: true },
+    experiments: { lazyCompilation: !production },
     devtool: production ? 'source-map' : 'inline-source-map',
     resolve: {
       modules: [path.resolve(__dirname, 'src'), 'node_modules'],
