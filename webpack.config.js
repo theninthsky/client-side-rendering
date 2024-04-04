@@ -22,10 +22,17 @@ export default (_, { mode }) => {
       devMiddleware: { stats: 'errors-warnings' }
     },
     cache: { type: 'filesystem' },
+    experiments: { lazyCompilation: true },
     devtool: production ? 'source-map' : 'inline-source-map',
     resolve: {
       modules: [path.resolve(__dirname, 'src'), 'node_modules'],
       extensions: ['.ts', '.tsx', '.js', '.jsx']
+    },
+    output: {
+      path: path.join(__dirname, 'build'),
+      publicPath: '/',
+      filename: 'scripts/[name].[contenthash:6].js',
+      clean: true
     },
     module: {
       rules: [
@@ -60,12 +67,6 @@ export default (_, { mode }) => {
           generator: { filename: 'images/[name].[hash:6][ext]' }
         }
       ]
-    },
-    output: {
-      path: path.join(__dirname, 'build'),
-      publicPath: '/',
-      filename: 'scripts/[name].[contenthash:6].js',
-      clean: true
     },
     optimization: {
       runtimeChunk: 'single',
