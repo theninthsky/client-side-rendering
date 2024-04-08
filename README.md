@@ -235,31 +235,33 @@ plugins: [
 ]
 ```
 
-_[index.js](public/index.js)_
+_[public/index.js](public/index.js)_
 
 ```js
-module.exports = pages => `
+import { join } from 'node:path'
+import { readFileSync } from 'node:fs'
+
+const __dirname = import.meta.dirname
+
+export default pages => `
   <!DOCTYPE html>
   <html lang="en">
     <head>
-      <title>CSR</title>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <meta name="theme-color" content="#1e90ff">
+      <meta name="google-site-verification" content="VizFjhwWDUBYMsq1bJtp6N2NPjz8sLdGH1513MlrytU" />
+
+      <link rel="shortcut icon" href="/icons/favicon.ico">
+      <link rel="manifest" href="/manifest.json">
+      <link rel="preload" href="/fonts/montserrat.woff2" as="font" type="font/woff2" crossorigin>
+
+      <title>Client-side Rendering</title>
 
       <script>
-        let { pathname } = window.location
-
-        if (pathname !== '/') pathname = pathname.replace(/\\/$/, '')
-
         const pages = ${JSON.stringify(pages)}
 
-        for (const { path, script } of pages) {
-          if (pathname !== path) continue
-
-          document.head.appendChild(
-            Object.assign(document.createElement('link'), { rel: 'preload', href: '/' + script, as: 'script' })
-          )
-
-          break
-        }
+        ${readFileSync(join(__dirname, '..', 'scripts', 'preload-assets.js'))}
       </script>
     </head>
     <body>
@@ -267,6 +269,33 @@ module.exports = pages => `
     </body>
   </html>
 `
+```
+
+_[scripts/preload-assets.js](scripts/preload-assets.js)_
+
+```js
+const isStructureEqual = (pathname, path) => {
+  const pathnameParts = pathname.split('/')
+  const pathParts = path.split('/')
+
+  if (pathnameParts.length !== pathParts.length) return false
+
+  return pathnameParts.every((part, ind) => part === pathParts[ind] || pathParts[ind].startsWith(':'))
+}
+
+let { pathname } = window.location
+
+if (pathname !== '/') pathname = pathname.replace(/\/$/, '')
+
+for (const { path, script } of pages) {
+  const match = pathname === path || (path.includes(':') && isStructureEqual(pathname, path))
+
+  if (!match) continue
+
+  document.head.appendChild(
+    Object.assign(document.createElement('link'), { rel: 'preload', href: '/' + script, as: 'script' })
+  )
+}
 ```
 
 The imported `pages-manifest` file can be found [here](src/pages-manifest.js).
@@ -431,71 +460,21 @@ plugins: [
 ]
 ```
 
-_[index.js](public/index.js)_
+_[scripts/preload-assets.js](scripts/preload-assets.js)_
 
 ```diff
-module.exports = pages => `
-  <!DOCTYPE html>
-  <html lang="en">
-    <head>
-      <title>CSR</title>
+- for (const { path, script } of pages) {
++ for (const { path, scripts } of pages) {
+    const match = pathname === path || (path.includes(':') && isStructureEqual(pathname, path))
 
-      <script>
-        const isStructureEqual = (pathname, path) => {
-          pathname = pathname.split('/')
-          path = path.split('/')
+    if (!match) continue
 
-          if (pathname.length !== path.length) return false
-
-          return pathname.every((segment, ind) => segment === path[ind] || path[ind].includes(':'))
-        }
-
-        let { pathname } = window.location
-
-        if (pathname !== '/') pathname = pathname.replace(/\\/$/, '')
-
-        const pages = ${JSON.stringify(pages)}
-
--       for (const { path, script, data } of pages) {
-+       for (const { path, scripts, data } of pages) {
-          const match = pathname === path || (path.includes(':') && isStructureEqual(pathname, path))
-
-          if (!match) continue
-
-+         scripts.forEach(script => {
-            document.head.appendChild(
-              Object.assign(document.createElement('link'), { rel: 'preload', href: '/' + script, as: 'script' })
-            )
-+         })
-
-          if (!data) break
-
-           data.forEach(({ url, dynamicPathIndexes, crossorigin }) => {
-            let fullURL = url
-
-            if (dynamicPathIndexes) {
-              const pathnameArr = pathname.split('/')
-              const dynamics = dynamicPathIndexes.map(index => pathnameArr[index])
-
-              let counter = 0
-
-              fullURL = url.replace(/\\$/g, match => dynamics[counter++])
-            }
-
-            document.head.appendChild(
-              Object.assign(document.createElement('link'), { rel: 'preload', href: fullURL, as: 'fetch', crossOrigin: crossorigin })
-            )
-          })
-
-          break
-        }
-      </script>
-    </head>
-    <body>
-      <div id="root"></div>
-    </body>
-  </html>
-`
++   scripts.forEach(script => {
+      document.head.appendChild(
+        Object.assign(document.createElement('link'), { rel: 'preload', href: '/' + script, as: 'script' })
+      )
++   })
+}
 ```
 
 Now all async vendor chunks will be fetched in parallel with their parent async chunk:
@@ -532,70 +511,60 @@ plugins: [
 ]
 ```
 
-_[index.js](public/index.js)_
+_[public/index.js](public/index.js)_
 
 ```diff
-module.exports = pages => `
-  <!DOCTYPE html>
-  <html lang="en">
-    <head>
-      <title>CSR</title>
+<script>
+- const pages = ${JSON.stringify(pages)}
++ const pages = ${JSON.stringify(pages, (_, value) => {
++   return typeof value === 'function' ? `func:${value.toString()}` : value
++ })}
 
-      <script>
-+       const isStructureEqual = (pathname, path) => {
-+         pathname = pathname.split('/')
-+         path = path.split('/')
-+
-+         if (pathname.length !== path.length) return false
-+
-+         return pathname.every((segment, ind) => segment === path[ind] || path[ind].includes(':'))
-+       }
+  ${readFileSync(join(__dirname, '..', 'scripts', 'preload-assets.js'))}
+</script>
+```
 
-        let { pathname } = window.location
+_[scripts/preload-assets.js](scripts/preload-assets.js)_
 
-        if (pathname !== '/') pathname = pathname.replace(/\\/$/, '')
+```diff
++ const getDynamicProperties = (pathname, path) => {
++   const pathParts = path.split('/')
++   const pathnameParts = pathname.split('/')
++   const dynamicProperties = {}
++
++   for (let i = 0; i < pathParts.length; i++) {
++     if (pathParts[i].startsWith(':')) dynamicProperties[pathParts[i].slice(1)] = pathnameParts[i]
++   }
++
++   return dynamicProperties
++ }
 
-        const pages = ${JSON.stringify(pages)}
+- for (const { path, scripts } of pages) {
++ for (const { path, scripts, data } of pages) {
+    .
+    .
+    .
++ if (!data) break
 
--       for (const { path, script } of pages) {
-+       for (const { path, script, data } of pages) {
--         if (pathname !== path) continue
-+         const match = pathname === path || (path.includes(':') && isStructureEqual(pathname, path))
++ data.forEach(({ url, crossorigin, preconnectURL }) => {
++  if (url.startsWith('func:')) url = eval(url.replace('func:', ''))
++  const fullURL = typeof url === 'string' ? url : url(getDynamicProperties(pathname, path))
 +
-+         if (!match) continue
-
-          document.head.appendChild(
-            Object.assign(document.createElement('link'), { rel: 'preload', href: '/' + script, as: 'script' })
-          )
-
-+         if (!data) break
++  document.head.appendChild(
++    Object.assign(document.createElement('link'), {
++      rel: 'preload',
++      href: fullURL,
++      as: 'fetch',
++      crossOrigin: crossorigin
++    })
++  )
 +
-+          data.forEach(({ url, dynamicPathIndexes, crossorigin }) => {
-+           let fullURL = url
-+
-+           if (dynamicPathIndexes) {
-+             const pathnameArr = pathname.split('/')
-+             const dynamics = dynamicPathIndexes.map(index => pathnameArr[index])
-+
-+             let counter = 0
-+
-+             fullURL = url.replace(/\\$/g, match => dynamics[counter++])
-+           }
-+
-+           document.head.appendChild(
-+             Object.assign(document.createElement('link'), { rel: 'preload', href: fullURL, as: 'fetch', crossOrigin: crossorigin })
-+           )
-          })
-
-          break
-        }
-      </script>
-    </head>
-    <body>
-      <div id="root"></div>
-    </body>
-  </html>
-`
++  if (preconnectURL) {
++    document.head.appendChild(
++      Object.assign(document.createElement('link'), { rel: 'preconnect', href: preconnectURL })
++    )
++  }
++ })
 ```
 
 Now we can see that the data is being fetched right away:

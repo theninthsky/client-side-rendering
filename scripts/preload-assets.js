@@ -55,6 +55,4 @@ for (const { path, scripts, data } of pages) {
       )
     }
   })
-
-  break
 }
