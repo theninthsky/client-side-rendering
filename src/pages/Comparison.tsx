@@ -2,7 +2,7 @@ import type { FC } from 'react'
 import { Meta } from 'frontend-essentials'
 import { css } from '@emotion/css'
 
-import pagesManifest from 'pages-manifest.json'
+import pagesManifest from 'pages-manifest'
 import { DESKTOP_VIEWPORT } from 'styles/constants'
 import Title from 'components/common/Title'
 import Subtitle from 'components/common/Subtitle'

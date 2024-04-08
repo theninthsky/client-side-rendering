@@ -6,7 +6,7 @@ declare module '*.svg' {
   export default any
 }
 
-declare module 'pages-manifest.json' {
+declare module 'pages-manifest' {
   const pages: [
     {
       chunk: string

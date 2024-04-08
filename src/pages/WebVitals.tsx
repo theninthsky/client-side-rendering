@@ -3,7 +3,7 @@ import { Meta } from 'frontend-essentials'
 import { onCLS, onFCP, onFID, onINP, onLCP, onTTFB } from 'web-vitals'
 import { css } from '@emotion/css'
 
-import pagesManifest from 'pages-manifest.json'
+import pagesManifest from 'pages-manifest'
 import Title from 'components/common/Title'
 import Info from 'components/common/Info'
 

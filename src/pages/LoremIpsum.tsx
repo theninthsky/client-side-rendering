@@ -2,7 +2,7 @@ import type { FC } from 'react'
 import { Meta, useFetch } from 'frontend-essentials'
 import { css } from '@emotion/css'
 
-import pagesManifest from 'pages-manifest.json'
+import pagesManifest from 'pages-manifest'
 import Title from 'components/common/Title'
 import Info from 'components/common/Info'
 

@@ -16,18 +16,18 @@ injectGlobal`
 	}
 
   ::view-transition-old(root) {
-    animation: slide-out 0.15s;
+    animation: slide-out 0.1s;
 
     @media(${DESKTOP_VIEWPORT}) {
-      animation: fade-out 0.15s;
+      animation: fade-out 0.1s;
     }
   }
 
   ::view-transition-new(root) {
-    animation: slide-in 0.15s;
+    animation: slide-in 0.1s;
 
     @media(${DESKTOP_VIEWPORT}) {
-      animation: fade-in 0.15s;
+      animation: fade-in 0.1s;
     }
   }
 

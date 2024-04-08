@@ -7,7 +7,7 @@ import HtmlPlugin from 'html-webpack-plugin'
 import HtmlInlineScriptPlugin from 'html-inline-script-webpack-plugin'
 import CopyPlugin from 'copy-webpack-plugin'
 
-import pagesManifest from './src/pages-manifest.json' assert { type: 'json' }
+import pagesManifest from './src/pages-manifest.js'
 import htmlTemplate from './public/index.js'
 
 const __dirname = import.meta.dirname

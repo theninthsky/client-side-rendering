@@ -1,7 +1,7 @@
 import { lazy, Suspense, FC } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 
-import pagesManifest from 'pages-manifest.json'
+import pagesManifest from 'pages-manifest'
 import Navigation from 'components/Navigation'
 import ScrollToTop from 'components/common/ScrollToTop'
 import Layout from 'components/Layout'

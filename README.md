@@ -269,7 +269,7 @@ module.exports = pages => `
 `
 ```
 
-The imported `pages-manifest.json` file can be found [here](src/pages-manifest.json).
+The imported `pages-manifest` file can be found [here](src/pages-manifest.js).
 
 _Please note that other types of assets can be preloaded the same way (like stylesheets)._
 
@@ -839,7 +839,7 @@ The preferred method would be to have our API server create JSON files from stat
 <br>
 However, if we wanted to do something similar ourselves, we could execute the following script during build time:
 
-_[fetch-static.mjs](scripts/fetch-static.mjs)_
+_[fetch-static.js](scripts/fetch-static.js)_
 
 ```js
 import { mkdir, writeFile } from 'fs/promises'
@@ -865,7 +865,7 @@ _[package.json](package.json)_
 "scripts": {
   "postinstall": "npm run fetch-static",
   "prebuild": "npm run fetch-static",
-  "fetch-static": "node scripts/fetch-static.mjs"
+  "fetch-static": "node scripts/fetch-static"
 }
 ```
 
@@ -1237,16 +1237,16 @@ _**Facebook**:_
 
 In order to make all of our app pages discoverable to search engines, we should create a `sitemap.xml` file which specifies all of our website routes.
 
-Since we already have a centralized _[pages-manifest.json](src/pages-manifest.json)_ file, we can easily generate a sitemap during build time:
+Since we already have a centralized _[pages-manifest](src/pages-manifest.js)_ file, we can easily generate a sitemap during build time:
 
-_[create-sitemap.mjs](scripts/create-sitemap.mjs)_
+_[create-sitemap.js](scripts/create-sitemap.js)_
 
 ```js
 import { Readable } from 'stream'
 import { writeFile } from 'fs/promises'
 import { SitemapStream, streamToPromise } from 'sitemap'
 
-import pagesManifest from '../src/pages-manifest.json' assert { type: 'json' }
+import pagesManifest from '../src/pages-manifest.js'
 
 const stream = new SitemapStream({ hostname: 'https://client-side-rendering.pages.dev' })
 const links = pagesManifest.map(({ path }) => ({ url: path, changefreq: 'weekly' }))

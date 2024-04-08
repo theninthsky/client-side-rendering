@@ -5,7 +5,7 @@ import toLower from 'lodash/toLower'
 import { css } from '@emotion/css'
 import { Skeleton } from '@mui/material'
 
-import pagesManifest from 'pages-manifest.json'
+import pagesManifest from 'pages-manifest'
 import preconnect from 'utils/preconnect'
 import Title from 'components/common/Title'
 import Info from 'components/common/Info'
