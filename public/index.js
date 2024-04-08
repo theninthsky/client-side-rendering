@@ -15,19 +15,33 @@ export default pages => `
 
       <script>
         const isStructureEqual = (pathname, path) => {
-          pathname = pathname.split('/')
-          path = path.split('/')
+          const pathnameParts = pathname.split('/')
+          const pathParts = path.split('/')
 
-          if (pathname.length !== path.length) return false
+          if (pathnameParts.length !== pathParts.length) return false
 
-          return pathname.every((segment, ind) => segment === path[ind] || path[ind].includes(':'))
+          return pathnameParts.every((part, ind) => part === pathParts[ind] || pathParts[ind].startsWith(':'))
+        }
+
+        const getDynamicProperties = (pathname, path) => {
+          const pathParts = path.split('/');
+          const pathnameParts = pathname.split('/');
+          const dynamicProperties = {};
+      
+          for (let i = 0; i < pathParts.length; i++) {
+            if (pathParts[i].startsWith(':')) dynamicProperties[pathParts[i].slice(1)] = pathnameParts[i];
+          }
+      
+          return dynamicProperties;
         }
 
         let { pathname } = window.location
 
         if (pathname !== '/') pathname = pathname.replace(/\\/$/, '')
 
-        const pages = ${JSON.stringify(pages)}
+        const pages = ${JSON.stringify(pages, (_, value) => {
+          return typeof value === 'function' ? `func:${value.toString()}` : value
+        })}
 
         for (const { path, scripts, data } of pages) {
           const match = pathname === path || (path.includes(':') && isStructureEqual(pathname, path))
@@ -41,19 +55,11 @@ export default pages => `
           })
 
           if (!data) break
-          
-          data.forEach(({ url, dynamicPathIndexes, crossorigin, preconnectURL }) => {
-            let fullURL = url
+
+          data.forEach(({ url, crossorigin, preconnectURL }) => {
+            if (url.startsWith('func:')) url = eval(url.replace('func:', ''))
+            const fullURL = (typeof url === 'string') ? url : url(getDynamicProperties(pathname, path))
             
-            if (dynamicPathIndexes) {
-              const pathnameArr = pathname.split('/')
-              const dynamics = dynamicPathIndexes.map(index => pathnameArr[index])
-
-              let counter = 0
-              
-              fullURL = url.replace(/\\$/g, match => dynamics[counter++])
-            }
-
             document.head.appendChild(
               Object.assign(document.createElement('link'), { rel: 'preload', href: fullURL, as: 'fetch', crossOrigin: crossorigin })
             )

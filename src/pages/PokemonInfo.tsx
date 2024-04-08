@@ -27,8 +27,8 @@ const PokemonInfo: FC<{}> = () => {
   const { data: pokemonSpecies, activate: fetchPokemonSpecies } = useFetch('', { manual: true, camelCased: true })
 
   useLayoutEffect(() => {
-    fetchPokemonInfo({ url: data[0].url.replace('$', nameParam!) })
-    fetchPokemonSpecies({ url: data[1].url.replace('$', nameParam!) })
+    fetchPokemonInfo({ url: data[0].url({ name: nameParam }) })
+    fetchPokemonSpecies({ url: data[1].url({ name: nameParam }) })
   }, [nameParam])
 
   const { id, name, img, sprites, types } = pokemonInfo || selectedPokemon || {}

@@ -37,14 +37,12 @@ export default [
     description: 'This page demonstrates a dynamic path data that is fetched in parallel with other assets.',
     data: [
       {
-        url: 'https://pokeapi.co/api/v2/pokemon/$',
-        dynamicPathIndexes: [2],
+        url: ({ name }) => `https://pokeapi.co/api/v2/pokemon/${name}`,
         crossorigin: 'anonymous',
         preconnectURL: 'https://raw.githubusercontent.com'
       },
       {
-        url: 'https://pokeapi.co/api/v2/pokemon-species/$',
-        dynamicPathIndexes: [2],
+        url: ({ name }) => `https://pokeapi.co/api/v2/pokemon-species/${name}`,
         crossorigin: 'anonymous'
       }
     ],

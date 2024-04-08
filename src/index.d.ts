@@ -14,7 +14,7 @@ declare module 'pages-manifest' {
       title: string
       description: string
       data: {
-        url: string
+        url: any
         dynamicPathIndexes: number[]
         crossorigin: string
         preconnectURL: string
