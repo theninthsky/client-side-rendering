@@ -203,7 +203,7 @@ const Pokemon = lazy(() => import(/* webpackChunkName: 'pokemon' */ 'pages/Pokem
 
 So when the user visits the Lorem Ipsum page, they only download the main chunk script (which includes all shared dependencies such as the framework) and the `lorem-ipsum.[hash].js` chunk.
 
-_Note: it is encouraged to make our users download the entire app so they can have an instant, app-like, navigation experience. But it is a bad idea to batch all assets into a single script, delaying the first render of the page.
+_Note: it is encouraged to download the entire app so that users will experience instant, app-like, navigations. But it is a bad idea to batch all assets into a single script, delaying the first render of the page.
 <br>
 These assets should be downloaded after the user-requested page has finished rendering and is entirely visible._
 
@@ -218,6 +218,11 @@ The way we can solve this issue is by implementing a script in the document that
 _[webpack.config.js](webpack.config.js)_
 
 ```js
+import pagesManifest from './src/pages-manifest.js'
+import htmlTemplate from './public/index.js'
+.
+.
+.
 plugins: [
   new HtmlPlugin({
     scriptLoading: 'module',
@@ -567,6 +572,8 @@ _[scripts/preload-assets.js](scripts/preload-assets.js)_
 + })
 ```
 
+Reminder: the `pages-manifest` file can be found [here](src/pages-manifest.js).
+
 Now we can see that the data is being fetched right away:
 
 ![With Data Preload](images/with-data-preload.png)
@@ -634,7 +641,7 @@ _[webpack.config.js](webpack.config.js)_
 plugins: [new HtmlInlineScriptPlugin({ scriptMatchPattern: [/runtime.+[.]js$/] })]
 ```
 
-This will only add about 2kb to our HTML file, but will ensure that unchanged (and unaffected) pages will be loaded immediately from the cache, without requiring an extra roundtrip.
+This will only add about 2kb to our HTML file, but will ensure that unchanged (and unaffected) pages will be loaded immediately from cache, without requiring an extra roundtrip to the CDN.
 
 ## Tweaking Further
 
