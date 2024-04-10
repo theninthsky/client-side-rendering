@@ -21,9 +21,9 @@ The conclusions of this project led to the creation of the _[ultimate-csr-boiler
   - [Caching](#caching)
   - [Code Splitting](#code-splitting)
   - [Preloading Async Pages](#preloading-async-pages)
-  - [Prefetching Async Pages](#prefetching-async-pages)
-  - [Preventing Duplicate Async Vendors](#preventing-duplicate-async-vendors)
+  - [Splitting Async Vendors](#splitting-async-vendors)
   - [Preloading Data](#preloading-data)
+  - [Prefetching Async Pages](#prefetching-async-pages)
   - [Accelerating Unchanged Pages](#accelerating-unchanged-pages)
   - [Tweaking Further](#tweaking-further)
     - [Preventing Incremental Rendering](#preventing-incremental-rendering)
@@ -139,7 +139,9 @@ This is crucial not only for CSR apps, but also for SSR (and SSG) apps, since th
 
 Ideally, every hashed file should be cached, and `index.html` should **never** be cached.
 <br>
-It means that the browser would initially cache `main.[hash].js` and would have to redownload it only if its hash (content) changes.
+It means that the browser would initially cache `main.[hash].js` and would have to redownload it only if its hash (content) changes:
+
+![Network Bundled](images/network-bundled.png)
 
 However, since `main.js` includes the entire bundle, the slightest change in code would cause its cache to expire, meaning the browser would have to download it again.
 <br>
@@ -164,7 +166,9 @@ optimization: {
 }
 ```
 
-This will create a `vendors.[hash].js` file.
+This will create a `vendors.[hash].js` file:
+
+![Network Vendors](images/network-vendors.png)
 
 Although this is a substantial improvement, what would happen if we updated a very small dependency?
 <br>
@@ -176,10 +180,16 @@ _[webpack.config.js](webpack.config.js)_
 
 ```diff
 - name: 'vendors'
-+ name: ({ context }) => (context.match(/[\\/]node_modules[\\/](.*?)([\\/]|$)/) || [])[1]
++ name: module => {
++  const moduleName = (module.context.match(/[\\/]node_modules[\\/](.*?)([\\/]|$)/) || [])[1]
++
++  return moduleName.replace('@', '')
++ }
 ```
 
-This will create files like `react-dom.[hash].js`, `react-router-dom.[hash].js` etc.
+This will create files like `react-dom.[hash].js`, `react-router-dom.[hash].js` etc:
+
+![Network Split Vendors](images/network-split-vendors.png)
 
 More info about the default configurations (such as the split threshold size) can be found here:
 <br>
@@ -201,7 +211,7 @@ const LoremIpsum = lazy(() => import(/* webpackChunkName: 'lorem-ipsum' */ 'page
 const Pokemon = lazy(() => import(/* webpackChunkName: 'pokemon' */ 'pages/Pokemon'))
 ```
 
-So when the user visits the Lorem Ipsum page, they only download the main chunk script (which includes all shared dependencies such as the framework) and the `lorem-ipsum.[hash].js` chunk.
+So when the user visits the Pokemon page, they only download the main chunk scripts (which includes all shared dependencies such as the framework) and the `pokemon.[hash].js` chunk.
 
 _Note: it is encouraged to download the entire app so that users will experience instant, app-like, navigations. But it is a bad idea to batch all assets into a single script, delaying the first render of the page.
 <br>
@@ -211,7 +221,7 @@ These assets should be downloaded after the user-requested page has finished ren
 
 Code splitting has one major flaw - the runtime doesn't know which async chunks are needed until the main script executes, leading to them being fetched in a significant delay (since they make another round-trip to the CDN):
 
-![Without Async Preload](images/without-async-preload.png)
+![Network Code Splitting](images/network-code-splitting.png)
 
 The way we can solve this issue is by implementing a script in the document that will be responsible for preloading relevant assets:
 
@@ -309,84 +319,11 @@ _Please note that other types of assets can be preloaded the same way (like styl
 
 This way, the browser is able to fetch the page-related script chunk **in parallel** with render-critical assets:
 
-![With Async Preload](images/with-async-preload.png)
+![Network Async Chunks Preload](images/network-async-chunks-preload.png)
 
-### Prefetching Async Pages
+### Splitting Async Vendors
 
-Users should have a smooth navigation experience in our app.
-<br>
-However, splitting every page causes a noticeable delay in navigation, since every page has to be downloaded before it can be rendered on screen.
-
-We would want to prefetch all pages ahead of time.
-
-We can do this by writing a simple service worker:
-
-_[webpack.config.js](webpack.config.js)_
-
-```js
-plugins: [
-  ...(production
-    ? [
-        new InjectManifest({
-          include: [/fonts\//, /scripts\/.+\.js$/],
-          swSrc: path.join(__dirname, 'public', 'service-worker.js')
-        })
-      ]
-    : [])
-]
-```
-
-_[service-worker-registration.ts](src/utils/service-worker-registration.ts)_
-
-```js
-const register = () => {
-  window.addEventListener('load', async () => {
-    try {
-      await navigator.serviceWorker.register('/service-worker.js')
-
-      console.log('Service worker registered!')
-    } catch (err) {
-      console.error(err)
-    }
-  })
-}
-
-const unregister = async () => {
-  try {
-    const registration = await navigator.serviceWorker.ready
-
-    await registration.unregister()
-
-    console.log('Service worker unregistered!')
-  } catch (err) {
-    console.error(err)
-  }
-}
-
-if ('serviceWorker' in navigator) {
-  if (process.env.NODE_ENV === 'development') unregister()
-  else register()
-}
-```
-
-_[service-worker.js](public/service-worker.js)_
-
-```js
-self.addEventListener('install', event => {
-  const assets = self.__WB_MANIFEST.map(({ url }) => url)
-
-  event.waitUntil(Promise.all(assets.map(asset => fetch(asset))))
-  self.skipWaiting()
-})
-
-self.addEventListener('fetch', () => {})
-```
-
-Now all pages will be prefetched before the user even tries to navigate to them.
-
-### Preventing Duplicate Async Vendors
-
-Code splitting introduced us to a new problem: async vendor duplication.
+Code splitting introduces another problem: async vendor duplication.
 
 Say we have two async chunks: `lorem-ipsum.[hash].js` and `pokemon.[hash].js`.
 If they both include the same dependency that is not part of the main chunk, that means the user will download that dependency **twice**.
@@ -417,7 +354,7 @@ Now both `lorem-ipsum.[hash].js` and `pokemon.[hash].js` will use the extracted 
 
 However, we have no way of telling which async vendor chunks will be split before we build the application, so we wouldn't know which async vendor chunks we need to preload (refer to the "Preloading Async Chunks" section):
 
-![Without Async Vendor Preload](images/without-async-vendor-preload.png)
+![Network Split Async Vendors](images/network-split-async-vendors.png)
 
 That's why we will append the chunks names to the async vendor's name:
 
@@ -484,13 +421,13 @@ _[scripts/preload-assets.js](scripts/preload-assets.js)_
 
 Now all async vendor chunks will be fetched in parallel with their parent async chunk:
 
-![With Async Vendor Preload](images/with-async-vendor-preload.png)
+![Network Split Async Vendors Preload](images/network-split-async-vendors-preload.png)
 
 ### Preloading Data
 
-One of the presumed disadvantages of CSR over SSR is that data will be fetched only after JS has been downloaded, parsed and executed in the browser:
+One of the presumed disadvantages of CSR over SSR is that the page's data (fetch requests) will be fired only after JS has been downloaded, parsed and executed in the browser:
 
-![Without Data Preload](images/without-data-preload.png)
+![Network Data](images/network-data.png)
 
 To overcome this, we will use preloading once again, this time for the data itself:
 
@@ -576,7 +513,7 @@ Reminder: the `pages-manifest` file can be found [here](src/pages-manifest.js).
 
 Now we can see that the data is being fetched right away:
 
-![With Data Preload](images/with-data-preload.png)
+![Network Data Preload](images/network-data-preload.png)
 
 With the above script, we can even preload dynamic routes data (such as _[pokemon/:name](https://client-side-rendering.pages.dev/pokemon/pikachu)_).
 
@@ -624,6 +561,79 @@ to:
 ```
 
 _Note that in order for the preload to work, the server has to send a `Cache-Control` header with a `max-age` of at least a few seconds._
+
+### Prefetching Async Pages
+
+Users should have a smooth navigation experience in our app.
+<br>
+However, splitting every page causes a noticeable delay in navigation, since every page has to be downloaded before it can be rendered on screen.
+
+We would want to prefetch all pages ahead of time.
+
+We can do this by writing a simple service worker:
+
+_[webpack.config.js](webpack.config.js)_
+
+```js
+plugins: [
+  ...(production
+    ? [
+        new InjectManifest({
+          include: [/fonts\//, /scripts\/.+\.js$/],
+          swSrc: path.join(__dirname, 'public', 'service-worker.js')
+        })
+      ]
+    : [])
+]
+```
+
+_[service-worker-registration.ts](src/utils/service-worker-registration.ts)_
+
+```js
+const register = () => {
+  window.addEventListener('load', async () => {
+    try {
+      await navigator.serviceWorker.register('/service-worker.js')
+
+      console.log('Service worker registered!')
+    } catch (err) {
+      console.error(err)
+    }
+  })
+}
+
+const unregister = async () => {
+  try {
+    const registration = await navigator.serviceWorker.ready
+
+    await registration.unregister()
+
+    console.log('Service worker unregistered!')
+  } catch (err) {
+    console.error(err)
+  }
+}
+
+if ('serviceWorker' in navigator) {
+  if (process.env.NODE_ENV === 'development') unregister()
+  else register()
+}
+```
+
+_[service-worker.js](public/service-worker.js)_
+
+```js
+self.addEventListener('install', event => {
+  const assets = self.__WB_MANIFEST.map(({ url }) => url)
+
+  event.waitUntil(Promise.all(assets.map(asset => fetch(asset))))
+  self.skipWaiting()
+})
+
+self.addEventListener('fetch', () => {})
+```
+
+Now all pages will be prefetched before the user even tries to navigate to them.
 
 ### Accelerating Unchanged Pages
 

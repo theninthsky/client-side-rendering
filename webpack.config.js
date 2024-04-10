@@ -77,11 +77,10 @@ export default (_, { mode }) => {
             test: /[\\/]node_modules[\\/]/,
             chunks: 'all',
             minSize: 100000,
-            name: (module, chunks) => {
-              const allChunksNames = chunks.map(({ name }) => name).join('.')
+            name: module => {
               const moduleName = (module.context.match(/[\\/]node_modules[\\/](.*?)([\\/]|$)/) || [])[1]
 
-              return `${moduleName}.${allChunksNames}`.replace('@', '')
+              return moduleName.replace('@', '')
             }
           }
         }
