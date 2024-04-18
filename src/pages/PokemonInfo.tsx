@@ -16,7 +16,10 @@ import $ from 'jquery'
 import moment from 'moment'
 $(`#${_.isDate(moment().toDate())}`)
 
-const { description, data } = pagesManifest.find(({ chunk }) => chunk === 'pokemon-info')!
+const {
+  description,
+  data: [pokemonInfoData, pokemonSpeciesData]
+} = pagesManifest.find(({ chunk }) => chunk === 'pokemon-info')!
 
 const PokemonInfo: FC<{}> = () => {
   const { name: nameParam } = useParams()
@@ -27,8 +30,8 @@ const PokemonInfo: FC<{}> = () => {
   const { data: pokemonSpecies, activate: fetchPokemonSpecies } = useFetch('', { manual: true, camelCased: true })
 
   useLayoutEffect(() => {
-    fetchPokemonInfo({ url: data[0].url({ name: nameParam }) })
-    fetchPokemonSpecies({ url: data[1].url({ name: nameParam }) })
+    fetchPokemonInfo({ url: pokemonInfoData.url({ name: nameParam }) })
+    fetchPokemonSpecies({ url: pokemonSpeciesData.url({ name: nameParam }) })
   }, [nameParam])
 
   const { id, name, img, sprites, types } = pokemonInfo || selectedPokemon || {}

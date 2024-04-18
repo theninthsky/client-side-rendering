@@ -6,6 +6,13 @@ declare module '*.svg' {
   export default any
 }
 
+type PageData = {
+  url: string | ((params: { [x: string]: string }) => string) | any
+  crossorigin: string
+  preconnectURL: string
+  menuPreload: boolean
+}
+
 declare module 'pages-manifest' {
   const pages: [
     {
@@ -13,13 +20,7 @@ declare module 'pages-manifest' {
       path: string
       title: string
       description: string
-      data: {
-        url: any
-        dynamicPathIndexes: number[]
-        crossorigin: string
-        preconnectURL: string
-        menuPreload: boolean
-      }[]
+      data: PageData[]
       menuItem: boolean
     }
   ]

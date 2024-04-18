@@ -1,5 +1,5 @@
 import { useRef, FC } from 'react'
-import { NavLink, NavLinkProps } from 'react-router-dom'
+import { useParams, NavLink, NavLinkProps, Params } from 'react-router-dom'
 import { useTransitionNavigate, useMedia } from 'frontend-essentials'
 import { css, cx } from '@emotion/css'
 
@@ -7,26 +7,14 @@ import preload from 'utils/preload'
 import { MOBILE_VIEWPORT } from 'styles/constants'
 
 export type Data = {
-  url: string
+  url: string | ((params: Params) => string)
   crossorigin?: string
   menuPreload?: boolean
 }
 
 export type NavigationLinkProps = NavLinkProps & {
   to: string
-  data?: Data | Data[]
-}
-
-const onLinkEvent = (data: Data | Data[]) => {
-  if (Array.isArray(data)) {
-    return data.forEach(({ url, crossorigin, menuPreload }) => {
-      if (menuPreload) preload({ url, crossorigin })
-    })
-  }
-
-  const { url, crossorigin, menuPreload } = data
-
-  if (menuPreload) preload({ url, crossorigin })
+  data?: Data[]
 }
 
 const NavigationLink: FC<NavigationLinkProps> = ({
@@ -43,11 +31,21 @@ const NavigationLink: FC<NavigationLinkProps> = ({
 }) => {
   const ref = useRef<HTMLAnchorElement>(null)
 
+  const params = useParams()
   const navigate = useTransitionNavigate()
 
   const { hoverable } = useMedia({ hoverable: '(hover: hover) and (pointer: fine)' })
 
   const baseURL = to.replace('/*', '')
+
+  const onLinkEvent = (data: Data[]) => {
+    data.forEach(({ url, crossorigin, menuPreload }) => {
+      if (!menuPreload) return
+      if (typeof url === 'function') url = url(params)
+
+      preload({ url, crossorigin })
+    })
+  }
 
   const onLinkClick = event => {
     event.preventDefault()

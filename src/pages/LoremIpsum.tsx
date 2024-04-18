@@ -12,10 +12,14 @@ import $ from 'jquery'
 import moment from 'moment'
 $(`#${_.isDate(moment().toDate())}`)
 
-const { title, description, data } = pagesManifest.find(({ chunk }) => chunk === 'lorem-ipsum')!
+const {
+  title,
+  description,
+  data: [loremIpsumData]
+} = pagesManifest.find(({ chunk }) => chunk === 'lorem-ipsum')!
 
 const LoremIpsum: FC<{}> = () => {
-  const { data: loremIpsum } = useFetch(data[0].url, {
+  const { data: loremIpsum } = useFetch(loremIpsumData.url, {
     credentials: 'include',
     mode: 'no-cors',
     uuid: 'loremIpsum',

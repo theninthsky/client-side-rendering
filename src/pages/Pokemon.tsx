@@ -17,18 +17,25 @@ import $ from 'jquery'
 import moment from 'moment'
 $(`#${_.isDate(moment().toDate())}`)
 
-const { title, description, data } = pagesManifest.find(({ chunk }) => chunk === 'pokemon')!
-const { data: pokemonInfoData } = pagesManifest.find(({ chunk }) => chunk === 'pokemon-info')!
+const {
+  title,
+  description,
+  data: [pokemonData]
+} = pagesManifest.find(({ chunk }) => chunk === 'pokemon')!
+const {
+  data: [pokemonInfoData]
+} = pagesManifest.find(({ chunk }) => chunk === 'pokemon-info')!
+
 const disableLazyRender = /prerender|googlebot/i.test(navigator.userAgent)
 
 const Pokemon: FC<{}> = () => {
-  const { data: pokemon } = useFetch(data[0].url, {
+  const { data: pokemon } = useFetch(pokemonData.url, {
     uuid: 'pokemon',
     immutable: true
   })
 
   useEffect(() => {
-    preconnect(pokemonInfoData[0].preconnectURL)
+    preconnect(pokemonInfoData.preconnectURL)
   }, [])
 
   return (

@@ -19,7 +19,7 @@ injectGlobal`
     animation: slide-out 0.1s;
 
     @media(${DESKTOP_VIEWPORT}) {
-      animation: fade-out 0.1s;
+      animation: none;
     }
   }
 
@@ -27,7 +27,7 @@ injectGlobal`
     animation: slide-in 0.1s;
 
     @media(${DESKTOP_VIEWPORT}) {
-      animation: fade-in 0.1s;
+      animation: none;
     }
   }
 
