@@ -1,5 +1,5 @@
 import { useRef, FC } from 'react'
-import { useParams, NavLink, NavLinkProps, Params } from 'react-router-dom'
+import { NavLink, NavLinkProps } from 'react-router-dom'
 import { useTransitionNavigate, useMedia } from 'frontend-essentials'
 import { css, cx } from '@emotion/css'
 
@@ -7,9 +7,8 @@ import preload from 'utils/preload'
 import { MOBILE_VIEWPORT } from 'styles/constants'
 
 export type Data = {
-  url: string | ((params: Params) => string)
+  url: string
   crossorigin?: string
-  menuPreload?: boolean
 }
 
 export type NavigationLinkProps = NavLinkProps & {
@@ -31,21 +30,11 @@ const NavigationLink: FC<NavigationLinkProps> = ({
 }) => {
   const ref = useRef<HTMLAnchorElement>(null)
 
-  const params = useParams()
   const navigate = useTransitionNavigate()
 
   const { hoverable } = useMedia({ hoverable: '(hover: hover) and (pointer: fine)' })
 
   const baseURL = to.replace('/*', '')
-
-  const onLinkEvent = (data: Data[]) => {
-    data.forEach(({ url, crossorigin, menuPreload }) => {
-      if (!menuPreload) return
-      if (typeof url === 'function') url = url(params)
-
-      preload({ url, crossorigin })
-    })
-  }
 
   const onLinkClick = event => {
     event.preventDefault()
@@ -60,7 +49,9 @@ const NavigationLink: FC<NavigationLinkProps> = ({
       to={baseURL}
       end
       onClick={onLinkClick}
-      onMouseEnter={hoverable && data ? () => onLinkEvent(data) : undefined}
+      onMouseEnter={() => {
+        hoverable ? data?.forEach(({ url, crossorigin }) => preload({ url, crossorigin })) : undefined
+      }}
       {...otherProps}
     >
       {children}

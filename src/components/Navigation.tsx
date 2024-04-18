@@ -41,7 +41,12 @@ const Navigation = () => {
       pagesManifest
         .filter(({ menuItem = true }) => menuItem)
         .map(({ path, title, data }) => (
-          <NavigationLink key={path} to={path} data={data} onClick={() => setDrawerOpen(false)}>
+          <NavigationLink
+            key={path}
+            to={path}
+            data={data?.filter(({ menuPreload }) => menuPreload)}
+            onClick={() => setDrawerOpen(false)}
+          >
             {title}
           </NavigationLink>
         )),
