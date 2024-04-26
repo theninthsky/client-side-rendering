@@ -89,12 +89,13 @@ export default (_, { mode }) => {
     },
     plugins: [
       ...(production
-        ? [
-            new InjectManifest({
-              include: [/fonts\//, /scripts\/.+\.js$/],
-              swSrc: path.join(__dirname, 'public', 'service-worker.js')
-            })
-          ]
+        ? ['prefetch', 'swr'].map(
+            swType =>
+              new InjectManifest({
+                include: [/fonts\//, /scripts\/.+\.js$/],
+                swSrc: path.join(__dirname, 'public', `${swType}-service-worker.js`)
+              })
+          )
         : [
             new ReactRefreshPlugin(),
             new ForkTsCheckerPlugin(),

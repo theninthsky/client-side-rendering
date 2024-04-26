@@ -1,12 +1,20 @@
 /* eslint-disable no-console */
 
+const SERVICE_WORKERS = {
+  prefetch: '/prefetch-service-worker.js',
+  swr: '/swr-service-worker.js'
+}
 const ACTIVE_REVALIDATION_INTERVAL = 10 * 60
 const shouldRegisterServiceWorker = process.env.NODE_ENV !== 'development' && navigator.userAgent !== 'Prerender'
+const appIsInstalled =
+  window.matchMedia('(display-mode: standalone)').matches || document.referrer.includes('android-app://')
 
 const register = () => {
   window.addEventListener('load', async () => {
+    const serviceWorkerType = appIsInstalled ? 'swr' : 'prefetch'
+
     try {
-      const registration = await navigator.serviceWorker.register('/service-worker.js')
+      const registration = await navigator.serviceWorker.register(SERVICE_WORKERS[serviceWorkerType])
 
       console.log('Service worker registered!')
 

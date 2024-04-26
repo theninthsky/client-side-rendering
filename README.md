@@ -580,7 +580,7 @@ plugins: [
     ? [
         new InjectManifest({
           include: [/fonts\//, /scripts\/.+\.js$/],
-          swSrc: path.join(__dirname, 'public', 'service-worker.js')
+          swSrc: path.join(__dirname, 'public', 'prefetch-service-worker.js')
         })
       ]
     : [])
@@ -593,7 +593,7 @@ _[service-worker-registration.ts](src/utils/service-worker-registration.ts)_
 const register = () => {
   window.addEventListener('load', async () => {
     try {
-      await navigator.serviceWorker.register('/service-worker.js')
+      await navigator.serviceWorker.register('/prefetch-service-worker.js')
 
       console.log('Service worker registered!')
     } catch (err) {
@@ -620,7 +620,7 @@ if ('serviceWorker' in navigator) {
 }
 ```
 
-_[service-worker.js](public/service-worker.js)_
+_[prefetch-service-worker.js](public/prefetch-service-worker.js)_
 
 ```js
 self.addEventListener('install', event => {
@@ -794,8 +794,8 @@ _[service-worker-registration.ts](src/utils/service-worker-registration.ts)_
 const register = () => {
   window.addEventListener('load', async () => {
     try {
--     await navigator.serviceWorker.register('/service-worker.js')
-+     const registration = await navigator.serviceWorker.register('/service-worker.js')
+-     await navigator.serviceWorker.register('/prefetch-service-worker.js')
++     const registration = await navigator.serviceWorker.register('/prefetch-service-worker.js')
 
       console.log('Service worker registered!')
 
@@ -937,7 +937,23 @@ Our SWR service worker needs to cache the HTML document and all of the fonts and
 <br>
 In addition, it needs to serve these cached assets right when the page loads and then send a request to the CDN, fetch all new assets (if exist) and finally replace the stale cached assets with the new ones.
 
-_[service-worker.js](public/service-worker.js)_
+_[webpack.config.js](webpack.config.js)_
+
+```diff
+plugins: [
+  ...(production
+    ? [
+        new InjectManifest({
+          include: [/fonts\//, /scripts\/.+\.js$/],
+-         swSrc: path.join(__dirname, 'public', 'prefetch-service-worker.js')
++         swSrc: path.join(__dirname, 'public', 'swr-service-worker.js')
+        })
+      ]
+    : [])
+]
+```
+
+_[swr-service-worker.js](public/swr-service-worker.js)_
 
 ```js
 const CACHE_NAME = 'my-csr-app'
@@ -1000,11 +1016,63 @@ https://www.microsoft.com/en-us/edge/features/sleeping-tabs-at-work
 
 This gives our app more chance to be as up-to-date as possible.
 
-The results exceed all expectations:
+While it is highly recommended to always use SWR for the app shell, some would prefer to avoid it and always serve users with the most up-to-date static assets.
+<br>
+In such cases, we need to apply the SWR service worker only to installed apps (PWAs):
+
+_[webpack.config.js](webpack.config.js)_
+
+```js
+plugins: [
+  ...(production
+    ? ['prefetch', 'swr'].map(
+        swType =>
+          new InjectManifest({
+            include: [/fonts\//, /scripts\/.+\.js$/],
+            swSrc: path.join(__dirname, 'public', `${swType}-service-worker.js`)
+          })
+      )
+    : [])
+]
+```
+
+_[service-worker-registration.ts](src/utils/service-worker-registration.ts)_
+
+```js
+const SERVICE_WORKERS = {
+  prefetch: '/prefetch-service-worker.js',
+  swr: '/swr-service-worker.js'
+}
+const ACTIVE_REVALIDATION_INTERVAL = 10 * 60
+const appIsInstalled =
+  window.matchMedia('(display-mode: standalone)').matches || document.referrer.includes('android-app://')
+
+const register = () => {
+  window.addEventListener('load', async () => {
+    const serviceWorkerType = appIsInstalled ? 'swr' : 'prefetch'
+
+    try {
+      const registration = await navigator.serviceWorker.register(SERVICE_WORKERS[serviceWorkerType])
+
+      console.log('Service worker registered!')
+
+      setInterval(() => registration.update(), ACTIVE_REVALIDATION_INTERVAL * 1000)
+    } catch (err) {
+      console.error(err)
+    }
+  })
+}
+
+.
+.
+.
+```
+
+When using SWR, the loading speed of the app exceeds all expectations:
 
 ![SWR Disk Cache](images/swr-disk-cache.png)
 
-These metrics are coming from a 6-year-old `Intel i3-8130U` laptop when the browser is using the disk cache (not the memory cache which is a lot faster), and are completely independent of network speed and status.
+These metrics are coming from a 2018 `Intel i3-8130U` laptop when the browser is using the disk cache (not the memory cache which is a lot faster), and are completely independent of network speed or status.
 
 It is obvious that nothing can match SWR in terms of performance.
 
