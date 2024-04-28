@@ -1,8 +1,8 @@
 <h1 align="center">Client-side Rendering</h1>
 
-This project is a case study of CSR, it aims to explore the potential of client-side rendered apps compared to server-side rendering.
+This project is a case study of CSR, it explores the potential of client-side rendered apps compared to server-side rendering.
 
-The conclusions of this project led to the creation of the _[ultimate-csr-boilerplate](https://github.com/theninthsky/ultimate-csr-boilerplate)_.
+To use this project as a production-ready boilerplate, refer to the _[BOILTERPLATE.md](BOILERPLATE.md)_ instruction file.
 
 ### Legend
 
@@ -60,7 +60,7 @@ The conclusions of this project led to the creation of the _[ultimate-csr-boiler
 <br>
 **Static Site Generation** is the practice of pre-generating HTML pages as static assets to be sent and displayed by the browser.
 
-Contrary to popular belief, the SSR process of modern frameworks such as React, Angular, Vue and Svelte, makes the app render twice: one time on the server and another time on the browser (this is called "hydration"). Without the latter the app will not be interactive and would just act as a "lifeless" web page.
+Contrary to popular belief, the SSR process of modern frameworks such as React, Angular, Vue and Svelte, makes the app render twice: one time on the server and another time on the browser (this is called "hydration"). Without the latter, the app will not be interactive and would just act as a "lifeless" web page.
 <br>
 The "hydration" process is not significantly faster than a normal render.
 <br>
