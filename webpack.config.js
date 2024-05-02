@@ -21,8 +21,8 @@ export default (_, { mode }) => {
       port: 3000,
       devMiddleware: { stats: 'errors-warnings' }
     },
-    cache: { type: 'filesystem' },
-    experiments: { lazyCompilation: !production },
+    cache: { type: 'filesystem', memoryCacheUnaffected: true },
+    experiments: { cacheUnaffected: true, lazyCompilation: !production },
     devtool: production ? 'source-map' : 'inline-source-map',
     resolve: {
       modules: [path.resolve(__dirname, 'src'), 'node_modules'],
