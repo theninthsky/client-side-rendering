@@ -10,12 +10,32 @@ npm i
 npm run boilerplatify
 ```
 
-Fully abiding by this boilerplate's requirements grants you the following features:
+## Adjustments
+
+### Sitemap
+
+To automatically generate a sitemap, replace the `https://example.com` hostname in _[create-sitemap.js](scripts/create-sitemap.js)_ with your own hostname.
+<br>
+To handle dynamic routes, modify the script to first fetch the dynamic routes and then add them to the `paths` array.
+
+Here is an example: https://github.com/theninthsky/client-side-rendering/blob/main/scripts/create-sitemap.js
+
+### Static Assets
+
+Static assets can be fetched and stored in the CDN during the build process, allowing them to be served very quickly.
+<br>
+The asset generation process should take place in _[fetch-static.js](scripts/fetch-static.js)_.
+
+Here is an example that fetches static data a stores it under `public/json`: https://github.com/theninthsky/client-side-rendering/blob/main/scripts/fetch-static.js
+
+## Features
+
+Abiding by this boilerplate's requirements grants you the following features:
 
 - [Extreme vendors splitting for better cache persistence](https://github.com/theninthsky/client-side-rendering#caching)
 - [Code-splitting](https://github.com/theninthsky/client-side-rendering#code-splitting)
 - [Preloading of current page scripts](https://github.com/theninthsky/client-side-rendering#preloading-async-pages)
-- [Prefetching of all scripts for instant navigation](https://github.com/theninthsky/client-side-rendering#prefetching-async-pages)
+- [Prefetching of all scripts for instant navigations](https://github.com/theninthsky/client-side-rendering#prefetching-async-pages)
 - [Preloading of data](https://github.com/theninthsky/client-side-rendering#preloading-data)
 - [Prerendering for perfect SEO](https://github.com/theninthsky/client-side-rendering#prerendering)
 
