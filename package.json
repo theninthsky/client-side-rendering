@@ -12,7 +12,8 @@
     "build": "webpack --mode production",
     "serve": "serve build",
     "fetch-static": "node scripts/fetch-static",
-    "create-sitemap": "node scripts/create-sitemap"
+    "create-sitemap": "node scripts/create-sitemap",
+    "boilerplatify": "node .boilerplate/boilerplatify"
   },
   "dependencies": {
     "@emotion/css": "^11.9.0",

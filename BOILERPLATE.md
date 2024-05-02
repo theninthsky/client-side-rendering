@@ -5,25 +5,9 @@ This project can be easily turned into a production-ready boilerplate by followi
 ## Installation
 
 ```sh
-git clone https://github.com/theninthsky/ultimate-csr-boilerplate.git
+git clone https://github.com/theninthsky/client-side-rendering.git
 npm i
-```
-
-## Deleting Files
-
-The project contains many pages for demonstration purposes. The following files can be safely removed:
-
-```
-components/*
-hooks/*
-images/*
-src/pages/Comparison.tsx
-src/pages/LoremIpsum.tsx
-src/pages/Pokemon.tsx
-src/pages/PokemonInfo.tsx
-src/pages/WebVitals.tsx
-utils/preconnect.ts
-utils/preload.ts
+npm run boilerplatify
 ```
 
 Fully abiding by this boilerplate's requirements grants you the following features:
@@ -34,8 +18,6 @@ Fully abiding by this boilerplate's requirements grants you the following featur
 - [Prefetching of all scripts for instant navigation](https://github.com/theninthsky/client-side-rendering#prefetching-async-pages)
 - [Preloading of data](https://github.com/theninthsky/client-side-rendering#preloading-data)
 - [Prerendering for perfect SEO](https://github.com/theninthsky/client-side-rendering#prerendering)
-
-To watch all of these features in action, visit https://client-side-rendering.pages.dev.
 
 ## Requirements
 

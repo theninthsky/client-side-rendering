@@ -1248,7 +1248,7 @@ https://www.bing.com/search?q=site%3Ahttps%3A%2F%2Fclient-side-rendering.pages.d
 
 _Note that when using CSS-in-JS, we can [disable the speedy optimization](src/components/PrerenderProvider.tsx) during prerendering in order to have our styles omitted to the DOM._
 <br>
-_It is not recommended though, since it will make no difference to web crawlers and will only slightly slow down our prerendering process._
+_It is not recommended though, since it will make no difference to web crawlers and will slightly slow down our prerendering process._
 
 ### Social Media Share Previews
 
