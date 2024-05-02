@@ -51,9 +51,9 @@ const listData = {
         )
       },
       {
-        value: 'Is not affected by load',
+        value: 'Is completely free to host',
         description:
-          'Since static apps can be served entirely from CDNs that have an enormous amount of throughput (such as Cloudflare), the amount of concurrent requests to our app has no effect on how fast each one will be satisfied'
+          'Some CDN vendors (such as Cloudflare Pages) host static apps without requiring any kind of fee and with no limits at all (unless the app has a very heavy traffic)'
       },
       {
         value: 'Uses minimal data',
@@ -119,7 +119,7 @@ const listData = {
             <a href="https://github.com/theninthsky/client-side-rendering#prerendering" target="_blank">
               prerendering server
             </a>{' '}
-            has to be set up to serve all crawlers
+            has to be set up to serve web crawlers
           </p>
         )
       }
@@ -135,9 +135,9 @@ const listData = {
           'Pages initially contain all of their data, so all bots and web crawlers will be able to properly crawl and index them'
       },
       {
-        value: 'Potentially loads fast',
+        value: 'Potentially fast initial load',
         description:
-          'Pages have the potential to load quickly (provided their data fetches swiftly and the CSS is inlined in the document), since their visibility is independent of JS.\nIn such cases, the FCP will be generally low'
+          'Pages have the potential to load quickly (provided their data takes short time to fetch), since their visibility is independent of JS.\nIn such cases, the FCP will be generally low'
       }
     ],
     cons: [
@@ -185,16 +185,24 @@ const listData = {
         )
       },
       {
-        value: 'Cannot prefetch pages',
+        value: 'Mostly cannot prefetch pages',
         description:
-          "Since pages have embedded data, it's impossible to prefetch or cache all pages without applying excessive load on the rendering and API servers"
+          "Since pages have embedded data, it's impossible to prefetch or cache all pages without applying unnecessary load on the API servers"
+      },
+      {
+        value: 'Cannot be a real PWA',
+        description:
+          'As an extension to the previews con, even if we have very few pages, caching them for offline use will make them show potentially stale data (since no fetch occurs in them, it only occurs in the server)'
       },
       {
         value: 'Is more complicated to develop',
         description: (
           <p>
-            Since the code runs both on the server and on the client, it is crucial to verify which object are usable on
-            each plafrom (see{' '}
+            SSR is so complicated to implement that it requires the usage of a meta-framework (such as Next.js) to be
+            accessible to most developers.
+            <br />
+            Even when using a meta-framework, since the code runs both on the server and on the client, it is crucial to
+            verify which object are usable on each plafrom (see{' '}
             <em>
               <a
                 href="https://stackoverflow.com/questions/55151041/window-is-not-defined-in-next-js-react-app"
@@ -208,29 +216,6 @@ const listData = {
             In addition, some tools are not optimized for SSR or require some modification in order to work
           </p>
         )
-      },
-      {
-        value: 'Might be greatly impacted by load',
-        description: (
-          <p>
-            Since rendering is serial (
-            <em>
-              <a
-                href="https://web.dev/rendering-on-the-web/#server-side-rendering-versus-static-rendering"
-                target="_blank"
-              >
-                renderToString
-              </a>
-            </em>
-            ), if the app is not served via serverless functions, the rendering of concurrent requests will not be
-            handled in parallel
-          </p>
-        )
-      },
-      {
-        value: 'Cannot be a real PWA',
-        description:
-          'As an extension to the previews con, even if we have very few pages, caching them for offline use will make them show potentially stale data (since no fetch occurs in them, it only occurs in the server)'
       },
       {
         value: 'Uses more data',
@@ -383,10 +368,11 @@ const listData = {
 }
 
 const tableNotes = [
-  'Ratings assume deployment on Cloudflare network (with Workers)',
+  'Ratings consider visibility + intractability (for visibility only and on "Slow Network", all non-CSR ratings should be at least B)',
+  'CSR and SSG are assumed to be deployed on a CDN (such as Cloudflare)',
+  'SSR and SSSR are assumed to be deployed on a serverless environment (such as Vercel cloud)',
   'Ratings are relative to what is expected from each network speed and each category (repeated loads are expected to be faster than the initial load. Navigations are expected to be the fastest)',
-  'Ratings consider visibility + intractability (for visibility only and on Slow Network, all non-CSR ratings should be at least B)',
-  'Ratings assume good implementation (low bundle size; route-based code-splitting; prefetch of all scripts)',
+  'Ratings assume good implementation (low bundle size; route-based code-splitting; prefetching of all scripts and stylesheets)',
   'Ratings assume the usage of React (48kb gzipped)',
   'Ratings exclude data fetching (except for SSR which has embedded data)',
   'SSR ratings heavily depend on server caching, query times and DB server proximity (hence "or lower")',
@@ -416,7 +402,7 @@ const slowNetworkData = [
     repeatedLoads: 'A or lower (full cache), B or lower (partial cache)',
     navigations: 'A or lower'
   },
-  { type: 'SSSR (RSC)', initialLoad: 'B', repeatedLoads: 'A (full cache), B (partial cache)', navigations: 'A' }
+  { type: 'SSSR (RSC)', initialLoad: 'C', repeatedLoads: 'A (full cache), B (partial cache)', navigations: 'A' }
 ]
 
 const fastNetworkData = [
