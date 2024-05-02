@@ -1,10 +1,5 @@
-declare module 'react/jsx-runtime' {
-  export default any
-}
-
-declare module '*.svg' {
-  export default any
-}
+declare module '*.css'
+declare module '*.svg'
 
 type PageData = {
   url: string | ((params: { [x: string]: string }) => string) | any
