@@ -1337,19 +1337,11 @@ We can manually submit our sitemap to _[Google Search Console](https://search.go
 
 An in-depth comparison of all rendering methods can be found here: https://client-side-rendering.pages.dev/comparison
 
-## SSR Disadvantages
-
-Here's a list of additional (minor) SSR drawbacks to consider:
-
-- SSR apps are always heavier than CSR apps, since every page is composed of both a fully-constructed HTML document and its scripts (used for hydration).
-- When _[hydration fails](https://stackoverflow.com/questions/71706064/react-18-hydration-failed-because-the-initial-ui-does-not-match-what-was-render)_, the app will render twice in the browser, increasing the _[TTI](https://web.dev/tti)_ and _[TBT](https://web.dev/tbt)_ of the page.
-- Since all images are initially included in the document, scripts and images will compete for bandwidth, causing delayed interactivity on slow networks.
-
 ## Why Not SSG?
 
-We have seen the advantages of static files: they are cacheable; a _304 Not Modified_ status can be returned for them; they can be served from a nearby CDN and serving them doesn't require a Node.js server.
+We have seen the advantages of static files: they are cacheable; they can be served from a nearby CDN without requiring a server.
 
-This may lead us to believe that SSG combines both CSR and SSR advantages: we can make our app visually appear very fast (_[FCP](https://web.dev/fcp)_) and it will even be interactive very quickly.
+This may lead us to believe that SSG combines both CSR and SSR advantages: we can make our app visually appear very fast (_[FCP](https://web.dev/fcp)_) and independently from our API server's response times.
 
 However, in reality, SSG has one major limitation:
 <br>
@@ -1369,15 +1361,15 @@ This is caused by the fact that there are `65536 (2^16)` possible filter combina
 <br>
 So they only generate a single `guides.html` file which contains all of the data of all pages, but this static file doesn't know which filters are applied until JS is loaded, so we see this layout shift.
 
-It is important to note that even when using _[Incremental Static Regeneration](https://nextjs.org/docs/pages/building-your-application/data-fetching/incremental-static-regeneration)_, users will have to wait for server response when visiting uncached pages (just like in SSR).
+It is important to note that even when using _[Incremental Static Regeneration](https://nextjs.org/docs/pages/building-your-application/data-fetching/incremental-static-regeneration)_, users will have to wait for server response when visiting pages that are yet to be cached on the server (just like in SSR).
 
 Another example for this is JS animations - they would first appear static and start animating only when JS is loaded.
 
 There are various examples of how this delayed functionality negatively impacts the user experience, like the way some websites only show the navigation bar after JS has been loaded (since they cannot access the Local Storage to check if it has a user info entry).
 
 Another issue, which can be especially critical for E-commere websites, is that SSG pages might reflect outdated data (a product's price or availability for example).
-
-However, if we insist on using SSG (for some unclear reason), we can simply use the _[Prerender SPA Plugin](https://github.com/chrisvfritz/prerender-spa-plugin#what-is-prerendering)_ to generate SSG pages from our CSR app.
+<br>
+That is the reason that no popular E-commerce website uses SSG.
 
 ## The Cost of Hydration
 
@@ -1408,7 +1400,7 @@ It is impossible for this issue to occur in CSR apps, since the moment they rend
 
 # Conclusion
 
-We saw that client-side rendering performance is on par and sometimes even better than SSR in terms of loading times.
+We saw that client-side rendering performance is on par and sometimes even better than SSR in terms of initial loading times (and far surpasses it in navigation times).
 <br>
 We also learned that Googlebot can easily index client-side rendered apps, and that we can set up a prerender server the serve all other bots and crawlers.
 <br>
@@ -1418,10 +1410,10 @@ These facts lead to the conclusion that there is no particular reason to use SSR
 
 ## What Might Change in the Future
 
-As time passes, [connection speed is getting faster](https://worldpopulationreview.com/country-rankings/internet-speeds-by-country) and end-user devices get stronger. So the performance differences between all possible website rendering methods are guarenteed to be mitigated even further.
+As time passes, [connection speed is getting faster](https://worldpopulationreview.com/country-rankings/internet-speeds-by-country) and end-user devices get stronger. So the performance differences between all possible website rendering methods are guarenteed to be mitigated even further (except for SSR which depends on the API server response times).
 
 There is the new SSR method called _Streaming SSR_ (with Server Components) and frameworks (such as Qwik) which are able to reduce the amount of JS that has to be downloaded initially.
 <br>
-However, there are also better CSR frameworks such as Svelte and Solid.js which have very small bundle size and are very optimized for rendering performance (thus greatly improving the FCP on slow networks).
+However, there are also better CSR frameworks such as Svelte and Solid.js which have very small bundle size and are much faster than React (thus greatly improving the FCP on slow networks).
 
 Nevertheless, it's important to note that nothing makes pages load faster than the SWR approach, which is only possible through client-side rendering.

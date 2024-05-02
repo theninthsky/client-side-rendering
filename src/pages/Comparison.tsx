@@ -174,13 +174,16 @@ const listData = {
         value: 'Delayed interactivity',
         description: (
           <p>
-            Until all JS downloads and executes (
+            Until all JS is downloaded and executed (
             <em>
               <a href="https://www.builder.io/blog/hydration-is-pure-overhead" target="_blank">
                 hydration
               </a>
             </em>
-            ), the page remians noninteractive (meaning it will not react to any user event that involves JS)
+            ), the page remians noninteractive (meaning it will not react to any user events that involve JS).
+            <br />
+            Moreover, since images are included in the HTML document, they will compete with uncached scripts for
+            bandwith, delaying interactivity even further
           </p>
         )
       },
