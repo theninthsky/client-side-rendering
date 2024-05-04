@@ -195,6 +195,8 @@ More info about the default configurations (such as the split threshold size) ca
 <br>
 https://webpack.js.org/plugins/split-chunks-plugin/#defaults
 
+This approach will also ensure a much better _[code caching](https://v8.dev/blog/code-caching-for-devs)_ persistence.
+
 ### Code Splitting
 
 A lot of the features we write end up being used only in a few of our pages, so we would like them to be loaded only when the user visits the page they are being used in.
@@ -1246,9 +1248,7 @@ https://www.bing.com/search?q=site%3Ahttps%3A%2F%2Fclient-side-rendering.pages.d
 
 ![Bing Search Results](images/bing-search-results.png)
 
-_Note that when using CSS-in-JS, we can [disable the speedy optimization](src/components/PrerenderProvider.tsx) during prerendering in order to have our styles omitted to the DOM._
-<br>
-_It is not recommended though, since it will make no difference to web crawlers and will slightly slow down our prerendering process._
+_Note that when using CSS-in-JS, we can [disable the speedy optimization](src/utils/disable-speedy.ts) during prerendering if we want to have our styles omitted to the DOM._
 
 ### Social Media Share Previews
 
