@@ -35,25 +35,15 @@ const BOT_AGENTS = [
 const fetchPrerendered = async request => {
   const { url, headers } = request
   const headersToSend = new Headers(headers)
-
-  /* Custom Server */
   const prerenderUrl = new URL(`https://renderprime.theninthsky.workers.dev?url=${url}`)
-  /*************/
-
-  /* Prerender.io */
-  // const prerenderUrl = `https://service.prerender.io/${url}`
-  //
-  // headersToSend.set('X-Prerender-Token', '8vGsiwq4BB5bsp2mXVfq')
-  /****************/
-
   const prerenderRequest = new Request(prerenderUrl, {
     headers: headersToSend,
     redirect: 'manual'
   })
 
-  const { body, ...rest } = await fetch(prerenderRequest)
+  const { body, headers: responseHeaders } = await fetch(prerenderRequest)
 
-  return new Response(body, rest)
+  return new Response(body, { headers: responseHeaders })
 }
 
 export default {
