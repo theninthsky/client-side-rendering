@@ -39,6 +39,22 @@ const listData = {
           'Since the entire app (shell) is downloaded, page transitions require no additional assets from the CDN since those are immediately served from the browser cache.\nThe data itself does require additional requsts, however these have no effect on how fast the page transitions.\nTransitions will even work when there is no internet connection at all'
       },
       {
+        value: 'Can reuse data during navigations',
+        description: (
+          <p>
+            Since rendering pages does not depend on a server response, data from main pages (e.g. "Posts") can be
+            passed to sub-pages (e.g. "Post") immediately, allowing the transitioning page to display some of the passed
+            shared data (or even all of it), long before the current page's data has been fetched.
+            <br />
+            An example for this can be found in the{' '}
+            <a href="https://client-side-rendering.pages.dev/pokemon" target="_blank">
+              Pokémon
+            </a>{' '}
+            page, where a chosen Pokémon immediately shows up with its name and index once selected.
+          </p>
+        )
+      },
+      {
         value: 'Unmatched performance with SWR',
         description: (
           <p>
@@ -198,6 +214,11 @@ const listData = {
           "Since pages have embedded data, it's impossible to prefetch or cache all pages without applying unnecessary load on the API servers"
       },
       {
+        value: 'Cannot reuse data during navigations',
+        description:
+          'Since rendering pages depends on a server response, data from main pages (e.g. "Posts") cannot be passed to sub-pages (e.g. "Post") as the response contains all the HTML of the transitioning page'
+      },
+      {
         value: 'Cannot be a real PWA',
         description:
           'As an extension to the previews con, even if we have very few pages, caching them for offline use will make them show potentially stale data, since no fetch occurs in them (it only occurs in the server)'
@@ -302,7 +323,7 @@ const listData = {
           'Since all pages are pre-generated (or incrementaly generated), they have to be stored in the CDN, which may lead to extra fees'
       },
       {
-        value: 'Same SSR cons as #3, #4, #6 and #8',
+        value: 'Same SSR cons as #3, #4, #7, #8 and #9',
         description: 'While some pages can be prefetched, surely not all pages in large websites can be'
       }
     ]

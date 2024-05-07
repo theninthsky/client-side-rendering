@@ -174,7 +174,7 @@ Although this is a substantial improvement, what would happen if we updated a ve
 <br>
 In such case, the entire vendors chunk's cache will invalidate.
 
-So, in order to make this even better, we will split **each dependency** to its own hashed chunk:
+So, in order to improve it even further, we will split **each dependency** to its own hashed chunk:
 
 _[webpack.config.js](webpack.config.js)_
 
@@ -1188,7 +1188,7 @@ We have two options when it comes to prerendering:
 1. We can deploy our own prerender server using _[Prerender](https://github.com/prerender/prerender)_ or my own _[Renderprime](https://github.com/theninthsky/renderprime)_ serverless function.
 2. We can use a dedicated service such as _[Prerender.io](https://prerender.io)_ which is very expensive but offers 1000 free prerenders a month.
 
-**Serverless prerendering is the recommended approach**, since it offers 2 million prerenders a month for free on _[GCP](https://cloud.google.com)_.
+**Serverless prerendering is the recommended approach**, since it can be very cheap (and sometimes even free) on _[GCP](https://cloud.google.com)_.
 
 Then we redirect web crawlers, identified by their `User-Agent` header string, using a Cloudflare worker (in the following example we redirect to our prerenderer):
 
