@@ -3,14 +3,14 @@ export default [
     chunk: 'home',
     path: '/',
     title: 'Home',
-    description: 'This page demonstrates a large amount of components that are rendered on the screen.'
+    description: 'Demonstrated here is a simple page which all of its assets are fetched in parallel.'
   },
   {
     chunk: 'lorem-ipsum',
     path: '/lorem-ipsum',
     title: 'Lorem Ipsum',
     description:
-      'This page demonstrates a large amount of static text that is pre-generated and fetched in parallel with other assets.',
+      "Demonstrated here is a large amount of static data that is pre-generated and fetched in parallel with all of the page's assets.",
     data: [
       {
         url: '/json/lorem-ipsum.json',
@@ -22,7 +22,8 @@ export default [
     chunk: 'pokemon',
     path: '/pokemon',
     title: 'Pokémon',
-    description: 'This page demonstrates dynamic data that is fetched in parallel with other assets.',
+    description:
+      "Demonstrated here is dynamic data that is fetched in parallel with all of the page's assets and passed directly to its sub-pages.",
     data: [
       {
         url: 'https://pokeapi.co/api/v2/pokemon?limit=10000',
@@ -34,7 +35,7 @@ export default [
   {
     chunk: 'pokemon-info',
     path: '/pokemon/:name',
-    description: 'This page demonstrates a dynamic path data that is fetched in parallel with other assets.',
+    description: "Demonstrated here is dynamic path data that is fetched in parallel with all of the page's assets.",
     data: [
       {
         url: ({ name }) => `https://pokeapi.co/api/v2/pokemon/${name}`,

@@ -1,13 +1,15 @@
 import type { FC } from 'react'
 import { css, cx } from '@emotion/css'
 import { Meta } from 'frontend-essentials'
-import { Button, Switch, TextField, Select, MenuItem, Slider, Rating } from '@mui/material'
+import { Button, Switch, TextField, Select, MenuItem, Slider, Rating, Autocomplete } from '@mui/material'
 
 import pagesManifest from 'pages-manifest'
 import Title from 'components/common/Title'
 import Info from 'components/common/Info'
 
 const { title, description } = pagesManifest.find(({ chunk }) => chunk === 'home')!
+
+const autocompleteOptions = [{ label: 'Option 1' }, { label: 'Option 2' }, { label: 'Option 3' }]
 
 const Home: FC<{}> = () => {
   return (
@@ -29,13 +31,20 @@ const Home: FC<{}> = () => {
 
         <Switch className={cx(style.input, style.switch)} defaultChecked />
 
-        <TextField className={style.input} variant="outlined" />
+        <TextField className={style.input} variant="outlined" label="TextField" />
 
-        <Select className={style.input} value={10}>
-          <MenuItem value={10}>Ten</MenuItem>
-          <MenuItem value={20}>Twenty</MenuItem>
-          <MenuItem value={30}>Thirty</MenuItem>
+        <Select className={style.input} value={1}>
+          <MenuItem value={1}>One</MenuItem>
+          <MenuItem value={2}>Two</MenuItem>
+          <MenuItem value={3}>Three</MenuItem>
         </Select>
+
+        <Autocomplete
+          className={style.input}
+          options={autocompleteOptions}
+          sx={{ width: 220 }}
+          renderInput={params => <TextField {...params} label="Label" />}
+        />
 
         <Slider className={cx(style.input, style.slider)} />
 

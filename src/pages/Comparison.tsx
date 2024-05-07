@@ -31,12 +31,12 @@ const listData = {
       {
         value: 'Loads quickly once cached',
         description:
-          'Since all assets static, they can be cached by the browser and load quickly.\nOnly the HTML request goes out to the server'
+          'Since all assets are static, they can be cached by the browser and load instantaneously.\nOnly the small HTML has to be download'
       },
       {
         value: 'Page transitions are instantaneous',
         description:
-          'Since the entire app (shell) is downloaded, page transitions require no additional assets from the CDN since those are immediately served from the browser cache.\nThe data itself does require additional requsts, however these have no effect on how fast the page will transition.\nTransitions will even work when there is no internet connection at all'
+          'Since the entire app (shell) is downloaded, page transitions require no additional assets from the CDN since those are immediately served from the browser cache.\nThe data itself does require additional requsts, however these have no effect on how fast the page transitions.\nTransitions will even work when there is no internet connection at all'
       },
       {
         value: 'Unmatched performance with SWR',
@@ -46,7 +46,7 @@ const listData = {
             <a href="https://github.com/theninthsky/client-side-rendering#the-swr-approach" target="_blank">
               SWR
             </a>{' '}
-            for the app shell, the app loads instantly
+            for the app shell, the app always loads instantly
           </p>
         )
       },
@@ -59,15 +59,16 @@ const listData = {
         value: 'Uses minimal data',
         description: (
           <p>
-            When loading the app with a fully valid cache, the document will get a <em>304 Not Modified</em> status code
-            from the CDN, so practically no additional data will be used in order to show the app (shell)
+            When loading the app with a fully valid cache, only the document is being fetched from the CDN (and most
+            often it will receive a <em>304 Not Modified</em> status code), so practically no additional data will be
+            used in order to show the app (shell)
           </p>
         )
       },
       {
         value: 'Is very simple to develop',
         description:
-          'Requires no conceptual separation between code that runs on the server to code that runs on the client.\nHas no compatibility issues with third-party packages nor the need to tweak those in order for them to work properly'
+          'Requires no separation between code that runs on the server to code that runs on the client.\nHas no compatibility issues with third-party packages nor the need to tweak those in order for them to work properly'
       },
       {
         value: 'Requires no dedicated server',
@@ -93,7 +94,7 @@ const listData = {
       {
         value: 'Load time is suboptimal upon cache invalidation',
         description:
-          'When some of the cache invalidates (as new assets are available), it will need to be redownloaded.\nThis slightly hurts performance'
+          'When some of the cache invalidates (as new assets are available), it will need to be redownloaded.\nThis slightly extends the time it takes for the app to become visible'
       },
       {
         value: 'Delayed data fetching',
@@ -101,7 +102,7 @@ const listData = {
           <p>
             The data is being fetched only when the app is rendered (after JS execution).
             <br />
-            This can be completely overcome by{' '}
+            This can be overcome by{' '}
             <a href="https://github.com/theninthsky/client-side-rendering#preloading-data" target="_blank">
               preloading data
             </a>
@@ -112,8 +113,8 @@ const listData = {
         value: 'Not great for SEO',
         description: (
           <p>
-            The HTML document will contain no data, so SEO is heavily dependant on the ability of web crawlers to render
-            JS (currently only <em>Googlebot</em> can do that).
+            The HTML document contains no data, so SEO is heavily dependant on the ability of web crawlers to render JS
+            (currently only <em>Googlebot</em> can do that).
             <br />
             Thus, a{' '}
             <a href="https://github.com/theninthsky/client-side-rendering#prerendering" target="_blank">
@@ -137,19 +138,19 @@ const listData = {
       {
         value: 'Potentially fast initial load',
         description:
-          'Pages have the potential to load quickly (provided their data takes short time to fetch), since their visibility is independent of JS.\nIn such cases, the FCP will be generally low'
+          'Pages have the potential to load quickly (provided their data takes very short time to fetch), since their visibility is independent of JS.\nIn such cases, the FCP will be generally low'
       }
     ],
     cons: [
       {
         value: 'Heavily depends on data to render',
         description:
-          'The initial page response time heavily depends on how fast the API server responds with the data.\nThis means that page visibility is strongly coupled with both proximity to the server and query time, as users will see absolutely nothing until the page fully renders on the server and then sent to them'
+          'The initial page response time heavily depends on how fast the API server responds with the data.\nThis means that page visibility is strongly coupled with both proximity to the server and query time, as users will see absolutely nothing until the page fully renders on the server and then is sent to them'
       },
       {
         value: 'Slow page transitions',
         description:
-          'Page transitions are slow since they are server-dependant. So a page request is sent to the server for each navigation, and the app has to wait for the server-rendered page before performing the navigation'
+          'Page transitions are slow since they are server-dependant. Meaning a page request is sent to the server for each navigation, and the app has to wait for the server-rendered page before performing the navigation'
       },
       {
         value: 'Inaccurate initial viewport renders',
@@ -162,7 +163,11 @@ const listData = {
             </a>
             .
             <br />
-            This might lead to severe CLS when performing viewport-based rendering (like when using a{' '}
+            This will lead to{' '}
+            <a href="https://web.dev/cls" target="_blank">
+              CLS
+            </a>{' '}
+            when performing viewport-based rendering (like when using a{' '}
             <a href="https://github.com/theninthsky/frontend-essentials/tree/main#media" target="_blank">
               Media
             </a>{' '}
@@ -195,7 +200,7 @@ const listData = {
       {
         value: 'Cannot be a real PWA',
         description:
-          'As an extension to the previews con, even if we have very few pages, caching them for offline use will make them show potentially stale data (since no fetch occurs in them, it only occurs in the server)'
+          'As an extension to the previews con, even if we have very few pages, caching them for offline use will make them show potentially stale data, since no fetch occurs in them (it only occurs in the server)'
       },
       {
         value: 'Is more complicated to develop',
@@ -269,14 +274,15 @@ const listData = {
         description: (
           <p>
             Since the vast majority of modern web apps include constnatly changing (and personalized) data, SSG serves
-            as a poor option for them (in many apps in can be used solely for the <em>About</em> and <em>Login</em>{' '}
-            pages)
+            as a poor option for them (in many apps in can be used solely for pages such as <em>About</em> and{' '}
+            <em>Login</em> pages)
           </p>
         )
       },
       {
         value: 'Will potentially show stale data',
-        description: 'Many pregenerated pages have to be updated very frequently or they will show stale data'
+        description:
+          'Many pre-generated pages have to be updated very frequently or else the data they show will be stale'
       },
       {
         value: 'Prone to layout shifts',
@@ -291,12 +297,12 @@ const listData = {
         )
       },
       {
-        value: 'Pages have to be stored in the CDN',
+        value: 'All pages have to be stored in the CDN',
         description:
           'Since all pages are pre-generated (or incrementaly generated), they have to be stored in the CDN, which may lead to extra fees'
       },
       {
-        value: 'Same SSR cons as #3, #4 and #8',
+        value: 'Same SSR cons as #3, #4, #6 and #8',
         description: 'While some pages can be prefetched, surely not all pages in large websites can be'
       }
     ]
@@ -319,7 +325,8 @@ const listData = {
         value: '"Zero Bundle Size"',
         description: (
           <p>
-            Server components will not send any JS to the browser.{' '}
+            Server components' JS will not be sent to the browser (although it will probably be no more than a few KBs,
+            so this is negligible).{' '}
             <a href="https://react.dev/blog/2020/12/21/data-fetching-with-react-server-components" target="_blank">
               Article
             </a>
@@ -380,7 +387,8 @@ const tableNotes = [
   'Ratings exclude data fetching (except for SSR which has embedded data)',
   'SSR ratings heavily depend on server caching, query times and DB server proximity (hence "or lower")',
   "SSG might show stale data while the others won't",
-  'A+ rating means near-instant load. S rating means instant load'
+  'A+ rating means near-instant load. S rating means instant load',
+  '"Slow Network": 1.6Mbps 150ms. "Fast Network": 10Mbps 40ms'
 ]
 
 const columns = [
@@ -449,7 +457,7 @@ const Comparison: FC<{}> = () => {
           </div>
         ))}
 
-        <h2 className={style.tableTitle}>Speed Comparison</h2>
+        <h2 className={style.tableTitle}>Approximated Speed Comparison</h2>
 
         <ul className={style.tableNotes}>
           {tableNotes.map(note => (
