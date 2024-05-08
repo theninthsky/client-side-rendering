@@ -6,7 +6,7 @@ const Tooltip: FC<TooltipProps> = props => {
   const [open, setOpen] = useState(false)
 
   return (
-    <ClickAwayListener onClickAway={() => setTimeout(() => setOpen(false), 1)}>
+    <ClickAwayListener onClickAway={() => setTimeout(() => setOpen(false), 50)}>
       <MuiTooltip
         {...props}
         PopperProps={{ disablePortal: true }}

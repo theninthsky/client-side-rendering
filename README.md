@@ -62,25 +62,23 @@ To use this project as a production-ready boilerplate, refer to the _[BOILTERPLA
 
 Contrary to popular belief, the SSR process of modern frameworks such as React, Angular, Vue and Svelte, makes the app render twice: one time on the server and another time on the browser (this is called "hydration"). Without the latter, the app will not be interactive and would just act as a "lifeless" web page.
 <br>
-The "hydration" process is not significantly faster than a normal render.
+The hydration process doesn't seem to be any faster than a normal render (excluding the painting procedure of course).
 <br>
 Needless to say that SSG apps have to be "hydrated" aswell.
 
 The HTML document is fully constucted in both SSR and SSG, which gives them the following advantages:
 
 1. Web crawlers will be able to crawl their pages out-of-the-box, which is critical for SEO.
-2. When inlining critical CSS, the _[FCP](https://web.dev/fcp)_ of the page will usually be very good (in SSR it heavily depends on the API server response times).
+2. The _[FCP](https://web.dev/fcp)_ of the page is usually very good (in SSR it heavily depends on the API server response times).
 
 On the other hand, CSR apps have the following advantages:
 
-1. The app itself is completely decoupled from the server, which means it loads without being affected by the API server's response times.
-2. The developer experience is seemless, all libraries and packages just work without any special customizations.
-3. Newly introduced framework updates can be used right away, without having to wait for the wrapping SSR framework to implement them.
-4. The learning curve is better, since developers only have to learn the framework instead of both the framework and its SSR wrapper.
+1. The app itself is completely decoupled from the server, which means it loads without being affected by the API server's response times, allowing for seemless page transitions.
+2. The developer experience is seemless, there is no need to pay attention to which pieces of code will run on the server and which will run in the browser.
 
 In this case-study, we will focus on CSR and how to overcome its (seemingly) inherent shortages while leaveraging its strong points.
 
-Our deployed app can be found here: https://client-side-rendering.pages.dev
+Each optimization will be included in the deployed app that can be found here: https://client-side-rendering.pages.dev
 
 # Motivation
 
@@ -92,9 +90,9 @@ _Thing is, despite what everyone might be telling you, you probably don't need S
 
 _~[Prerender SPA Plugin](https://github.com/chrisvfritz/prerender-spa-plugin#what-is-prerendering)_
 
-Over the last few years, server-side rendering has started to (re)gain popularity in the form of frameworks such as _[Next.js](https://nextjs.org)_ and _[Remix](https://remix.run)_ to the point that developers just start working with them as a default, without understanding their limitations and even in apps which do not require SEO at all.
+Over the last few years, server-side rendering has started to (re)gain popularity in the form of frameworks such as _[Next.js](https://nextjs.org)_ and _[Remix](https://remix.run)_ to the point that developers just start working with them as a default, without understanding their limitations and even in apps which do not require SEO at all (like those who have a login requirement).
 <br>
-While SSR has some advantages, these frameworks keep emphasizing how fast they are ("Performance as a default"), implying client-side rendering is slow.
+While SSR has some advantages, these frameworks keep emphasizing how fast they are (_"Performance as a default"_), implying client-side rendering is slow.
 <br>
 In addition, it is a common misconception that perfect SEO can only be achieved by using SSR, and that there's nothing we can do to improve the way search engines crawl CSR apps.
 
@@ -108,7 +106,7 @@ It can also be observed in the decreasing sizes of frameworks in correlation wit
 <br>
 These packages consist the most of a web page’s scripts weight.
 <br>
-And so, when properly utilizing code-splitting, the loading times of a single page should even **decrease** over time.
+And so, when properly utilizing code-splitting, the initial loading time of a single page might even **decrease** over time.
 
 This project implements a basic CSR app with some tweaks such as code-splitting and preloading, with the ambition that as the app scales, the loading time of a single page would mostly remain unaffected.
 The objective is to simulate the number of packages used in a production grade app and try to decrease its loading time as much as possible, mostly by parallelizing requests.
@@ -117,7 +115,7 @@ It is important to note that improving performance should not come at the expens
 
 This case study will cover two major aspects: performance and SEO. We will see how we can achieve top scores in both of them.
 
-_Note that while this project is implemented with React, the vast majority of its tweaks are not tied to any framework and are purely browser-based._
+_Note that while this project is implemented with React, the vast majority of its tweaks are not tied to any framework and are purely based on the bundler and the web browser._
 
 # Performance
 
@@ -187,7 +185,7 @@ _[webpack.config.js](webpack.config.js)_
 + }
 ```
 
-This will create files like `react-dom.[hash].js`, `react-router-dom.[hash].js` etc:
+This will create files like `react-dom.[hash].js` which contain a single big vendor and a `[id].[hash].js` file which contains all the remaining (small) vendors:
 
 ![Network Split Vendors](images/network-split-vendors.png)
 
@@ -201,9 +199,9 @@ This approach will also ensure a much better _[code caching](https://v8.dev/blog
 
 A lot of the features we write end up being used only in a few of our pages, so we would like them to be loaded only when the user visits the page they are being used in.
 
-For Example, we wouldn't want users to download, parse and execute the _[react-big-calendar](https://www.npmjs.com/package/react-big-calendar)_ package if they merely loaded the home page. We would only want that to happen when they visit the calendar page.
+For Example, we wouldn't want users to have to wait until the _[react-big-calendar](https://www.npmjs.com/package/react-big-calendar)_ package is downloaded, parsed and executed if they merely loaded the _Home_ page. We would only want that to happen when they visit the _Calendar_ page.
 
-The way we achieve this is (preferably) by route-based code splitting:
+The way we can achieve this is (preferably) by route-based code splitting:
 
 _[App.tsx](src/App.tsx)_
 
@@ -213,11 +211,11 @@ const LoremIpsum = lazy(() => import(/* webpackChunkName: 'lorem-ipsum' */ 'page
 const Pokemon = lazy(() => import(/* webpackChunkName: 'pokemon' */ 'pages/Pokemon'))
 ```
 
-So when the user visits the Pokemon page, they only download the main chunk scripts (which includes all shared dependencies such as the framework) and the `pokemon.[hash].js` chunk.
+So when user visit the _Pokemon_ page, they only download the main chunk scripts (which includes all shared dependencies such as the framework) and the `pokemon.[hash].js` chunk.
 
 _Note: it is encouraged to download the entire app so that users will experience instant, app-like, navigations. But it is a bad idea to batch all assets into a single script, delaying the first render of the page.
 <br>
-These assets should be downloaded after the user-requested page has finished rendering and is entirely visible._
+These assets should be downloaded asynchronously and only after the user-requested page has finished rendering and is entirely visible._
 
 ### Preloading Async Pages
 
