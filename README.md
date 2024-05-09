@@ -1391,7 +1391,7 @@ These facts lead to the conclusion that there is no particular reason to use SSR
 
 ## What Might Change in the Future
 
-As time passes, [connection speed is getting faster](https://worldpopulationreview.com/country-rankings/internet-speeds-by-country) and end-user devices get stronger. So the performance differences between all possible website rendering methods are guarenteed to be mitigated even further (except for SSR which depends on the API server response times).
+As time passes, [connection speed is getting faster](https://www.speedtest.net/global-index) and end-user devices get stronger. So the performance differences between all possible website rendering methods are guarenteed to be mitigated even further (except for SSR which depends on the API server response times).
 
 There is a new SSR method called _Streaming SSR_ (in React it is through "Server Components") and new frameworks (such as Qwik) which are able to stream responses to the browser without having to wait for the API server's response.
 <br>
