@@ -12,6 +12,8 @@ To use this project as a production-ready boilerplate, refer to the _[BOILTERPLA
 <br>
 **SSG**: Static Site Generation
 
+An in-depth comparison of all rendering methods can be found on this project's _Comparison_ page: https://client-side-rendering.pages.dev/comparison
+
 ## Table of Contents
 
 - [Intro](#intro)
@@ -1314,7 +1316,7 @@ We can manually submit our sitemap to _[Google Search Console](https://search.go
 
 # CSR vs. SSR
 
-An in-depth comparison of all rendering methods can be found here: https://client-side-rendering.pages.dev/comparison
+As mentioned above, an in-depth comparison of all rendering methods can be found here: https://client-side-rendering.pages.dev/comparison
 
 ## Why Not SSG?
 
