@@ -108,9 +108,20 @@ const listData = {
         )
       },
       {
-        value: 'Load time is suboptimal upon cache invalidation',
-        description:
-          'When some of the cache invalidates (as new assets are available), it will need to be redownloaded.\nThis slightly extends the time it takes for the app to become visible'
+        value: 'Loading is delayed upon cache invalidation',
+        description: (
+          <p>
+            When some of the cache invalidates (as new assets are available), it will need to be redownloaded.
+            <br />
+            This slightly extends the time it takes for the app to become visible.
+            <br />
+            Refer to the{' '}
+            <a href="https://github.com/theninthsky/client-side-rendering#accelerating-unchanged-pages" target="_blank">
+              Accelerating Unchanged Pages
+            </a>{' '}
+            section to see how this can be mitigated.
+          </p>
+        )
       },
       {
         value: 'Delayed data fetching',

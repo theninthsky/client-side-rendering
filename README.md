@@ -211,7 +211,7 @@ const LoremIpsum = lazy(() => import(/* webpackChunkName: 'lorem-ipsum' */ 'page
 const Pokemon = lazy(() => import(/* webpackChunkName: 'pokemon' */ 'pages/Pokemon'))
 ```
 
-So when user visit the _Pokemon_ page, they only download the main chunk scripts (which includes all shared dependencies such as the framework) and the `pokemon.[hash].js` chunk.
+So when users visit the _Pokemon_ page, they only download the main chunk scripts (which includes all shared dependencies such as the framework) and the `pokemon.[hash].js` chunk.
 
 _Note: it is encouraged to download the entire app so that users will experience instant, app-like, navigations. But it is a bad idea to batch all assets into a single script, delaying the first render of the page.
 <br>
@@ -519,7 +519,7 @@ With the above script, we can even preload dynamic routes data (such as _[pokemo
 
 The only limitation is that we can only preload GET resources. However, we can easily implement an endpoint that transforms GET requests with query params to POST requests with body.
 <br>
-Here's an example of such transform proxy as a Cloudflare worker:
+Here's an example of such transform proxy as a Cloudflare Worker:
 
 ```js
 export default {
@@ -637,11 +637,11 @@ Now all pages will be prefetched before the user even tries to navigate to them.
 
 ### Accelerating Unchanged Pages
 
-Our build process produces a `runtime.[hash].js` file which is an "initial" (critical) script that contains all of the other script mappings.
+Our build process produces a `runtime.[hash].js` file which is an "initial" (critical) script that contains all of the script mappings.
 <br>
 So when any file changes in our app, the `runtime` file changes aswell.
 
-The problem is, even when users land on a page that did not change since they last visited our app (neither its dependencies changed), so that all of its page-related scripts are fully cached - since the `runtime` script did change, it has to be redownload, thus slightly delaying the entire load of the page.
+The problem is, even when users land on a page that did not change since they last visited our app (neither its dependencies changed), so that all of its page-related scripts are fully cached - since the `runtime` script **did** change, the browser will have to wait for it to be downloaded and executed to render the page, thus slightly delaying the entire load of the page.
 
 We can easily overcome this issue by inlining the `runtime` script in the HTML:
 
@@ -680,7 +680,7 @@ const App = () => {
 
 This method has a lot of sense to it:
 <br>
-We would prefer the app to be visually complete in a single render, but we would never want to stall the page render until the async chunk finishes loading.
+We would prefer the app to be visually complete in a single render, but we would never want to delay the page render to after the async chunk finishes loading.
 
 However, since we preload all async chunks (and their vendors), this won't be a problem for us. So we **should** hide the entire app until the async chunk finishes loading (which, in our case, happens in parallel with all the render-critical assets):
 
@@ -763,7 +763,7 @@ Now async pages will feel like they were never split from the main app.
 
 ### Preloading Other Pages Data
 
-We can preload data when hovering over links (desktop) or when links enter the viewport (mobile):
+We can preload other pages data when hovering over links (desktop) or when links enter the viewport (mobile):
 
 _[NavigationLink.tsx](src/components/NavigationLink.tsx)_
 
@@ -782,9 +782,11 @@ const preload = ({ url, as = 'fetch', crossorigin }) => {
 }
 ```
 
+_Note that this may unnecessarily load the API server._
+
 ### Revalidating Active Apps
 
-Some users leave the app open for extended periods of time, so another thing we can do is revalidate the app while it is running:
+Some users leave the app open for extended periods of time, so another thing we can do is revalidate (download new assets of) the app while it is running:
 
 _[service-worker-registration.ts](src/utils/service-worker-registration.ts)_
 
@@ -855,7 +857,7 @@ _[package.json](package.json)_
 }
 ```
 
-The above script would create a `json/lorem-ipsum.json` file that will be stored in the CDN.
+The above script would create a `json/lorem-ipsum.json` file that will be stored in our CDN.
 
 Then we simply fetch the static data in our app:
 
@@ -896,29 +898,29 @@ In addition, even those with fast interent connection will have to pay the price
 
 ![Connection Establishment](images/connection-establishment.png)
 
-In the sample above (caught by a 500Mbps interent connection speed), it tooks 600ms just to get the first byte of the HTML document.
+In the sample above (caught by a 500Mbps interent connection speed), it took 600ms just to get the first byte of the HTML document.
 <br>
 These times vary greatly from several hundreds of milliseconds to (in extreme cases) more than a second. And to make things even worse, browsers keep the DNS cache only for about a minute, and so this process repeats very frequently.
 
-The only reasonable way to rise above these issues is by caching HTML pages in the browser (for example, by setting a `Max-Age` value higher than `0`).
+The only way to skip these loading times is by caching HTML pages in the browser (for example, by setting a `Max-Age` value of more than `0`).
 
 But here is the problem with SSR: by doing so, users will most likely see outdated content, since the data is embedded in the document.
 <br>
 The lack of seperation between the app (also called the "app shell") and its data prevents us from caching pages without risking the freshness of the data.
 
-However, in CSR apps we have complete seperation of the two, making it more than possible to cache only the app shell while still getting fresh data on every visit (just like in native apps).
+However, in CSR apps we have complete seperation of the two, making it possible to cache only the app shell while still getting fresh data on every visit (just like in native apps).
 
 ## The SWR Approach
 
-We can easily implement app shell cache by setting the `Cache-Control: Max-Age=x` header of the HTML document to any value greater than 0. This way the app will load almost instantly (usually under 200ms) regardless of the user's connectivity or connection speed for the duration we set.
+We can easily implement app shell cache by setting the `Cache-Control: Max-Age=x` header of the HTML document to any value greater than 0. This way the entire app will load almost instantly (usually under 200ms), regardless of the user's connection speed, for the duration we set.
 
-However, the `Max-Age` attribute has one major flaw: during the set time period, the browser won't even attempt to reach the CDN, requests will be fulfilled immidiately by the cached responses. This means that no matter how many times the user reloads the page - they will always get a "stale" (potentially outdated) response.
+However, the `Max-Age` attribute has a flaw: during the set time period, the browser won't even attempt to reach the CDN, as requests will be fulfilled immidiately by the cached responses. This means that no matter how many times the users reload their page - they will always get a "stale" (potentially outdated) response.
 
 That's why the "Stale While Revalidate" (SWR) approach was invented.
 
 When using SWR, the browser is allowed to use a cached asset or response (usually for a limited time) but in the same time it sends a request for the server and asks for the newest asset. After the fresh asset is downloaded, the browser **replaces** the stale cached asset with the fresh asset, ready to be used the next time the page is loaded.
 
-This method completely surpasses any network conditions, it even allows our app to be available while offline (within the SWR allowed time period), and all of this without even compromising on the freshness of the app shell.
+This method completely surpasses any network conditions, it even allows our app to be available offline (within the SWR allowed time period), and all of this - without even compromising on the freshness of the app shell.
 
 Many popular websites such as YouTube, Twitter and CodeSandbox implement SWR in their app shell.
 <br>
@@ -926,16 +928,16 @@ Additionally, SWR is absolutely necessary when making a PWA, since it behaves ju
 
 There are two ways to achieve SWR in web applications:
 
-- The _[stale-while-revalidate](https://web.dev/stale-while-revalidate/#what-shipped)_ attribute.
-- A custom service worker.
+1. The _[stale-while-revalidate](https://web.dev/stale-while-revalidate/#what-shipped)_ attribute.
+2. A custom service worker.
 
-Although the first approach is completely usable (and can be set up within seconds), the second approach will give us a more granular control of how and when assets are cached and updated, in addition to giving us _[immediate code cache](https://v8.dev/blog/code-caching-for-devs#use-service-worker-caches)_. So this is the approach we choose to implement.
+Although the first approach is completely usable (and can be set up within seconds), the second approach will give us a more granular control of how and when assets are cached and updated, in addition to giving us _[immediate code cache](https://v8.dev/blog/code-caching-for-devs#use-service-worker-caches)_. So this is the approach we should choose to implement.
 
 ### Implementing SWR
 
 Our SWR service worker needs to cache the HTML document and all of the fonts and scripts (and stylesheets) of all pages.
 <br>
-In addition, it needs to serve these cached assets right when the page loads and then send a request to the CDN, fetch all new assets (if exist) and finally replace the stale cached assets with the new ones.
+In addition, it needs to serve these cached assets right when the page opens and then send a request to the CDN, fetch all new assets (if exist), and finally replace the stale cached assets with the new ones.
 
 _[webpack.config.js](webpack.config.js)_
 
@@ -996,7 +998,7 @@ self.addEventListener('install', event => {
 })
 
 self.addEventListener('fetch', event => {
-  if (['document', 'font', 'script'].includes(event.request.destination)) {
+  if (['document', 'font', 'script', 'style'].includes(event.request.destination)) {
     event.respondWith(staleWhileRevalidate(event.request))
   }
 })
@@ -1004,7 +1006,7 @@ self.addEventListener('fetch', event => {
 
 We define a `MAX_STALE_DURATION` constant to set the maximum duration we are willing for our users to see the (potentially) stale app shell.
 <br>
-This duration can be derived from how often we update (deploy) our app in production. And it's important to remember that native apps, in comparison, can sometimes be stale for months without being updated by the app stores.
+This duration can be derived from how often we update (deploy) our app in production.
 
 In addition, the desktop versions of Chrome and Edge automatically freeze inactive tabs and then reload them upon reactivation:
 <br>
@@ -1068,21 +1070,21 @@ const register = () => {
 .
 ```
 
-When using SWR, the loading speed of the app exceeds all expectations:
+When using SWR, the loading time of the app is near-instant:
 
 ![SWR Disk Cache](images/swr-disk-cache.png)
 
 These metrics are coming from a 2018 `Intel i3-8130U` laptop when the browser is using the disk cache (not the memory cache which is a lot faster), and are completely independent of network speed or status.
 
-It is obvious that nothing can match SWR in terms of performance.
+In conclusion, it is obvious that no rendering method can match SWR in terms of performance.
 
 ## Summary
 
-We've managed to make the initial load of our app extremely fast, only what is needed for the requested page is being loaded.
+We've managed to make the initial load of our app very fast, only what is required for the requested page is being loaded.
 <br>
 In addition, we preload other pages (and even their data), which makes it seem as if they were never seperated to begin with.
 <br>
-And finally, we wrapped everything with SWR, so the repeated loads of our app are unbelievably fast, it's literally impossible to get any better than that.
+And finally, we wrapped everything with SWR, so the repeated loads of our app are fast as they can get.
 
 All of these were achieved without compromising on the developer experience and without dictating which JS framework we choose or where we deploy our app, it can be on any CDN we choose (more on that in the next section).
 
@@ -1106,7 +1108,7 @@ https://pages.cloudflare.com
 
 ## Benchmark
 
-To conclude this section, we will perform a benchmark of our app compared to _[Next.js](https://nextjs.org/docs/getting-started)_'s documentation site (which is **entirely SSG**).
+To conclude this section, we will perform a benchmark of our app compared to _[Next.js](https://nextjs.org/docs/getting-started)_'s documentation site, which is **entirely SSG**.
 <br>
 We will compare the minimalistic _Accessibility_ page to our _Lorem Ipsum_ page. Both pages include ~246kb of JS in their render-critical chunks (preloads and prefetches that come after are irrelevant).
 <br>
@@ -1138,11 +1140,11 @@ _Note that this benchmark only tests the first load of the page, without even co
 
 ### Google
 
-It is often said that Google is having trouble properly indexing CSR (JS) apps.
+It is a common minconception that Google is having trouble properly indexing CSR (JS) apps.
 <br>
 That might have been the case in 2017, but as of today: Google indexes CSR apps mostly flawlessly.
 
-Indexed pages will have a title, description, content and all other SEO-related attributes, as long as we remember to dynamically set them (either manually or using something like _[react-helmet](https://www.npmjs.com/package/react-helmet)_).
+Indexed pages will have a title, description, content and all other SEO-related attributes, as long as we remember to dynamically set them (either manually like [this](https://github.com/theninthsky/frontend-essentials/blob/main/src/components/Meta.tsx) or using a package such as _[react-helmet](https://www.npmjs.com/package/react-helmet)_).
 
 https://www.google.com/search?q=site:https://client-side-rendering.pages.dev
 
@@ -1171,24 +1173,24 @@ This can be confirmed by inspecting the crawled page (by clicking _View Crawled 
 
 ![Google Search Console Insufficient Fetch Quota](images/google-search-console-insufficient-fetch-quota.png)
 
-This should only happen to websites that Google deems to have no interesting content or have very low traffic.
+This should only happen to websites that Google deems to have no interesting content or have very low traffic (such as our demo app).
 
 More information can be found here: https://support.google.com/webmasters/thread/4425254?hl=en&msgid=4426601
 
 ### Prerendering
 
-Other search engines such as Bing cannot render JS, so in order to have them crawl our app properly, we will serve them **prerendered** versions of our pages.
+Other search engines such as Bing cannot render JS, so in order to have them crawl our app properly, we need to serve them **prerendered** version of our pages.
 <br>
 Prerendering is the act of crawling web apps in production (using headless Chromium) and generating a complete HTML file (with data) for each page.
 
 We have two options when it comes to prerendering:
 
-1. We can deploy our own prerender server using _[Prerender](https://github.com/prerender/prerender)_ or my own _[Renderprime](https://github.com/theninthsky/renderprime)_ serverless function.
+1. We can deploy our own prerender server using _[Prerender](https://github.com/prerender/prerender)_ (or my own _[Renderprime](https://github.com/theninthsky/renderprime)_ serverless function).
 2. We can use a dedicated service such as _[Prerender.io](https://prerender.io)_ which is very expensive but offers 1000 free prerenders a month.
 
-**Serverless prerendering is the recommended approach**, since it can be very cheap (and sometimes even free) on _[GCP](https://cloud.google.com)_.
+**Serverless prerendering is the recommended approach**, since it can be very cheap (and sometimes even free on _[GCP](https://cloud.google.com)_).
 
-Then we redirect web crawlers, identified by their `User-Agent` header string, using a Cloudflare worker (in the following example we redirect to our prerenderer):
+Then we redirect web crawlers (identified by their `User-Agent` header string) to our prerenderer, using a Cloudflare Worker (for example):
 
 _[public/\_worker.js](public/_worker.js)_
 
@@ -1236,7 +1238,7 @@ export default {
 
 ```
 
-Here is an up-to-date list of all bot agnets (web crawlers): https://docs.prerender.io/docs/how-to-add-additional-bots#cloudflare
+Here is an up-to-date list of all bot agnets (web crawlers): https://docs.prerender.io/docs/how-to-add-additional-bots#cloudflare. Remember to exclude `googlebot` from the list.
 
 _Prerendering_, also called _Dynamic Rendering_, is encouraged by _[Microsoft](https://blogs.bing.com/webmaster/october-2018/bingbot-Series-JavaScript,-Dynamic-Rendering,-and-Cloaking-Oh-My)_ and is heavily used by many popular websites including Twitter.
 
@@ -1252,30 +1254,9 @@ _Note that when using CSS-in-JS, we can [disable the speedy optimization](src/ut
 
 When we share a CSR app link in social media, we can see that no matter what page we link to, the preview will remain the same.
 <br>
-This happens because most CSR apps have only one HTML file, and social media crawlers do not render JS.
+This happens because most CSR apps have only one contentless HTML file, and social media crawlers do not render JS.
 <br>
-This is where prerendering comes to our aid once again, we only need to make sure to set the correct meta tags dynamically:
-
-_[Home.tsx](src/pages/Home.tsx)_
-
-```js
-const Home = props => {
-  return (
-    <Meta
-      title="Client-side Rendering"
-      description="This page demonstrates a large amount of components that are rendered on the screen."
-      image={`${window.location.origin}/icons/og-icon.png`}
-    />
-    .
-    .
-    .
-  )
-}
-```
-
-The simple `Meta` component can be found [here](https://github.com/theninthsky/frontend-essentials/blob/main/src/components/Meta.tsx).
-
-This, after going through prerendering, gives us the correct preview for every page.
+This is where prerendering comes to our aid once again, it will generate the proper share preview for each page:
 
 _**Whatsapp:**_
 
@@ -1287,7 +1268,7 @@ _**Facebook**:_
 
 ## Sitemaps
 
-In order to make all of our app pages discoverable to search engines, we should create a `sitemap.xml` file which specifies all of our website routes.
+In order to make all of our app pages discoverable to search engines, it is recommended to create a `sitemap.xml` file which specifies all of our website routes.
 
 Since we already have a centralized _[pages-manifest](src/pages-manifest.js)_ file, we can easily generate a sitemap during build time:
 
@@ -1337,11 +1318,11 @@ An in-depth comparison of all rendering methods can be found here: https://clien
 
 ## Why Not SSG?
 
-We have seen the advantages of static files: they are cacheable; they can be served from a nearby CDN without requiring a server.
+We have seen the advantages of static files: they are cacheable and they can be served from a nearby CDN without requiring a server.
 
-This may lead us to believe that SSG combines both CSR and SSR advantages: we can make our app visually appear very fast (_[FCP](https://web.dev/fcp)_) and independently from our API server's response times.
+This may lead us to believe that SSG combines both CSR and SSR advantages: it makes our app visually appear very fast (_[FCP](https://web.dev/fcp)_) and independently from our API server's response times.
 
-However, in reality, SSG has one major limitation:
+However, in reality, SSG has a major limitation:
 <br>
 Since JS isn't active during the first moments, everything that relies on JS to be presented simply won't be visible, or it will be visible in its incorrect state (like components which rely on the `window.matchMedia` function to be displayed).
 
@@ -1367,32 +1348,34 @@ There are various examples of how this delayed functionality negatively impacts 
 
 Another issue, which can be especially critical for E-commere websites, is that SSG pages might reflect outdated data (a product's price or availability for example).
 <br>
-That is the reason that no popular E-commerce website uses SSG.
+That is the reason why no popular E-commerce website uses SSG.
 
 ## The Cost of Hydration
 
-It is a fact that under fast internet connection, both CSR and SSR perform great (as long as they are both optimized). And the higher the connection speed - the closer they get in terms of loading times.
+It is a fact that under fast internet connection, both CSR and SSR perform great (as long as they are both optimized), and the higher the connection speed - the closer they get in terms of loading times.
 
 However, when dealing with slow connections (such as mobile networks), it seems that SSR has an edge over CSR regarding loading times.
 <br>
 Since SSR apps are rendered on the server, the browser receives the fully-constructed HTML file, and so it can show the page to the user without waiting for JS to download. When JS is eventually download and parsed, the framework is able to "hydrate" the DOM with functionality (without having to reconstruct it).
 
-Although it seems like a big advantage, this behaviour has one major flaw on slow connections - until JS is loaded, users can click wherever they desire but the app won't react to their interactions.
+Although it seems like a big advantage, this behaviour introduces an undesired side-effect, especially on slower connections:
 <br>
-It is a bad user experience when buttons don't respond to user interaction, but it becomes a much larger problem when default events are not being prevented.
+Until JS is loaded, users can click wherever they desire but the app won't react to any of their JS-based events.
+<br>
+It is a bad user experience when buttons don't respond to user interactions, but it becomes a much larger problem when default events are not being prevented.
 
-This is a comparison between Next.js's website and Client-side Rendering app on a fast 3G connection:
+This is a comparison between Next.js's website and our Client-side Rendering app on a fast 3G connection:
 
 ![SSR Load 3G](images/ssr-load-3g.gif)
 ![CSR Load 3G](images/csr-load-3g.gif)
 
 What happened here?
 <br>
-Since JS hasn't been loaded yet, Next.js's website could not prevent the default behaviour of anchor tags to navigate to another page, resulting in every click on them triggering a full page reload.
+Since JS hasn't been loaded yet, Next.js's website could not prevent the default behaviour of anchor tag elements (`<a>`) to navigate to another page, resulting in every click on them triggering a full page reload.
 <br>
 And the slower the connection is - the more severe this issue becomes.
 <br>
-In other words, where SSR should have had a performance edge over CSR, we see a very "dangerous" behavior that might degrade the user experience.
+In other words, where SSR should have had a performance edge over CSR, we see a very "dangerous" behavior that might significantly degrade the user experience.
 
 It is impossible for this issue to occur in CSR apps, since the moment they render - JS has already been fully loaded.
 
@@ -1400,9 +1383,9 @@ It is impossible for this issue to occur in CSR apps, since the moment they rend
 
 We saw that client-side rendering performance is on par and sometimes even better than SSR in terms of initial loading times (and far surpasses it in navigation times).
 <br>
-We also learned that Googlebot can easily index client-side rendered apps, and that we can set up a prerender server the serve all other bots and crawlers.
+We've also seen that Googlebot can perfectly index client-side rendered apps, and that we can easily set up a prerender server to serve all other bots and crawlers.
 <br>
-And above all - we have achieved all this mainly by modifiying 2 files (Webpack config and HTML template) and using a prerender service, so every existing CSR app should be able to quickly and easily implement these modifications and benefit from them.
+And above all - we have achieved all this mainly by modifiying 2 files (the Webpack config and HTML template) and using a prerender service, so every existing CSR app should be able to quickly and easily implement these modifications and benefit from them.
 
 These facts lead to the conclusion that there is no particular reason to use SSR, it would only add a lot of complexity and limitations to our app and degrade the developer and user experience.
 
@@ -1410,8 +1393,8 @@ These facts lead to the conclusion that there is no particular reason to use SSR
 
 As time passes, [connection speed is getting faster](https://worldpopulationreview.com/country-rankings/internet-speeds-by-country) and end-user devices get stronger. So the performance differences between all possible website rendering methods are guarenteed to be mitigated even further (except for SSR which depends on the API server response times).
 
-There is the new SSR method called _Streaming SSR_ (with Server Components) and frameworks (such as Qwik) which are able to reduce the amount of JS that has to be downloaded initially.
+There is a new SSR method called _Streaming SSR_ (in React it is through "Server Components") and new frameworks (such as Qwik) which are able to stream responses to the browser without having to wait for the API server's response.
 <br>
-However, there are also better CSR frameworks such as Svelte and Solid.js which have very small bundle size and are much faster than React (thus greatly improving the FCP on slow networks).
+However, there are also newer and better CSR frameworks such as Svelte and Solid.js, which have a very small bundle size and are much faster than React (thus greatly improving the FCP on slow networks).
 
-Nevertheless, it's important to note that nothing makes pages load faster than the SWR approach, which is only possible through client-side rendering.
+Nevertheless, it's important to note that nothing will ever outperform the instant page transitions that client-side rendering is able to provide, and when using the SWR approach, even repeated page loads are instant.

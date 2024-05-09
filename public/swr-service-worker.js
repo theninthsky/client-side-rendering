@@ -38,7 +38,7 @@ self.addEventListener('install', event => {
 })
 
 self.addEventListener('fetch', event => {
-  if (['document', 'font', 'script'].includes(event.request.destination)) {
+  if (['document', 'font', 'script', 'style'].includes(event.request.destination)) {
     event.respondWith(staleWhileRevalidate(event.request))
   }
 })
