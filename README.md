@@ -100,7 +100,7 @@ In addition, it is a common misconception that perfect SEO can only be achieved 
 
 Another claim that is often raised regarding the advantages of SSR is that web apps are getting bigger, and so their loading times will only keep increasing (which means bad _[FCP](https://web.dev/fcp)_ for CSR apps).
 
-While it’s true that apps are naturally expanding, they size of a single page should only **get smaller** as time passes.
+While it’s true that apps are naturally expanding, the size of a single page should only **get smaller** as time passes.
 <br>
 This is due to a popular trend of making smaller and more efficient versions of packages, as seen with _zustand_, _day.js_, _headless-ui_ and _react-router v6_.
 <br>
