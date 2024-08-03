@@ -291,28 +291,37 @@ export default pages => `
 _[scripts/preload-assets.js](scripts/preload-assets.js)_
 
 ```js
-const isStructureEqual = (pathname, path) => {
+const isMatch = (pathname, path) => {
+  if (pathname === path) return { exact: true, match: true }
+  if (!path.includes(':')) return { match: false }
+
   const pathnameParts = pathname.split('/')
   const pathParts = path.split('/')
+  const match = pathnameParts.every((part, ind) => part === pathParts[ind] || pathParts[ind]?.startsWith(':'))
 
-  if (pathnameParts.length !== pathParts.length) return false
-
-  return pathnameParts.every((part, ind) => part === pathParts[ind] || pathParts[ind].startsWith(':'))
+  return {
+    exact: match && pathnameParts.length === pathParts.length,
+    match
+  }
 }
 
-let { pathname } = window.location
+const preloadAssets = () => {
+  let { pathname } = window.location
 
-if (pathname !== '/') pathname = pathname.replace(/\/$/, '')
+  if (pathname !== '/') pathname = pathname.replace(/\/$/, '')
 
-for (const { path, script } of pages) {
-  const match = pathname === path || (path.includes(':') && isStructureEqual(pathname, path))
+  const matchingPages = pages.map(page => ({ ...isMatch(pathname, page.path), ...page })).filter(({ match }) => match)
 
-  if (!match) continue
+  if (!matchingPages.length) return
+
+  const { path, script } = matchingPages.find(({ exact }) => exact) || matchingPages[0]
 
   document.head.appendChild(
     Object.assign(document.createElement('link'), { rel: 'preload', href: '/' + script, as: 'script' })
   )
 }
+
+preloadAssets()
 ```
 
 The imported `pages-manifest` file can be found [here](src/pages-manifest.js).
@@ -390,12 +399,12 @@ plugins: [
     scriptLoading: 'module',
     templateContent: ({ compilation }) => {
       const assets = compilation.getAssets().map(({ name }) => name)
-      const pages = pagesManifest.map(({ chunk, path, data }) => {
+      const pages = pagesManifest.map(({ chunk, path }) => {
 -       const script = assets.find(name => name.includes(`/${chunk}.`) && name.endsWith('.js'))
 +       const scripts = assets.filter(name => new RegExp(`[/.]${chunk}\\.(.+)\\.js$`).test(name))
 
--       return { path, script, data }
-+       return { path, scripts, data }
+-       return { path, script }
++       return { path, scripts }
       })
 
       return htmlTemplate(pages)
@@ -407,18 +416,14 @@ plugins: [
 _[scripts/preload-assets.js](scripts/preload-assets.js)_
 
 ```diff
-- for (const { path, script } of pages) {
-+ for (const { path, scripts } of pages) {
-    const match = pathname === path || (path.includes(':') && isStructureEqual(pathname, path))
+- const { path, script } = matchingPages.find(({ exact }) => exact) || matchingPages[0]
++ const { path, scripts } = matchingPages.find(({ exact }) => exact) || matchingPages[0]
 
-    if (!match) continue
-
-+   scripts.forEach(script => {
-      document.head.appendChild(
-        Object.assign(document.createElement('link'), { rel: 'preload', href: '/' + script, as: 'script' })
-      )
-+   })
-}
++ scripts.forEach(script => {
+    document.head.appendChild(
+      Object.assign(document.createElement('link'), { rel: 'preload', href: '/' + script, as: 'script' })
+    )
++ })
 ```
 
 Now all async vendor chunks will be fetched in parallel with their parent async chunk:
@@ -471,6 +476,9 @@ _[public/index.js](public/index.js)_
 _[scripts/preload-assets.js](scripts/preload-assets.js)_
 
 ```diff
+.
+.
+.
 + const getDynamicProperties = (pathname, path) => {
 +   const pathParts = path.split('/')
 +   const pathnameParts = pathname.split('/')
@@ -483,32 +491,32 @@ _[scripts/preload-assets.js](scripts/preload-assets.js)_
 +   return dynamicProperties
 + }
 
-- for (const { path, scripts } of pages) {
-+ for (const { path, scripts, data } of pages) {
+const preloadAssets = () => {
+-   const { path, scripts } = matchingPages.find(({ exact }) => exact) || matchingPages[0]
++   const { path, scripts, data } = matchingPages.find(({ exact }) => exact) || matchingPages[0]
     .
     .
     .
-+ if (!data) break
-
-+ data.forEach(({ url, crossorigin, preconnectURL }) => {
-+  if (url.startsWith('func:')) url = eval(url.replace('func:', ''))
-+  const fullURL = typeof url === 'string' ? url : url(getDynamicProperties(pathname, path))
++   data?.forEach(({ url, crossorigin, preconnectURL }) => {
++     if (url.startsWith('func:')) url = eval(url.replace('func:', ''))
++     const fullURL = typeof url === 'string' ? url : url(getDynamicProperties(pathname, path))
 +
-+  document.head.appendChild(
-+    Object.assign(document.createElement('link'), {
-+      rel: 'preload',
-+      href: fullURL,
-+      as: 'fetch',
-+      crossOrigin: crossorigin
-+    })
-+  )
++     document.head.appendChild(
++       Object.assign(document.createElement('link'), {
++         rel: 'preload',
++         href: fullURL,
++         as: 'fetch',
++         crossOrigin: crossorigin
++       })
++     )
 +
-+  if (preconnectURL) {
-+    document.head.appendChild(
-+      Object.assign(document.createElement('link'), { rel: 'preconnect', href: preconnectURL })
-+    )
-+  }
-+ })
++     if (preconnectURL) {
++       document.head.appendChild(
++         Object.assign(document.createElement('link'), { rel: 'preconnect', href: preconnectURL })
++       )
++     }
++   })
+}
 ```
 
 Reminder: the `pages-manifest` file can be found [here](src/pages-manifest.js).

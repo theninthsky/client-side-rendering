@@ -307,7 +307,7 @@ const listData = {
           <p>
             Since the vast majority of modern web apps include constnatly changing (and personalized) data, SSG serves
             as a poor option for them (in many apps in can be used solely for pages such as <em>About</em> and{' '}
-            <em>Login</em> pages)
+            <em>Login</em>)
           </p>
         )
       },
