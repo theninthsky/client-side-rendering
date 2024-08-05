@@ -1,4 +1,5 @@
-import path from 'node:path'
+import { join, resolve } from 'node:path'
+import { writeFileSync } from 'node:fs'
 import ReactRefreshPlugin from '@pmmmwh/react-refresh-webpack-plugin'
 import ForkTsCheckerPlugin from 'fork-ts-checker-webpack-plugin'
 import ESLintPlugin from 'eslint-webpack-plugin'
@@ -21,15 +22,15 @@ export default (_, { mode }) => {
       port: 3000,
       devMiddleware: { stats: 'errors-warnings' }
     },
-    cache: { type: 'filesystem', memoryCacheUnaffected: true },
-    experiments: { cacheUnaffected: true, lazyCompilation: !production },
+    // cache: { type: 'filesystem', memoryCacheUnaffected: true },
+    // experiments: { cacheUnaffected: true, lazyCompilation: !production },
     devtool: production ? 'source-map' : 'inline-source-map',
     resolve: {
-      modules: [path.resolve(__dirname, 'src'), 'node_modules'],
+      modules: [resolve(__dirname, 'src'), 'node_modules'],
       extensions: ['.ts', '.tsx', '.js', '.jsx']
     },
     output: {
-      path: path.join(__dirname, 'build'),
+      path: join(__dirname, 'build'),
       publicPath: '/',
       filename: 'scripts/[name].[contenthash:6].js',
       clean: true
@@ -99,7 +100,7 @@ export default (_, { mode }) => {
             swType =>
               new InjectManifest({
                 include: [/fonts\//, /scripts\/.+\.js$/],
-                swSrc: path.join(__dirname, 'public', `${swType}-service-worker.js`)
+                swSrc: join(__dirname, 'public', `${swType}-service-worker.js`)
               })
           )
         : [
@@ -110,17 +111,30 @@ export default (_, { mode }) => {
       new HtmlPlugin({
         scriptLoading: 'module',
         templateContent: ({ compilation }) => {
-          const assets = compilation.getAssets().map(({ name }) => name)
+          const rawAssets = compilation.getAssets()
+          const assets = rawAssets.map(({ name }) => name)
+
+          const fullAssets = rawAssets
+            .filter(({ name }) => name.startsWith('scripts/') && name.endsWith('.js'))
+            .map(({ name, source }) => ({ name, source: source._children?.[0]._valueAsString }))
+
+          writeFileSync(join(__dirname, 'public', 'assets.js'), JSON.stringify(fullAssets))
+
           const pages = pagesManifest.map(({ chunk, path, data }) => {
             const scripts = assets.filter(name => new RegExp(`[/.]${chunk}\\.(.+)\\.js$`).test(name))
 
             return { path, scripts, data }
           })
 
+          console.log(
+            pages.map(({ scripts }) => scripts).flat(),
+            fullAssets.map(({ name }) => name)
+          )
+
           return htmlTemplate(pages)
         }
       }),
-      new HtmlInlineScriptPlugin({ scriptMatchPattern: [/runtime.+[.]js$/] }),
+      // new HtmlInlineScriptPlugin({ scriptMatchPattern: [/runtime.+[.]js$/] }),
       new CopyPlugin({
         patterns: [
           {

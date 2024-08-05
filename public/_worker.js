@@ -56,6 +56,11 @@ export default {
       return fetchPrerendered(request)
     }
 
+    const cachedAssets = ['scripts/main.31c5e7.js', 'scripts/react-dom.main.1043d5.js']
+
+    const pages = INJECT_PAGES_HERE
+    const html = INJECT_HTML_HERE
+
     return env.ASSETS.fetch(request)
   }
 }
