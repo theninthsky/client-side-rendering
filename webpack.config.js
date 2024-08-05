@@ -23,7 +23,7 @@ export default (_, { mode }) => {
       devMiddleware: { stats: 'errors-warnings' }
     },
     // cache: { type: 'filesystem', memoryCacheUnaffected: true },
-    // experiments: { cacheUnaffected: true, lazyCompilation: !production },
+    experiments: { cacheUnaffected: true, lazyCompilation: !production },
     devtool: production ? 'source-map' : 'inline-source-map',
     resolve: {
       modules: [resolve(__dirname, 'src'), 'node_modules'],
@@ -76,6 +76,7 @@ export default (_, { mode }) => {
       ]
     },
     optimization: {
+      realContentHash: false,
       runtimeChunk: 'single',
       splitChunks: {
         chunks: 'initial',
@@ -125,11 +126,6 @@ export default (_, { mode }) => {
 
             return { path, scripts, data }
           })
-
-          console.log(
-            pages.map(({ scripts }) => scripts).flat(),
-            fullAssets.map(({ name }) => name)
-          )
 
           return htmlTemplate(pages)
         }
