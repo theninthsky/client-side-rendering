@@ -1,5 +1,7 @@
 /* eslint-disable no-console */
 
+import extractDocumentScripts from './extractDocumentScripts'
+
 const SERVICE_WORKERS = {
   prefetch: '/prefetch-service-worker.js',
   swr: '/swr-service-worker.js'
@@ -19,6 +21,8 @@ const register = () => {
       console.log('Service worker registered!')
 
       setInterval(() => registration.update(), ACTIVE_REVALIDATION_INTERVAL * 1000)
+
+      registration.active!.postMessage({ type: 'cache-inlined-scripts', scripts: extractDocumentScripts() })
     } catch (err) {
       console.error(err)
     }

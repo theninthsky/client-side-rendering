@@ -2,6 +2,7 @@
   "compilerOptions": {
     "jsx": "react-jsx",
     "module": "esnext",
+    "target": "es2017",
     "moduleResolution": "node",
     "baseUrl": "src",
     "allowJs": true,

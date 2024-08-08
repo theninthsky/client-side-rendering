@@ -18,5 +18,5 @@ uncachedAssets.forEach(({ name, source }) => {
   )
 })
 
-writeFileSync(join(__dirname, '..', 'build', 'injected-html.html'), htmlFile)
-writeFileSync(join(__dirname, '..', 'build', '_worker.js'), workerFile.replace('INJECT_PAGES_HERE', pages))
+// writeFileSync(join(__dirname, '..', 'build', 'injected-html.html'), htmlFile)
+// writeFileSync(join(__dirname, '..', 'build', '_worker.js'), workerFile.replace('INJECT_PAGES_HERE', pages))
