@@ -1,13 +1,14 @@
 /* eslint-disable no-console */
 
-import extractDocumentScripts from './extractDocumentScripts'
+import extractInlinedScripts from './extract-inlined-scripts'
 
 const SERVICE_WORKERS = {
   prefetch: '/prefetch-service-worker.js',
   swr: '/swr-service-worker.js'
 }
 const ACTIVE_REVALIDATION_INTERVAL = 10 * 60
-const shouldRegisterServiceWorker = process.env.NODE_ENV !== 'development' && navigator.userAgent !== 'Prerender'
+const shouldRegisterServiceWorker =
+  true || (process.env.NODE_ENV !== 'development' && navigator.userAgent !== 'Prerender')
 const appIsInstalled =
   window.matchMedia('(display-mode: standalone)').matches || document.referrer.includes('android-app://')
 
@@ -22,7 +23,19 @@ const register = () => {
 
       setInterval(() => registration.update(), ACTIVE_REVALIDATION_INTERVAL * 1000)
 
-      registration.active!.postMessage({ type: 'cache-inlined-scripts', scripts: extractDocumentScripts() })
+      registration.addEventListener('updatefound', () => {
+        const inlinedScripts = extractInlinedScripts()
+
+        if (!inlinedScripts) return
+
+        registration.installing!.onstatechange = event => {
+          // @ts-ignore
+          if (event.target.state !== 'activated') return
+
+          registration.active!.postMessage({ type: 'inlined-scripts', inlinedScripts })
+          inlinedScripts.forEach(({ id }) => fetch(`/${id}`))
+        }
+      })
     } catch (err) {
       console.error(err)
     }

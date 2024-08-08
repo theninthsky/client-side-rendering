@@ -1,4 +1,4 @@
-const extractDocumentScripts = () => {
+const extractInlinedScripts = () => {
   const scripts = [...document.querySelectorAll('script[type="module"]:not([src])')].map(({ id, textContent }) => ({
     id,
     source: textContent
@@ -7,4 +7,4 @@ const extractDocumentScripts = () => {
   return scripts
 }
 
-export default extractDocumentScripts
+export default extractInlinedScripts

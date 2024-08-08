@@ -119,7 +119,7 @@ export default (_, { mode }) => {
             .filter(({ name }) => name.startsWith('scripts/') && name.endsWith('.js'))
             .map(({ name, source }) => ({ name, source: source._children?.[0]._valueAsString }))
 
-          writeFileSync(join(__dirname, 'public', 'assets.js'), JSON.stringify(fullAssets))
+          // writeFileSync(join(__dirname, 'public', 'assets.js'), JSON.stringify(fullAssets))
 
           const pages = pagesManifest.map(({ chunk, path, data }) => {
             const scripts = assets.filter(name => new RegExp(`[/.]${chunk}\\.(.+)\\.js$`).test(name))

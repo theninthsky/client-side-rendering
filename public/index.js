@@ -28,8 +28,6 @@ export default pages => `
 
       <script type="module" id="tester.3gt6d3.js">
         const x = 5;
-
-        console.log(x)
       </script>
     </head>
     <body>
