@@ -25,10 +25,6 @@ export default pages => `
 
         ${readFileSync(join(__dirname, '..', 'scripts', 'preload-assets.js'))}
       </script>
-
-      <script type="module" id="tester.3gt6d3.js">
-        const x = 5;
-      </script>
     </head>
     <body>
       <div id="root"></div>

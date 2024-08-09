@@ -115,11 +115,13 @@ export default (_, { mode }) => {
           const rawAssets = compilation.getAssets()
           const assets = rawAssets.map(({ name }) => name)
 
-          const fullAssets = rawAssets
-            .filter(({ name }) => name.startsWith('scripts/') && name.endsWith('.js'))
-            .map(({ name, source }) => ({ name, source: source._children?.[0]._valueAsString }))
+          if (production) {
+            const assetsWithSource = rawAssets
+              .filter(({ name }) => name.startsWith('scripts/') && name.endsWith('.js'))
+              .map(({ name, source }) => ({ name, source: source.source() }))
 
-          // writeFileSync(join(__dirname, 'public', 'assets.js'), JSON.stringify(fullAssets))
+            writeFileSync(join(__dirname, 'public', 'assets.js'), JSON.stringify(assetsWithSource))
+          }
 
           const pages = pagesManifest.map(({ chunk, path, data }) => {
             const scripts = assets.filter(name => new RegExp(`[/.]${chunk}\\.(.+)\\.js$`).test(name))
