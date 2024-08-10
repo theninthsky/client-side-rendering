@@ -1,31 +1,52 @@
-self.addEventListener('install', event => {
-  const assets = self.__WB_MANIFEST.map(({ url }) => url)
+const CACHE_NAME = 'my-csr-app'
 
-  // event.waitUntil(Promise.all(assets.map(asset => fetch(asset))))
-  self.skipWaiting()
-})
+const cacheInlinedAssets = async inlinedAssets => {
+  const cache = await caches.open(CACHE_NAME)
 
-self.addEventListener('activate', event => event.waitUntil(clients.claim()))
+  inlinedAssets.forEach(({ url, source }) => {
+    const response = new Response(source, {
+      headers: {
+        'Cache-Control': 'public, max-age=31536000, immutable',
+        'Content-Type': 'application/javascript'
+      }
+    })
 
-self.addEventListener('fetch', event => {
-  const inlinedScript = self.inlinedScripts?.find(({ id }) => event.request.url.includes(id))
+    console.log(`Cached ${url}`)
 
-  if (!inlinedScript) return
-
-  console.log('inlinedScript: ', inlinedScript)
-
-  const response = new Response(inlinedScript.source, {
-    headers: {
-      'Cache-Control': 'public, max-age=31536000, immutable',
-      'Content-Type': 'application/javascript'
-    }
+    cache.put(url, response)
   })
+}
 
-  event.respondWith(response)
-})
+const precacheAssets = async ignoredAssets => {
+  const cache = await caches.open(CACHE_NAME)
+  const assets = self.__WB_MANIFEST.map(({ url }) => url)
+  const assetsToPrecache = assets.filter(asset => !ignoredAssets.includes(asset))
+
+  await cache.addAll(assetsToPrecache)
+}
+
+self.addEventListener('install', () => self.skipWaiting())
 
 self.addEventListener('message', event => {
-  const { type, inlinedScripts } = event.data
+  const { type, inlinedAssets } = event.data
 
-  if (type === 'inlined-scripts') self.inlinedScripts = inlinedScripts
+  if (type === 'inlined-assets') {
+    cacheInlinedAssets(inlinedAssets)
+    precacheAssets(inlinedAssets.map(({ url }) => url))
+  }
+})
+
+self.addEventListener('fetch', async event => {
+  const { request } = event
+
+  if (request.destination !== 'script') return
+
+  event.respondWith(
+    (async () => {
+      const cache = await caches.open(CACHE_NAME)
+      const cachedResponse = await cache.match(request)
+
+      return cachedResponse || fetch(request)
+    })()
+  )
 })

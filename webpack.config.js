@@ -118,7 +118,7 @@ export default (_, { mode }) => {
           if (production) {
             const assetsWithSource = rawAssets
               .filter(({ name }) => name.startsWith('scripts/') && name.endsWith('.js'))
-              .map(({ name, source }) => ({ name, source: source.source() }))
+              .map(({ name, source }) => ({ url: `/${name}`, source: source.source() }))
 
             writeFileSync(join(__dirname, 'public', 'assets.js'), JSON.stringify(assetsWithSource))
           }

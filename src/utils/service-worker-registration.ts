@@ -23,16 +23,15 @@ const register = () => {
       setInterval(() => registration.update(), ACTIVE_REVALIDATION_INTERVAL * 1000)
 
       registration.addEventListener('updatefound', () => {
-        const inlinedScripts = extractInlinedScripts()
+        const inlinedAssets = extractInlinedScripts()
 
-        if (!inlinedScripts) return
+        if (!inlinedAssets.length) return
 
         registration.installing!.onstatechange = event => {
           // @ts-ignore
           if (event.target.state !== 'activated') return
 
-          registration.active!.postMessage({ type: 'inlined-scripts', inlinedScripts })
-          inlinedScripts.forEach(({ id }) => fetch(`/${id}`))
+          registration.active!.postMessage({ type: 'inlined-assets', inlinedAssets })
         }
       })
     } catch (err) {
