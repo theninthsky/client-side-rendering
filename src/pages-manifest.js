@@ -1,12 +1,10 @@
 export default [
   {
-    chunk: 'home',
     path: '/',
     title: 'Home',
     description: 'Demonstrated here is a simple page which all of its assets are fetched in parallel.'
   },
   {
-    chunk: 'lorem-ipsum',
     path: '/lorem-ipsum',
     title: 'Lorem Ipsum',
     description:
@@ -19,7 +17,6 @@ export default [
     ]
   },
   {
-    chunk: 'pokemon',
     path: '/pokemon',
     title: 'Pokémon',
     description:
@@ -33,7 +30,6 @@ export default [
     ]
   },
   {
-    chunk: 'pokemon-info',
     path: '/pokemon/:name',
     description: "Demonstrated here is dynamic path data that is fetched in parallel with all of the page's assets.",
     data: [
@@ -50,14 +46,12 @@ export default [
     menuItem: false
   },
   {
-    chunk: 'comparison',
     path: '/comparison',
     title: 'Comparison',
     description:
       'This page compares all rendering methods, listing their pros and cons.\nYou can click on each point to view a detailed explanation.'
   },
   {
-    chunk: 'core-web-vitals',
     path: '/web-vitals',
     title: 'Web Vitals',
     description: 'This page specifies the values of core web vitals.'

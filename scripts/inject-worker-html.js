@@ -8,12 +8,12 @@ let html = readFileSync(join(__dirname, '..', 'build', 'index.html'), 'utf-8')
 let workerFile = readFileSync(join(__dirname, '..', 'build', '_worker.js'), 'utf-8')
 
 const cachedAssets = [
-  '/scripts/runtime.2b555a.js',
-  '/scripts/main.a37345.js',
-  '/scripts/react-dom.main.1043d5.js',
-  '/scripts/remix-run.main.f2f0dd.js',
-  '/scripts/mui.main.d68ff2.js',
-  '/scripts/423.2112bb.js'
+  // '/scripts/runtime.2b555a.js',
+  // '/scripts/main.a37345.js',
+  // '/scripts/react-dom.main.1043d5.js',
+  // '/scripts/remix-run.main.f2f0dd.js',
+  // '/scripts/mui.main.d68ff2.js',
+  // '/scripts/423.2112bb.js'
 ]
 const parsedPages = JSON.parse(pages)
 const uncachedAssets = parsedPages.filter(({ url }) => !cachedAssets.includes(url))
@@ -29,3 +29,4 @@ uncachedAssets.forEach(({ url, source }) => {
 
 writeFileSync(join(__dirname, '..', 'build', 'injected.html'), html)
 // writeFileSync(join(__dirname, '..', 'build', '_worker.js'), workerFile.replace('INJECT_PAGES_HERE', pages))
+// writeFileSync(join(__dirname, '..', 'build', '_worker.js'), workerFile.replace('INJECT_HTML_HERE', html))

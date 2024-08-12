@@ -123,11 +123,7 @@ export default (_, { mode }) => {
             writeFileSync(join(__dirname, 'public', 'assets.js'), JSON.stringify(assetsWithSource))
           }
 
-          const pages = pagesManifest.map(({ chunk, path, data }) => {
-            const scripts = assets.filter(name => new RegExp(`[/.]${chunk}\\.(.+)\\.js$`).test(name))
-
-            return { path, scripts, data }
-          })
+          const pages = pagesManifest.map(({ path, data }) => ({ path, data }))
 
           return htmlTemplate(pages)
         }

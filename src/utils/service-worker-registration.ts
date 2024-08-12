@@ -3,7 +3,7 @@
 import extractInlinedScripts from './extract-inlined-scripts'
 
 const SERVICE_WORKERS = {
-  prefetch: '/prefetch-service-worker.js',
+  precache: '/precache-service-worker.js',
   swr: '/swr-service-worker.js'
 }
 const ACTIVE_REVALIDATION_INTERVAL = 10 * 60
@@ -13,7 +13,7 @@ const appIsInstalled =
 
 const register = () => {
   window.addEventListener('load', async () => {
-    const serviceWorkerType = appIsInstalled ? 'swr' : 'prefetch'
+    const serviceWorkerType = appIsInstalled ? 'swr' : 'precache'
 
     try {
       const registration = await navigator.serviceWorker.register(SERVICE_WORKERS[serviceWorkerType])
