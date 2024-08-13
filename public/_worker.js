@@ -58,8 +58,6 @@ export default {
 
     const cachedAssets = request.headers.get('X-Cached')?.split(', ').filter(Boolean) || []
 
-    if (!cachedAssets.length) return env.ASSETS.fetch(request)
-
     const pages = INJECT_PAGES_HERE
 
     let html = INJECT_HTML_HERE
