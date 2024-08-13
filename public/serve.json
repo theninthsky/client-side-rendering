@@ -1,5 +1,5 @@
 {
-  "rewrites": [{ "source": "/*", "destination": "/injected.html" }],
+  "rewrites": [{ "source": "/*", "destination": "/index.html" }],
   "headers": [
     {
       "source": "**/*.@(woff2|js)",

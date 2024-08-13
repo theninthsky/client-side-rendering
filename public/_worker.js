@@ -56,11 +56,25 @@ export default {
       return fetchPrerendered(request)
     }
 
-    const cachedAssets = ['scripts/main.31c5e7.js', 'scripts/react-dom.main.1043d5.js']
+    const cachedAssets = request.headers.get('X-Cached')?.split(', ').filter(Boolean) || []
+
+    if (!cachedAssets.length) return env.ASSETS.fetch(request)
 
     const pages = INJECT_PAGES_HERE
-    const html = INJECT_HTML_HERE
 
-    return env.ASSETS.fetch(request)
+    let html = INJECT_HTML_HERE
+
+    const uncachedAssets = pages.filter(({ url }) => !cachedAssets.includes(url))
+
+    uncachedAssets.forEach(({ url, source }) => {
+      html = html.replace(
+        `<script type="module" src="${url}"></script>`,
+        () => `<script id="${url}" type="module">${source}</script>`
+      )
+    })
+
+    const response = new Response(html, { headers: { 'Content-Type': 'text/html; charset=utf-8' } })
+
+    return response
   }
 }

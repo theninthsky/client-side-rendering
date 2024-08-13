@@ -5,7 +5,6 @@ import ForkTsCheckerPlugin from 'fork-ts-checker-webpack-plugin'
 import ESLintPlugin from 'eslint-webpack-plugin'
 import { InjectManifest } from 'workbox-webpack-plugin'
 import HtmlPlugin from 'html-webpack-plugin'
-import HtmlInlineScriptPlugin from 'html-inline-script-webpack-plugin'
 import CopyPlugin from 'copy-webpack-plugin'
 
 import pagesManifest from './src/pages-manifest.js'
@@ -97,7 +96,7 @@ export default (_, { mode }) => {
     },
     plugins: [
       ...(production
-        ? ['prefetch', 'swr'].map(
+        ? ['precache', 'swr'].map(
             swType =>
               new InjectManifest({
                 include: [/fonts\//, /scripts\/.+\.js$/],
@@ -128,12 +127,12 @@ export default (_, { mode }) => {
           return htmlTemplate(pages)
         }
       }),
-      // new HtmlInlineScriptPlugin({ scriptMatchPattern: [/runtime.+[.]js$/] }),
       new CopyPlugin({
         patterns: [
           {
             from: 'public',
-            globOptions: { ignore: ['**/index.js'] }
+            globOptions: { ignore: ['**/index.js'] },
+            info: { minimized: true }
           }
         ]
       })
