@@ -97,8 +97,9 @@ export default {
       .filter(({ match }) => match)
     const exactMatchingPageAssets = matchingPageAssets.filter(({ exact }) => exact)
     const pageAssets = exactMatchingPageAssets.length ? exactMatchingPageAssets : matchingPageAssets
+    const uncachedPageAssets = pageAssets.filter(({ url }) => !cachedAssets.includes(url))
 
-    pageAssets?.forEach(({ url, source }) => {
+    uncachedPageAssets.forEach(({ url, source }) => {
       html = html.replace('</head>', () => `<script id="${url}" type="module">${source}</script></head>`)
     })
 
