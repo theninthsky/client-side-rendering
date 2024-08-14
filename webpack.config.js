@@ -83,7 +83,7 @@ export default (_, { mode }) => {
           vendors: {
             test: /[\\/]node_modules[\\/]/,
             chunks: 'all',
-            minSize: 100000,
+            minSize: 10000,
             name: (module, chunks) => {
               const allChunksNames = chunks.map(({ name }) => name).join('.')
               const moduleName = (module.context.match(/[\\/]node_modules[\\/](.*?)([\\/]|$)/) || [])[1]
