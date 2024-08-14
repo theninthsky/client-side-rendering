@@ -242,7 +242,7 @@ const listData = {
             accessible to most developers.
             <br />
             Even when using a meta-framework, since the code runs both on the server and on the client, it is crucial to
-            verify which object are usable on each plafrom (see{' '}
+            verify which object are usable on each platform (see{' '}
             <em>
               <a
                 href="https://stackoverflow.com/questions/55151041/window-is-not-defined-in-next-js-react-app"

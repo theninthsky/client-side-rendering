@@ -28,7 +28,6 @@ An in-depth comparison of all rendering methods can be found on this project's _
   - [Prefetching Async Pages](#prefetching-async-pages)
   - [Accelerating Unchanged Pages](#accelerating-unchanged-pages)
   - [Tweaking Further](#tweaking-further)
-    - [Preventing Incremental Rendering](#preventing-incremental-rendering)
     - [Transitioning Async Pages](#transitioning-async-pages)
     - [Preloading Other Pages Data](#preloading-other-pages-data)
     - [Revalidating Active Apps](#revalidating-active-apps)
@@ -665,9 +664,13 @@ This will only add about 2kb to our HTML file, but will ensure that unchanged (a
 
 ## Tweaking Further
 
-### Preventing Incremental Rendering
+### Transitioning Async Pages
 
-When we split a page from the main app, we separate its render phase, meaning the app will render before the page renders:
+_Note: requires React (v18), Svelte or Solid.js_
+
+When we split a page from the main app, we separate its render phase, meaning the app will render before the page renders.
+<br>
+So when we move from one async page to another, we see a blank space that remains until the page is rendered:
 
 ![Before Page Render](images/before-page-render.png)
 ![After Page Render](images/after-page-render.png)
@@ -687,45 +690,6 @@ const App = () => {
   )
 }
 ```
-
-This method has a lot of sense to it:
-<br>
-We would prefer the app to be visually complete in a single render, but we would never want to delay the page render to after the async chunk finishes loading.
-
-However, since we preload all async chunks (and their vendors), this won't be a problem for us. So we **should** hide the entire app until the async chunk finishes loading (which, in our case, happens in parallel with all the render-critical assets):
-
-_[delay-page-visibility.ts](src/utils/delay-page-visibility.ts)_
-
-```js
-const root = document.getElementById('root') as HTMLDivElement
-
-document.body.style.overflow = 'hidden'
-root.style.visibility = 'hidden'
-
-new MutationObserver((_, observer) => {
-  if (!document.getElementById('layout')?.hasChildNodes()) return
-
-  document.body.removeAttribute('style')
-  root.removeAttribute('style')
-  observer.disconnect()
-}).observe(root, { childList: true, subtree: true })
-```
-
-_[index.tsx](src/index.tsx)_
-
-```js
-import 'utils/delay-page-visibility'
-```
-
-In our case, we only show the app when the `Layout` component has children (which means that an async page was loaded).
-
-This would make our app and the async page visually show up at the same time.
-
-### Transitioning Async Pages
-
-_Note: requires React (v18), Svelte or Solid.js_
-
-We will see a similar effect when we move to another async page: a blank space that remains until the page is rendered.
 
 React 18 introduced us to the `useTransition` hook, which allows us to delay a render until some criteria are met.
 <br>

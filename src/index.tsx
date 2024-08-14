@@ -5,7 +5,6 @@ import { BrowserRouter } from 'react-router-dom'
 import { StyledEngineProvider } from '@mui/material/styles'
 
 import 'styles'
-import 'utils/delay-page-visibility'
 import 'utils/service-worker-registration'
 import App from './App'
 
