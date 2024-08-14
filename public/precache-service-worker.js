@@ -1,9 +1,10 @@
 const CACHE_NAME = 'my-csr-app'
 
 const cachePromise = caches.open(CACHE_NAME)
-const cachedAssetsPromise = cachePromise.then(cache =>
-  cache.keys().then(keys => keys.map(({ url }) => `/${url.replace(self.registration.scope, '')}`))
-)
+const cachedAssetsPromise = cachePromise
+  .then(cache => cache.keys())
+  .then(keys => keys.map(({ url }) => `/${url.replace(self.registration.scope, '')}`))
+
 const currentAssets = self.__WB_MANIFEST.map(({ url }) => url)
 
 const cacheInlinedAssets = async inlinedAssets => {

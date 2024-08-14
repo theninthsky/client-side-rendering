@@ -111,18 +111,26 @@ export default (_, { mode }) => {
       new HtmlPlugin({
         scriptLoading: 'module',
         templateContent: ({ compilation }) => {
-          const rawAssets = compilation.getAssets()
-          const assets = rawAssets.map(({ name }) => name)
+          const assets = compilation.getAssets()
+          const pages = pagesManifest.map(({ chunk, path, data }) => {
+            const scripts = assets
+              .map(({ name }) => name)
+              .filter(name => new RegExp(`[/.]${chunk}\\.(.+)\\.js$`).test(name))
+
+            return { path, scripts, data }
+          })
 
           if (production) {
-            const assetsWithSource = rawAssets
-              .filter(({ name }) => name.startsWith('scripts/') && name.endsWith('.js'))
-              .map(({ name, source }) => ({ url: `/${name}`, source: source.source() }))
+            const assetsWithSource = assets
+              .filter(({ name }) => /^scripts\/.+\.js$/.test(name))
+              .map(({ name, source }) => ({
+                url: `/${name}`,
+                source: source.source(),
+                parentPaths: pages.filter(({ scripts }) => scripts.includes(name)).map(({ path }) => path)
+              }))
 
             writeFileSync(join(__dirname, 'public', 'assets.js'), JSON.stringify(assetsWithSource))
           }
-
-          const pages = pagesManifest.map(({ path, data }) => ({ path, data }))
 
           return htmlTemplate(pages)
         }

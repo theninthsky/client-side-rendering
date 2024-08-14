@@ -46,6 +46,20 @@ const fetchPrerendered = async request => {
   return new Response(body, { headers: responseHeaders })
 }
 
+const isMatch = (pathname, path) => {
+  if (pathname === path) return { exact: true, match: true }
+  if (!path.includes(':')) return { match: false }
+
+  const pathnameParts = pathname.split('/')
+  const pathParts = path.split('/')
+  const match = pathnameParts.every((part, ind) => part === pathParts[ind] || pathParts[ind]?.startsWith(':'))
+
+  return {
+    exact: match && pathnameParts.length === pathParts.length,
+    match
+  }
+}
+
 export default {
   fetch(request, env) {
     const pathname = new URL(request.url).pathname.toLowerCase()
@@ -70,6 +84,22 @@ export default {
         `<script type="module" src="${url}"></script>`,
         () => `<script id="${url}" type="module">${source}</script>`
       )
+    })
+
+    const matchingPageAssets = pages
+      .map(page => {
+        const parentsPaths = page.parentPaths.map(path => ({ path, ...isMatch(pathname, path) }))
+        const parentPathsExactMatch = parentsPaths.some(({ exact }) => exact)
+        const parentPathsMatch = parentsPaths.some(({ match }) => match)
+
+        return { ...page, exact: parentPathsExactMatch, match: parentPathsMatch }
+      })
+      .filter(({ match }) => match)
+    const exactMatchingPageAssets = matchingPageAssets.filter(({ exact }) => exact)
+    const pageAssets = exactMatchingPageAssets.length ? exactMatchingPageAssets : matchingPageAssets
+
+    pageAssets?.forEach(({ url, source }) => {
+      html = html.replace('</head>', () => `<script id="${url}" type="module">${source}</script></head>`)
     })
 
     const response = new Response(html, { headers: { 'Content-Type': 'text/html; charset=utf-8' } })
