@@ -25,13 +25,11 @@ const register = () => {
       registration.addEventListener('updatefound', () => {
         const inlinedAssets = extractInlinedScripts()
 
-        if (!inlinedAssets.length) return
-
         registration.installing!.onstatechange = event => {
           // @ts-ignore
           if (event.target.state !== 'activated') return
 
-          registration.active!.postMessage({ type: 'inlined-assets', inlinedAssets })
+          registration.active!.postMessage({ type: 'cache-assets', inlinedAssets })
         }
       })
     } catch (err) {

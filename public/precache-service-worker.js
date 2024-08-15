@@ -1,16 +1,19 @@
 const CACHE_NAME = 'my-csr-app'
 
-const cachePromise = caches.open(CACHE_NAME)
-const cachedAssetsPromise = cachePromise
-  .then(cache => cache.keys())
-  .then(keys => keys.map(({ url }) => `/${url.replace(self.registration.scope, '')}`))
+const allAssets = self.__WB_MANIFEST.map(({ url }) => url)
 
-const currentAssets = self.__WB_MANIFEST.map(({ url }) => url)
+const getCache = () => caches.open(CACHE_NAME)
 
-const cacheInlinedAssets = async inlinedAssets => {
-  const cache = await cachePromise
+const getCachedAssets = async cache => {
+  const keys = await cache.keys()
 
-  inlinedAssets.forEach(({ url, source }) => {
+  return keys.map(({ url }) => `/${url.replace(self.registration.scope, '')}`)
+}
+
+const cacheInlinedAssets = async assets => {
+  const cache = await getCache()
+
+  assets.forEach(({ url, source }) => {
     const response = new Response(source, {
       headers: {
         'Cache-Control': 'public, max-age=31536000, immutable',
@@ -24,30 +27,28 @@ const cacheInlinedAssets = async inlinedAssets => {
   })
 }
 
-const precacheAssets = async ignoredAssets => {
-  const cache = await cachePromise
-  const assetsToPrecache = currentAssets.filter(asset => !ignoredAssets.includes(asset))
+const precacheAssets = async ({ ignoreAssets }) => {
+  const cache = await getCache()
+  const assetsToPrecache = allAssets.filter(asset => !ignoreAssets.includes(asset))
 
   await cache.addAll(assetsToPrecache)
 }
 
-const removeStaleAssets = async () => {
-  const cache = await cachePromise
-  const cachedAssets = await cachedAssetsPromise
+const removeUnusedAssets = async () => {
+  const cache = await getCache()
+  const cachedAssets = await getCachedAssets(cache)
 
   cachedAssets.forEach(asset => {
-    if (!currentAssets.includes(asset)) cache.delete(asset)
+    if (!allAssets.includes(asset)) cache.delete(asset)
   })
 }
 
 const handleFetch = async request => {
-  const cache = await cachePromise
-  const cachedAssets = await cachedAssetsPromise
+  const cache = await getCache()
 
   if (request.destination === 'document') {
-    const headers = {
-      'X-Cached': cachedAssets.join(', ')
-    }
+    const cachedAssets = await getCachedAssets(cache)
+    const headers = { 'X-Cached': cachedAssets.join(', ') }
 
     return fetch(request, { headers })
   }
@@ -62,10 +63,10 @@ self.addEventListener('install', () => self.skipWaiting())
 self.addEventListener('message', event => {
   const { type, inlinedAssets } = event.data
 
-  if (type === 'inlined-assets') {
+  if (type === 'cache-assets') {
     cacheInlinedAssets(inlinedAssets)
-    precacheAssets(inlinedAssets.map(({ url }) => url))
-    removeStaleAssets()
+    precacheAssets({ ignoreAssets: inlinedAssets.map(({ url }) => url) })
+    removeUnusedAssets()
   }
 })
 
