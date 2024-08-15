@@ -73,11 +73,11 @@ export default {
 
     const cachedAssets = request.headers.get('X-Cached')?.split(', ').filter(Boolean) || []
 
-    const pages = INJECT_PAGES_HERE
+    const allAssets = INJECT_ASSETS_HERE
 
     let html = INJECT_HTML_HERE
 
-    const uncachedAssets = pages.filter(({ url }) => !cachedAssets.includes(url))
+    const uncachedAssets = allAssets.filter(({ url }) => !cachedAssets.includes(url))
 
     uncachedAssets.forEach(({ url, source }) => {
       html = html.replace(
@@ -86,13 +86,13 @@ export default {
       )
     })
 
-    const matchingPageAssets = pages
-      .map(page => {
-        const parentsPaths = page.parentPaths.map(path => ({ path, ...isMatch(pathname, path) }))
+    const matchingPageAssets = allAssets
+      .map(asset => {
+        const parentsPaths = asset.parentPaths.map(path => ({ path, ...isMatch(pathname, path) }))
         const parentPathsExactMatch = parentsPaths.some(({ exact }) => exact)
         const parentPathsMatch = parentsPaths.some(({ match }) => match)
 
-        return { ...page, exact: parentPathsExactMatch, match: parentPathsMatch }
+        return { ...asset, exact: parentPathsExactMatch, match: parentPathsMatch }
       })
       .filter(({ match }) => match)
     const exactMatchingPageAssets = matchingPageAssets.filter(({ exact }) => exact)
