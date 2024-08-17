@@ -23,7 +23,7 @@ export default pages => `
           return typeof value === 'function' ? `func:${value.toString()}` : value
         })}
 
-        ${readFileSync(join(__dirname, '..', 'scripts', 'preload-data.js'))}
+        ${readFileSync(join(__dirname, '..', 'scripts', 'preload-assets.js'))}
       </script>
     </head>
     <body>

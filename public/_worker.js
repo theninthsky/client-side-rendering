@@ -66,7 +66,7 @@ export default {
     const userAgent = (request.headers.get('User-Agent') || '').toLowerCase()
 
     // non-document request
-    if (pathname.includes('.')) return env.ASSETS.fetch(request)
+    if (pathname.includes('.') || userAgent.includes('googlebot')) return env.ASSETS.fetch(request)
 
     // crawler request
     if (BOT_AGENTS.some(agent => userAgent.includes(agent))) return fetchPrerendered(request)
