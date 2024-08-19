@@ -20,18 +20,23 @@ const register = () => {
 
       console.log('Service worker registered!')
 
-      setInterval(() => registration.update(), ACTIVE_REVALIDATION_INTERVAL * 1000)
+      const inlinedAssets = extractInlinedScripts()
+
+      if (inlinedAssets.length) {
+        navigator.serviceWorker.ready.then(registration => {
+          registration.active?.postMessage({ type: 'cache-assets', inlinedAssets })
+        })
+      }
 
       registration.addEventListener('updatefound', () => {
-        const inlinedAssets = extractInlinedScripts()
+        registration.installing!.onstatechange = (event: Event) => {
+          const serviceWorker = event.target as ServiceWorker
 
-        registration.installing!.onstatechange = event => {
-          // @ts-ignore
-          if (event.target.state !== 'activated') return
-
-          registration.active!.postMessage({ type: 'cache-assets', inlinedAssets })
+          if (serviceWorker.state === 'activated') serviceWorker.postMessage({ type: 'precache-assets', inlinedAssets })
         }
       })
+
+      setInterval(() => registration.update(), ACTIVE_REVALIDATION_INTERVAL * 1000)
     } catch (err) {
       console.error(err)
     }

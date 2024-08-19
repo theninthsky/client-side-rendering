@@ -194,11 +194,10 @@ const listData = {
             <a href="https://web.dev/cls" target="_blank">
               CLS
             </a>{' '}
-            when performing viewport-based rendering (like when using a{' '}
-            <a href="https://github.com/theninthsky/frontend-essentials/tree/main#media" target="_blank">
-              Media
-            </a>{' '}
-            component).
+            when performing viewport-based rendering which rely on{' '}
+            <a href="https://developer.mozilla.org/en-US/docs/Web/API/Window/matchMedia" target="_blank">
+              window.matchMedia
+            </a>
           </p>
         )
       },
@@ -335,7 +334,7 @@ const listData = {
       },
       {
         value: 'Same SSR cons as #3, #4, #7, #8 and #9',
-        description: 'While some pages can be prefetched, surely not all pages in large websites can be'
+        description: '#3: static pages cannot even distinguish between desktop and mobile viewports'
       }
     ]
   },

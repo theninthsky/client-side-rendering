@@ -23,7 +23,7 @@ const cacheInlinedAssets = async assets => {
 
     cache.put(url, response)
 
-    console.log(`Cached ${url}`)
+    console.log(`Service worker cached %c${url}`, 'color: yellow; font-style: italic;')
   })
 }
 
@@ -63,8 +63,8 @@ self.addEventListener('install', () => self.skipWaiting())
 self.addEventListener('message', event => {
   const { type, inlinedAssets } = event.data
 
-  if (type === 'cache-assets') {
-    cacheInlinedAssets(inlinedAssets)
+  if (type === 'cache-assets') return cacheInlinedAssets(inlinedAssets)
+  if (type === 'precache-assets') {
     precacheAssets({ ignoreAssets: inlinedAssets.map(({ url }) => url) })
     removeUnusedAssets()
   }
