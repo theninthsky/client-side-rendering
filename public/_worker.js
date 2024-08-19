@@ -1,3 +1,6 @@
+const allAssets = INJECT_ASSETS_HERE
+const html = INJECT_HTML_HERE
+
 const BOT_AGENTS = [
   'bingbot',
   'yahoo! slurp',
@@ -65,22 +68,20 @@ export default {
     const pathname = new URL(request.url).pathname.toLowerCase()
     const userAgent = (request.headers.get('User-Agent') || '').toLowerCase()
 
-    // non-document request
+    // non-document or google crawler request
     if (pathname.includes('.') || userAgent.includes('googlebot')) return env.ASSETS.fetch(request)
-
     // crawler request
     if (BOT_AGENTS.some(agent => userAgent.includes(agent))) return fetchPrerendered(request)
 
     const cachedAssets = request.headers.get('X-Cached')?.split(', ').filter(Boolean) || []
-
-    const allAssets = INJECT_ASSETS_HERE
-
-    let html = INJECT_HTML_HERE
-
     const uncachedAssets = allAssets.filter(({ url }) => !cachedAssets.includes(url))
 
+    if (!uncachedAssets.length) return env.ASSETS.fetch(request)
+
+    let body = html
+
     uncachedAssets.forEach(({ url, source }) => {
-      html = html.replace(
+      body = body.replace(
         `<script type="module" src="${url}"></script>`,
         () => `<script id="${url}" type="module">${source}</script>`
       )
@@ -100,10 +101,10 @@ export default {
     const uncachedPageAssets = pageAssets.filter(({ url }) => !cachedAssets.includes(url))
 
     uncachedPageAssets.forEach(({ url, source }) => {
-      html = html.replace('</head>', () => `<script id="${url}" type="module">${source}</script></head>`)
+      body = body.replace('</head>', () => `<script id="${url}" type="module">${source}</script></head>`)
     })
 
-    const response = new Response(html, { headers: { 'Content-Type': 'text/html; charset=utf-8' } })
+    const response = new Response(body, { headers: { 'Content-Type': 'text/html; charset=utf-8' } })
 
     return response
   }
