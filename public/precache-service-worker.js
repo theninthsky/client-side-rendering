@@ -23,7 +23,7 @@ const cacheInlinedAssets = async assets => {
 
     cache.put(url, response)
 
-    console.log(`Service worker cached %c${url}`, 'color: yellow; font-style: italic;')
+    console.log(`Cached %c${url}`, 'color: yellow; font-style: italic;')
   })
 }
 

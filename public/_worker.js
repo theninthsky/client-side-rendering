@@ -73,10 +73,11 @@ export default {
     // crawler request
     if (BOT_AGENTS.some(agent => userAgent.includes(agent))) return fetchPrerendered(request)
 
+    const headers = { 'Content-Type': 'text/html; charset=utf-8' }
     const cachedAssets = request.headers.get('X-Cached')?.split(', ').filter(Boolean) || []
     const uncachedAssets = allAssets.filter(({ url }) => !cachedAssets.includes(url))
 
-    if (!uncachedAssets.length) return env.ASSETS.fetch(request)
+    if (!uncachedAssets.length) return new Response(html, { headers })
 
     let body = html
 
@@ -104,8 +105,6 @@ export default {
       body = body.replace('</head>', () => `<script id="${url}" type="module">${source}</script></head>`)
     })
 
-    const response = new Response(body, { headers: { 'Content-Type': 'text/html; charset=utf-8' } })
-
-    return response
+    return new Response(body, { headers })
   }
 }
