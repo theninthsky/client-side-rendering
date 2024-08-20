@@ -3,8 +3,8 @@
 import extractInlinedScripts from './extract-inlined-scripts'
 
 const SERVICE_WORKERS = {
-  precache: '/precache-service-worker.js',
-  swr: '/swr-service-worker.js'
+  precache: '/workers/precache-service-worker.js',
+  swr: '/workers/swr-service-worker.js'
 }
 const ACTIVE_REVALIDATION_INTERVAL = 10 * 60
 const shouldRegisterServiceWorker = process.env.NODE_ENV !== 'development' && navigator.userAgent !== 'Prerender'
