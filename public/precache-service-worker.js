@@ -29,7 +29,8 @@ const cacheInlinedAssets = async assets => {
 
 const precacheAssets = async ({ ignoreAssets }) => {
   const cache = await getCache()
-  const assetsToPrecache = allAssets.filter(asset => !ignoreAssets.includes(asset))
+  const cachedAssets = await getCachedAssets(cache)
+  const assetsToPrecache = allAssets.filter(asset => !cachedAssets.includes(asset) && !ignoreAssets.includes(asset))
 
   await cache.addAll(assetsToPrecache)
 }
