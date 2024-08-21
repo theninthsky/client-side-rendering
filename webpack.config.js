@@ -100,8 +100,7 @@ export default (_, { mode }) => {
             swType =>
               new InjectManifest({
                 include: [/fonts\//, /scripts\/.+\.js$/],
-                swSrc: join(__dirname, 'public', 'workers', `${swType}-service-worker.js`),
-                swDest: `workers/${swType}-service-worker.js`
+                swSrc: join(__dirname, 'public', `${swType}-service-worker.js`)
               })
           )
         : [
@@ -140,7 +139,7 @@ export default (_, { mode }) => {
         patterns: [
           {
             from: 'public',
-            globOptions: { ignore: ['**/index.js', '**/workers/*'] },
+            globOptions: { ignore: ['**/index.js'] },
             info: { minimized: true }
           }
         ]
