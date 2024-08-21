@@ -1,5 +1,13 @@
 {
   "version": 1,
   "include": ["/*"],
-  "exclude": ["/fonts/*", "/icons/*", "/json/*", "/scripts/*", "/manifest.json"]
+  "exclude": [
+    "/fonts/*",
+    "/icons/*",
+    "/json/*",
+    "/scripts/*",
+    "/manifest.json",
+    "/precache-service-worker.js",
+    "/swr-service-worker.js"
+  ]
 }
