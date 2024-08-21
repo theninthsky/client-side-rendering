@@ -17,7 +17,7 @@ const staleWhileRevalidate = async request => {
 
   const cache = await caches.open(CACHE_NAME)
   const cachedResponsePromise = await cache.match(request)
-  const networkResponsePromise = fetch(request)
+  const networkResponsePromise = fetch(request, { headers: { 'X-Installed': 'true' } })
 
   if (documentRequest) {
     networkResponsePromise.then(response => cache.put(request, response.clone()))

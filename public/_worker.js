@@ -67,10 +67,11 @@ export default {
   fetch(request, env) {
     const pathname = new URL(request.url).pathname.toLowerCase()
     const userAgent = (request.headers.get('User-Agent') || '').toLowerCase()
+    const nonDocument = pathname.includes('.')
+    const appInstalled = request.headers.get('X-Installed')
+    const googlebot = userAgent.includes('googlebot')
 
-    // non-document or google crawler request
-    if (pathname.includes('.') || userAgent.includes('googlebot')) return env.ASSETS.fetch(request)
-    // crawler request
+    if (nonDocument || appInstalled || googlebot) return env.ASSETS.fetch(request)
     if (BOT_AGENTS.some(agent => userAgent.includes(agent))) return fetchPrerendered(request)
 
     const headers = { 'Content-Type': 'text/html; charset=utf-8' }

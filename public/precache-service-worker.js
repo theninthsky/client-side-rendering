@@ -48,9 +48,8 @@ const handleFetch = async request => {
 
   if (request.destination === 'document') {
     const cachedAssets = await getCachedAssets(cache)
-    const headers = { 'X-Cached': cachedAssets.join(', ') }
 
-    return fetch(request, { headers })
+    return fetch(request, { headers: { 'X-Cached': cachedAssets.join(', ') } })
   }
 
   const cachedResponse = await cache.match(request)
