@@ -25,8 +25,8 @@ An in-depth comparison of all rendering methods can be found on this project's _
   - [Preloading Async Pages](#preloading-async-pages)
   - [Splitting Async Vendors](#splitting-async-vendors)
   - [Preloading Data](#preloading-data)
-  - [Prefetching Async Pages](#prefetching-async-pages)
-  - [Accelerating Unchanged Pages](#accelerating-unchanged-pages)
+  - [Precaching Async Pages](#precaching-async-pages)
+  - [Eliminating Idle Time](#eliminating-idle-time)
   - [Tweaking Further](#tweaking-further)
     - [Transitioning Async Pages](#transitioning-async-pages)
     - [Preloading Other Pages Data](#preloading-other-pages-data)
@@ -571,13 +571,13 @@ to:
 
 _Note that in order for the preload to work, the server has to send a `Cache-Control` header with a `max-age` of at least a few seconds._
 
-### Prefetching Async Pages
+### Precaching Async Pages
 
 Users should have a smooth navigation experience in our app.
 <br>
-However, splitting every page causes a noticeable delay in navigation, since every page has to be downloaded before it can be rendered on screen.
+However, splitting every page causes a noticeable delay in navigation, since every page has to be downloaded (on-demand) before it can be rendered on screen.
 
-We would want to prefetch all pages ahead of time.
+We would want to prefetch and cache all pages ahead of time.
 
 We can do this by writing a simple service worker:
 
@@ -589,7 +589,7 @@ plugins: [
     ? [
         new InjectManifest({
           include: [/fonts\//, /scripts\/.+\.js$/],
-          swSrc: path.join(__dirname, 'public', 'prefetch-service-worker.js')
+          swSrc: path.join(__dirname, 'public', 'precache-service-worker.js')
         })
       ]
     : [])
@@ -602,7 +602,7 @@ _[service-worker-registration.ts](src/utils/service-worker-registration.ts)_
 const register = () => {
   window.addEventListener('load', async () => {
     try {
-      await navigator.serviceWorker.register('/prefetch-service-worker.js')
+      await navigator.serviceWorker.register('/precache-service-worker.js')
 
       console.log('Service worker registered!')
     } catch (err) {
@@ -629,38 +629,101 @@ if ('serviceWorker' in navigator) {
 }
 ```
 
-_[prefetch-service-worker.js](public/prefetch-service-worker.js)_
+_[precache-service-worker.js](public/precache-service-worker.js)_
 
 ```js
-self.addEventListener('install', event => {
-  const assets = self.__WB_MANIFEST.map(({ url }) => url)
+const CACHE_NAME = 'my-csr-app'
 
-  event.waitUntil(Promise.all(assets.map(asset => fetch(asset))))
+const allAssets = self.__WB_MANIFEST.map(({ url }) => url)
+
+const getCache = () => caches.open(CACHE_NAME)
+
+const getCachedAssets = async cache => {
+  const keys = await cache.keys()
+
+  return keys.map(({ url }) => `/${url.replace(self.registration.scope, '')}`)
+}
+
+const precacheAssets = async ({ ignoreAssets }) => {
+  const cache = await getCache()
+  const cachedAssets = await getCachedAssets(cache)
+  const assetsToPrecache = allAssets.filter(asset => !cachedAssets.includes(asset) && !ignoreAssets.includes(asset))
+
+  await cache.addAll(assetsToPrecache)
+}
+
+const removeUnusedAssets = async () => {
+  const cache = await getCache()
+  const cachedAssets = await getCachedAssets(cache)
+
+  cachedAssets.forEach(asset => {
+    if (!allAssets.includes(asset)) cache.delete(asset)
+  })
+}
+
+self.addEventListener('install', () => {
   self.skipWaiting()
+
+  precacheAssets()
+  removeUnusedAssets()
 })
-
-self.addEventListener('fetch', () => {})
 ```
 
-Now all pages will be prefetched before the user even tries to navigate to them.
+Now all pages will be prefetched and cached before the user even tries to navigate to them.
 
-### Accelerating Unchanged Pages
+## Eliminating Idle Time
 
-Our build process produces a `runtime.[hash].js` file which is an "initial" (critical) script that contains all of the script mappings.
+When inspecting our 43kb `react-dom.js` file, we can see that the time it took for the request to return was 128ms while the time it took to download the file was 9ms:
+
+[Picture]
+
+This demonstrates the well-known fact that [RTT](https://en.wikipedia.org/wiki/Round-trip_delay) has a huge impact on web pages load times, sometimes even more than download speed, and even when assets are served from a nearby CDN edge.
+
+Additionally and even more importantly, we can see that after the HTML file is downloaded, we have a large timespan where the browser stays idle and just waits for the scripts to be download:
+
+![Browser Idle Period](images/browser-idle-period.png)
+
+This is a lot of precious time (marked in green) that the browser could use to execute scripts and speed up the page's visibility and interactivity.
 <br>
-So when any file changes in our app, the `runtime` file changes aswell.
+This inefficiency will reoccur when some of the cache invalidates, so it's not a one-time-only event.
 
-The problem is, even when users land on a page that did not change since they last visited our app (neither its dependencies changed), so that all of its page-related scripts are fully cached - since the `runtime` script **did** change, the browser will have to wait for it to be downloaded and executed to render the page, thus slightly delaying the entire load of the page.
+So how can we eliminate this idle time?
+<br>
+We could inline all the initial (critical) scripts in the document, so that they will start download, parse and execute until the async page arrives:
 
-We can easily overcome this issue by inlining the `runtime` script in the HTML:
+[Picture]
 
-_[webpack.config.js](webpack.config.js)_
+We can see that the browser now gets its initial scripts without having to send another request to the CDN. And since the HTML file is streamed sequentially, the browser will execute the scripts as soon as it gets them, without having to wait for the entire file to download.
+<br>
+So the browser will first send requests for the async chunks and the preloaded data, and while these are pending, it will resume to downloading and executing the main scripts.
 
-```js
-plugins: [new HtmlInlineScriptPlugin({ scriptMatchPattern: [/runtime.+[.]js$/] })]
-```
+While making a noticeable difference on fast networks, this is especially critical for slower networks, where the delay is larger and so the RTT is much more impactful:
 
-This will only add about 2kb to our HTML file, but will ensure that unchanged (and unaffected) pages will be loaded immediately from cache, without requiring an extra roundtrip to the CDN.
+![Inlined Scripts Slow 4G](images/inlined-scripts-slow-4g.png)
+
+We can see that the async chunks start to download (marked in blue) right after the HTML file finishes downloading, parsing and executing, which saves a lot of time.
+
+However, this solution has 2 major issues:
+
+1. We wouldn’t want users to download the 100kb+ HTML file every time they visit our app. We only want that to happen for the very first visit.
+2. Since we do not inline the async page’s assets as well, we would probably still be waiting for them to fetch even after the entire HTML has finished downloading, parsing and executing.
+
+To overcome thses issues, we can no longer stick to a static HTML file anymore, and so we shall leaverage the power of a server. Or, more precisely, the power of a Cloudflare serverless function (worker).
+<br>
+This worker should intercept every HTML document request and tailor a response that fits it perfectly.
+
+The entire flow should be described as follows:
+
+1. The browser sends a HTML document request to the Clouflare worker.
+2. The Clouflare worker checks for the existence of a `X-Cached` header in the request.
+   If such header exists, it will iterate over its values and inline only the relevant* assets that are absent from it in the response.
+   If such header doesn't exist, it will inline all the relevant* assets in the response.
+3. The app will then extract all of the inlined assets, cache them in a service worker and then precache all of the other assets.
+4. The next time the page is reloaded, the service worker will send the HTML document along with a `X-Cached` header specifying all of its cached assets.
+
+\* Both initial and page-specefic assets.
+
+This ensures that the browser receives exactly the assets it needs (no more, no less) to display the page **in a single roundtrip**!
 
 ## Tweaking Further
 

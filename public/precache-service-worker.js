@@ -71,7 +71,7 @@ self.addEventListener('message', event => {
 })
 
 self.addEventListener('fetch', async event => {
-  if (['document', 'font', 'script', 'style'].includes(event.request.destination)) {
+  if (['document', 'font', 'script'].includes(event.request.destination)) {
     event.respondWith(handleFetch(event.request))
   }
 })
