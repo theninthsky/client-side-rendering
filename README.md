@@ -26,16 +26,12 @@ An in-depth comparison of all rendering methods can be found on this project's _
   - [Splitting Async Vendors](#splitting-async-vendors)
   - [Preloading Data](#preloading-data)
   - [Precaching Async Pages](#precaching-async-pages)
-  - [Eliminating Idle Time](#eliminating-idle-time)
+  - [Dynamic Source Inlining](#dynamic-source-inlining)
   - [Tweaking Further](#tweaking-further)
     - [Transitioning Async Pages](#transitioning-async-pages)
     - [Preloading Other Pages Data](#preloading-other-pages-data)
     - [Revalidating Active Apps](#revalidating-active-apps)
     - [Generating Static Data](#generating-static-data)
-  - [Interim Summary](#interim-summary)
-  - [The Biggest Drawback of SSR](#the-biggest-drawback-of-ssr)
-  - [The SWR Approach](#the-swr-approach)
-    - [Implementing SWR](#implementing-swr)
   - [Summary](#summary)
   - [Deploying](#deploying)
   - [Benchmark](#benchmark)
@@ -629,7 +625,7 @@ if ('serviceWorker' in navigator) {
 }
 ```
 
-_[precache-service-worker.js](public/precache-service-worker.js)_
+_[public/precache-service-worker.js](public/precache-service-worker.js)_
 
 ```js
 const CACHE_NAME = 'my-csr-app'
@@ -661,69 +657,208 @@ const removeUnusedAssets = async () => {
   })
 }
 
+const handleFetch = async request => {
+  const cache = await getCache()
+  const cachedResponse = await cache.match(request)
+
+  return cachedResponse || fetch(request)
+}
+
 self.addEventListener('install', () => {
   self.skipWaiting()
 
   precacheAssets()
   removeUnusedAssets()
 })
+
+self.addEventListener('fetch', async event => {
+  if (['font', 'script'].includes(event.request.destination)) {
+    event.respondWith(handleFetch(event.request))
+  }
+})
 ```
 
 Now all pages will be prefetched and cached before the user even tries to navigate to them.
 
-## Eliminating Idle Time
+## Dynamic Source Inlining
 
-When inspecting our 43kb `react-dom.js` file, we can see that the time it took for the request to return was 128ms while the time it took to download the file was 9ms:
+When inspecting our 43kb `react-dom.js` file, we can see that the time it took for the request to return was 60ms while the time it took to download the file was 3ms:
 
-[Picture]
+![CDN Response Time](images/cdn-response-time.png)
 
-This demonstrates the well-known fact that [RTT](https://en.wikipedia.org/wiki/Round-trip_delay) has a huge impact on web pages load times, sometimes even more than download speed, and even when assets are served from a nearby CDN edge.
+This demonstrates the well-known fact that [RTT](https://en.wikipedia.org/wiki/Round-trip_delay) has a huge impact on web pages load times, sometimes even more than download speed, and even when assets are served from a nearby CDN edge like in our case.
 
-Additionally and even more importantly, we can see that after the HTML file is downloaded, we have a large timespan where the browser stays idle and just waits for the scripts to be download:
+Additionally and more importantly, we can see that after the HTML file is downloaded, we have a large timespan where the browser stays idle and just waits for the scripts to download:
 
 ![Browser Idle Period](images/browser-idle-period.png)
 
-This is a lot of precious time (marked in green) that the browser could use to execute scripts and speed up the page's visibility and interactivity.
+This is a lot of precious time (marked in red) that the browser could use to execute scripts and speed up the page's visibility and interactivity.
 <br>
-This inefficiency will reoccur when some of the cache invalidates, so it's not a one-time-only event.
+This inefficiency will reoccur frequently when some of the cache invalidates. It is not something that only happens in the very first page load.
 
 So how can we eliminate this idle time?
 <br>
-We could inline all the initial (critical) scripts in the document, so that they will start download, parse and execute until the async page arrives:
+We could inline all the initial (critical) scripts in the document, so that they will start to download, parse and execute until the async page assets arrive:
 
-[Picture]
+![Inlined Initial Scripts](images/inlined-initial-scripts.png)
 
 We can see that the browser now gets its initial scripts without having to send another request to the CDN. And since the HTML file is streamed sequentially, the browser will execute the scripts as soon as it gets them, without having to wait for the entire file to download.
 <br>
-So the browser will first send requests for the async chunks and the preloaded data, and while these are pending, it will resume to downloading and executing the main scripts.
-
-While making a noticeable difference on fast networks, this is especially critical for slower networks, where the delay is larger and so the RTT is much more impactful:
-
-![Inlined Scripts Slow 4G](images/inlined-scripts-slow-4g.png)
-
+So the browser will first send requests for the async chunks and the preloaded data, and while these are pending, it will continue to download and execute the main scripts.
+<br>
 We can see that the async chunks start to download (marked in blue) right after the HTML file finishes downloading, parsing and executing, which saves a lot of time.
+
+While this change is making a significant difference on fast networks, it is even more crucial for slower networks, where the delay is larger and the RTT is much more impactful.
 
 However, this solution has 2 major issues:
 
 1. We wouldn’t want users to download the 100kb+ HTML file every time they visit our app. We only want that to happen for the very first visit.
 2. Since we do not inline the async page’s assets as well, we would probably still be waiting for them to fetch even after the entire HTML has finished downloading, parsing and executing.
 
-To overcome thses issues, we can no longer stick to a static HTML file anymore, and so we shall leaverage the power of a server. Or, more precisely, the power of a Cloudflare serverless function (worker).
+To overcome thses issues, we can no longer stick to a static HTML file, and so we shall leaverage the power of a server. Or, more precisely, the power of a Cloudflare serverless worker.
 <br>
 This worker should intercept every HTML document request and tailor a response that fits it perfectly.
 
 The entire flow should be described as follows:
 
-1. The browser sends a HTML document request to the Clouflare worker.
-2. The Clouflare worker checks for the existence of a `X-Cached` header in the request.
+1. The browser sends an HTML document request to the Clouflare worker.
+2. The Clouflare worker checks for the existence of an `X-Cached` header in the request.
    If such header exists, it will iterate over its values and inline only the relevant* assets that are absent from it in the response.
    If such header doesn't exist, it will inline all the relevant* assets in the response.
 3. The app will then extract all of the inlined assets, cache them in a service worker and then precache all of the other assets.
-4. The next time the page is reloaded, the service worker will send the HTML document along with a `X-Cached` header specifying all of its cached assets.
+4. The next time the page is reloaded, the service worker will send the HTML document along with an `X-Cached` header specifying all of its cached assets.
 
 \* Both initial and page-specefic assets.
 
 This ensures that the browser receives exactly the assets it needs (no more, no less) to display the page **in a single roundtrip**!
+
+_[webpack.config.js](webpack.config.js)_
+
+```js
+plugins: [
+  new HtmlPlugin({
+    scriptLoading: 'module',
+    templateContent: ({ compilation }) => {
+      const assets = compilation.getAssets()
+      const pages = pagesManifest.map(({ chunk, path, data }) => {
+        const scripts = assets
+          .map(({ name }) => name)
+          .filter(name => new RegExp(`[/.]${chunk}\\.(.+)\\.js$`).test(name))
+
+        return { path, scripts, data }
+      })
+
+      if (production) {
+        const assetsWithSource = assets
+          .filter(({ name }) => /^scripts\/.+\.js$/.test(name))
+          .map(({ name, source }) => ({
+            url: `/${name}`,
+            source: source.source(),
+            parentPaths: pages.filter(({ scripts }) => scripts.includes(name)).map(({ path }) => path)
+          }))
+
+        writeFileSync(join(__dirname, 'public', 'assets.js'), JSON.stringify(assetsWithSource))
+      }
+
+      return htmlTemplate(pages)
+    }
+  })
+]
+```
+
+_[scripts/inject-worker-html.js](scripts/inject-worker-html.js)_
+
+```js
+import { join } from 'node:path'
+import { readFileSync, writeFileSync, rmSync } from 'node:fs'
+
+const __dirname = import.meta.dirname
+
+const assets = readFileSync(join(__dirname, '..', 'public', 'assets.js'), 'utf-8')
+let html = readFileSync(join(__dirname, '..', 'build', 'index.html'), 'utf-8')
+let worker = readFileSync(join(__dirname, '..', 'build', '_worker.js'), 'utf-8')
+
+html = html
+  .replace(/,"scripts":\s*\[(.*?)\]/g, () => '')
+  .replace(/scripts\.forEach[\s\S]*?data\?\.\s*forEach/, () => 'data?.forEach')
+  .replace(/preloadAssets/g, () => 'preloadData')
+
+worker = worker.replace('INJECT_ASSETS_HERE', () => assets).replace('INJECT_HTML_HERE', () => JSON.stringify(html))
+
+rmSync(join(__dirname, '..', 'public', 'assets.js'))
+writeFileSync(join(__dirname, '..', 'build', '_worker.js'), worker)
+```
+
+_[public/\_worker.js](public/_worker.js)_
+
+```js
+const allAssets = INJECT_ASSETS_HERE
+const html = INJECT_HTML_HERE
+
+const isMatch = (pathname, path) => {
+  if (pathname === path) return { exact: true, match: true }
+  if (!path.includes(':')) return { match: false }
+
+  const pathnameParts = pathname.split('/')
+  const pathParts = path.split('/')
+  const match = pathnameParts.every((part, ind) => part === pathParts[ind] || pathParts[ind]?.startsWith(':'))
+
+  return {
+    exact: match && pathnameParts.length === pathParts.length,
+    match
+  }
+}
+
+export default {
+  fetch(request, env) {
+    const pathname = new URL(request.url).pathname.toLowerCase()
+    const nonDocument = pathname.includes('.')
+
+    if (nonDocument) return env.ASSETS.fetch(request)
+
+    const headers = { 'Content-Type': 'text/html; charset=utf-8' }
+    const cachedAssets = request.headers.get('X-Cached')?.split(', ').filter(Boolean) || []
+    const uncachedAssets = allAssets.filter(({ url }) => !cachedAssets.includes(url))
+
+    if (!uncachedAssets.length) return new Response(html, { headers })
+
+    let body = html
+
+    uncachedAssets.forEach(({ url, source }) => {
+      body = body.replace(
+        `<script type="module" src="${url}"></script>`,
+        () => `<script id="${url}" type="module">${source}</script>`
+      )
+    })
+
+    const matchingPageAssets = allAssets
+      .map(asset => {
+        const parentsPaths = asset.parentPaths.map(path => ({ path, ...isMatch(pathname, path) }))
+        const parentPathsExactMatch = parentsPaths.some(({ exact }) => exact)
+        const parentPathsMatch = parentsPaths.some(({ match }) => match)
+
+        return { ...asset, exact: parentPathsExactMatch, match: parentPathsMatch }
+      })
+      .filter(({ match }) => match)
+    const exactMatchingPageAssets = matchingPageAssets.filter(({ exact }) => exact)
+    const pageAssets = exactMatchingPageAssets.length ? exactMatchingPageAssets : matchingPageAssets
+    const uncachedPageAssets = pageAssets.filter(({ url }) => !cachedAssets.includes(url))
+
+    uncachedPageAssets.forEach(({ url, source }) => {
+      body = body.replace('</head>', () => `<script id="${url}" type="module">${source}</script></head>`)
+    })
+
+    return new Response(body, { headers })
+  }
+}
+```
+
+The results for an initial (uncached) load are exceptional:
+
+![Inlined Scripts](images/inlined-scripts.png)
+![Inlined Scripts CDN Response Time](images/inlined-scripts-cdn-response-time.png)
+
+On the next load, the Cloudflate worker responds with a minimal (1.8kb) HTML document and all assets are immediately served from cache.
 
 ## Tweaking Further
 
@@ -850,7 +985,7 @@ The code above revalidates the app every 10 minutes.
 
 The revalidation process is extremely cheap, since it only involves refetching the service worker (which will return a _304 Not Modified_ status code if not changed).
 <br>
-When the service worker **does** change, it means that new assets are available, and so they will be selectively downloaded and saved in the browser's cache.
+When the service worker **does** change, it means that new assets are available, and so they will be selectively downloaded and cached.
 
 ### Generating Static Data
 
@@ -909,221 +1044,16 @@ There are some advantages to this approach:
 
 Whenever we need to update the static data we simply rebuild the app or, if we have control over our build files in production, just rerun the script.
 
-## Interim Summary
-
-Up until now we've managed the make our app well-splitted, extremely cachable, with fluid navigations between async pages and with page and data preloads.
-<br>
-All of the above were achieved by adding a few lines of code to the webpack config and without imposing any limitations to how we develop our app.
-
-In its current state, our app has amazing performance, far exceeding any preconfigured CSR solutions such as _[CRA](https://create-react-app.dev)_.
-
-From this point forward we are going to level it up one last time using a method that is a little less conservative but with unmatched benefits in terms of performance.
-
-## The Biggest Drawback of SSR
-
-When using server-side rendering, it is most common to fetch the (dynamic) data on the server and then "bake" it into the HTML before sending the page to the browser.
-<br>
-This practice has a lot of sense to it, and fetching data on the browser will make the choice of using SSR completely unreasonable (it even falls behind CSR's performance since the fetch will occur only after the entire hydration process is finished).
-
-However, inlining the data in the HTML has one major flaw: it eliminates the natural seperation between the app and the dynamic data.
-<br>
-The implications of this can be seen when trying to serve users cached pages.
-
-It's obvious that we want our app to load fast for every user and especially for returning users. But since every user has a different connection speed, some users will see their requested pages only after several seconds.
-<br>
-In addition, even those with fast interent connection will have to pay the price of the initial connection before even starting to download their desired page:
-
-![Connection Establishment](images/connection-establishment.png)
-
-In the sample above (caught by a 500Mbps interent connection speed), it took 600ms just to get the first byte of the HTML document.
-<br>
-These times vary greatly from several hundreds of milliseconds to (in extreme cases) more than a second. And to make things even worse, browsers keep the DNS cache only for about a minute, and so this process repeats very frequently.
-
-The only way to skip these loading times is by caching HTML pages in the browser (for example, by setting a `Max-Age` value of more than `0`).
-
-But here is the problem with SSR: by doing so, users will most likely see outdated content, since the data is embedded in the document.
-<br>
-The lack of seperation between the app (also called the "app shell") and its data prevents us from caching pages without risking the freshness of the data.
-
-However, in CSR apps we have complete seperation of the two, making it possible to cache only the app shell while still getting fresh data on every visit (just like in native apps).
-
-## The SWR Approach
-
-We can easily implement app shell cache by setting the `Cache-Control: Max-Age=x` header of the HTML document to any value greater than 0. This way the entire app will load almost instantly (usually under 200ms), regardless of the user's connection speed, for the duration we set.
-
-However, the `Max-Age` attribute has a flaw: during the set time period, the browser won't even attempt to reach the CDN, as requests will be fulfilled immidiately by the cached responses. This means that no matter how many times the users reload their page - they will always get a "stale" (potentially outdated) response.
-
-That's why the "Stale While Revalidate" (SWR) approach was invented.
-
-When using SWR, the browser is allowed to use a cached asset or response (usually for a limited time) but in the same time it sends a request for the server and asks for the newest asset. After the fresh asset is downloaded, the browser **replaces** the stale cached asset with the fresh asset, ready to be used the next time the page is loaded.
-
-This method completely surpasses any network conditions, it even allows our app to be available offline (within the SWR allowed time period), and all of this - without even compromising on the freshness of the app shell.
-
-Many popular websites such as YouTube, Twitter and CodeSandbox implement SWR in their app shell.
-<br>
-Additionally, SWR is absolutely necessary when making a PWA, since it behaves just like native apps do.
-
-There are two ways to achieve SWR in web applications:
-
-1. The _[stale-while-revalidate](https://web.dev/stale-while-revalidate/#what-shipped)_ attribute.
-2. A custom service worker.
-
-Although the first approach is completely usable (and can be set up within seconds), the second approach will give us a more granular control of how and when assets are cached and updated, in addition to giving us _[immediate code cache](https://v8.dev/blog/code-caching-for-devs#use-service-worker-caches)_. So this is the approach we should choose to implement.
-
-### Implementing SWR
-
-Our SWR service worker needs to cache the HTML document and all of the fonts and scripts (and stylesheets) of all pages.
-<br>
-In addition, it needs to serve these cached assets right when the page opens and then send a request to the CDN, fetch all new assets (if exist), and finally replace the stale cached assets with the new ones.
-
-_[webpack.config.js](webpack.config.js)_
-
-```diff
-plugins: [
-  ...(production
-    ? [
-        new InjectManifest({
-          include: [/fonts\//, /scripts\/.+\.js$/],
--         swSrc: path.join(__dirname, 'public', 'prefetch-service-worker.js')
-+         swSrc: path.join(__dirname, 'public', 'swr-service-worker.js')
-        })
-      ]
-    : [])
-]
-```
-
-_[swr-service-worker.js](public/swr-service-worker.js)_
-
-```js
-const CACHE_NAME = 'my-csr-app'
-const CACHED_URLS = ['/', ...self.__WB_MANIFEST.map(({ url }) => url)]
-const MAX_STALE_DURATION = 7 * 24 * 60 * 60
-
-const preCache = async () => {
-  await caches.delete(CACHE_NAME)
-
-  const cache = await caches.open(CACHE_NAME)
-
-  await cache.addAll(CACHED_URLS)
-}
-
-const staleWhileRevalidate = async request => {
-  const documentRequest = request.destination === 'document'
-
-  if (documentRequest) request = new Request(self.registration.scope)
-
-  const cache = await caches.open(CACHE_NAME)
-  const cachedResponsePromise = await cache.match(request)
-  const networkResponsePromise = fetch(request)
-
-  if (documentRequest) {
-    networkResponsePromise.then(response => cache.put(request, response.clone()))
-
-    if ((new Date() - new Date(cachedResponsePromise?.headers.get('date'))) / 1000 > MAX_STALE_DURATION) {
-      return networkResponsePromise
-    }
-
-    return cachedResponsePromise
-  }
-
-  return cachedResponsePromise || networkResponsePromise
-}
-
-self.addEventListener('install', event => {
-  event.waitUntil(preCache())
-  self.skipWaiting()
-})
-
-self.addEventListener('fetch', event => {
-  if (['document', 'font', 'script', 'style'].includes(event.request.destination)) {
-    event.respondWith(staleWhileRevalidate(event.request))
-  }
-})
-```
-
-We define a `MAX_STALE_DURATION` constant to set the maximum duration we are willing for our users to see the (potentially) stale app shell.
-<br>
-This duration can be derived from how often we update (deploy) our app in production.
-
-In addition, the desktop versions of Chrome and Edge automatically freeze inactive tabs and then reload them upon reactivation:
-<br>
-https://blog.google/products/chrome/new-chrome-features-to-save-battery-and-make-browsing-smoother
-<br>
-https://www.microsoft.com/en-us/edge/features/sleeping-tabs-at-work
-
-![Chrome Memory Saver](images/chrome-memory-saver.png)
-
-This gives our app more chance to be as up-to-date as possible.
-
-While it is highly recommended to always use SWR for the app shell, some would prefer to avoid it and always serve users with the most up-to-date static assets.
-<br>
-In such cases, we need to apply the SWR service worker only to installed apps (PWAs):
-
-_[webpack.config.js](webpack.config.js)_
-
-```js
-plugins: [
-  ...(production
-    ? ['prefetch', 'swr'].map(
-        swType =>
-          new InjectManifest({
-            include: [/fonts\//, /scripts\/.+\.js$/],
-            swSrc: path.join(__dirname, 'public', `${swType}-service-worker.js`)
-          })
-      )
-    : [])
-]
-```
-
-_[service-worker-registration.ts](src/utils/service-worker-registration.ts)_
-
-```js
-const SERVICE_WORKERS = {
-  prefetch: '/prefetch-service-worker.js',
-  swr: '/swr-service-worker.js'
-}
-const ACTIVE_REVALIDATION_INTERVAL = 10 * 60
-const appIsInstalled =
-  window.matchMedia('(display-mode: standalone)').matches || document.referrer.includes('android-app://')
-
-const register = () => {
-  window.addEventListener('load', async () => {
-    const serviceWorkerType = appIsInstalled ? 'swr' : 'prefetch'
-
-    try {
-      const registration = await navigator.serviceWorker.register(SERVICE_WORKERS[serviceWorkerType])
-
-      console.log('Service worker registered!')
-
-      setInterval(() => registration.update(), ACTIVE_REVALIDATION_INTERVAL * 1000)
-    } catch (err) {
-      console.error(err)
-    }
-  })
-}
-
-.
-.
-.
-```
-
-When using SWR, the loading time of the app is near-instant:
-
-![SWR Disk Cache](images/swr-disk-cache.png)
-
-These metrics are coming from a 2018 `Intel i3-8130U` laptop when the browser is using the disk cache (not the memory cache which is a lot faster), and are completely independent of network speed or status.
-
-In conclusion, it is obvious that no rendering method can match SWR in terms of performance.
-
 ## Summary
 
-We've managed to make the initial load of our app very fast, only what is required for the requested page is being loaded.
+We've managed to make the initial (cacheless) load of our extremely fast, everything that a page requires to load is dynamically injected to it.
 <br>
-In addition, we preload other pages (and even their data), which makes it seem as if they were never seperated to begin with.
+We even preload the page's data, eliminating the famous data fetching delay that CSR apps are known to have.
 <br>
-And finally, we wrapped everything with SWR, so the repeated loads of our app are fast as they can get.
+In addition, we precache other pages, which makes it seem as if they were never separated.
+<br>
 
-All of these were achieved without compromising on the developer experience and without dictating which JS framework we choose or where we deploy our app, it can be on any CDN we choose (more on that in the next section).
+All of these were achieved without compromising on the developer experience and without dictating which JS framework to choose.
 
 ## Deploying
 
