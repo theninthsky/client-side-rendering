@@ -235,10 +235,10 @@ plugins: [
     scriptLoading: 'module',
     templateContent: ({ compilation }) => {
       const assets = compilation.getAssets().map(({ name }) => name)
-      const pages = pagesManifest.map(({ chunk, path }) => {
+      const pages = pagesManifest.map(({ chunk, path, title }) => {
         const script = assets.find(name => name.includes(`/${chunk}.`) && name.endsWith('.js'))
 
-        return { path, script }
+        return { path, title, script }
       })
 
       return htmlTemplate(pages)
@@ -309,11 +309,13 @@ const preloadAssets = () => {
 
   if (!matchingPages.length) return
 
-  const { path, script } = matchingPages.find(({ exact }) => exact) || matchingPages[0]
+  const { path, title, script } = matchingPages.find(({ exact }) => exact) || matchingPages[0]
 
   document.head.appendChild(
     Object.assign(document.createElement('link'), { rel: 'preload', href: '/' + script, as: 'script' })
   )
+
+  if (title) document.title = title
 }
 
 preloadAssets()
@@ -394,12 +396,12 @@ plugins: [
     scriptLoading: 'module',
     templateContent: ({ compilation }) => {
       const assets = compilation.getAssets().map(({ name }) => name)
-      const pages = pagesManifest.map(({ chunk, path }) => {
+      const pages = pagesManifest.map(({ chunk, path, title }) => {
 -       const script = assets.find(name => name.includes(`/${chunk}.`) && name.endsWith('.js'))
 +       const scripts = assets.filter(name => new RegExp(`[/.]${chunk}\\.(.+)\\.js$`).test(name))
 
--       return { path, script }
-+       return { path, scripts }
+-       return { path, title, script }
++       return { path, title, scripts }
       })
 
       return htmlTemplate(pages)
@@ -411,8 +413,8 @@ plugins: [
 _[scripts/preload-assets.js](scripts/preload-assets.js)_
 
 ```diff
-- const { path, script } = matchingPages.find(({ exact }) => exact) || matchingPages[0]
-+ const { path, scripts } = matchingPages.find(({ exact }) => exact) || matchingPages[0]
+- const { path, title, script } = matchingPages.find(({ exact }) => exact) || matchingPages[0]
++ const { path, title, scripts } = matchingPages.find(({ exact }) => exact) || matchingPages[0]
 
 + scripts.forEach(script => {
     document.head.appendChild(
@@ -441,12 +443,12 @@ plugins: [
     scriptLoading: 'module',
     templateContent: ({ compilation }) => {
       const assets = compilation.getAssets().map(({ name }) => name)
--     const pages = pagesManifest.map(({ chunk, path }) => {
-+     const pages = pagesManifest.map(({ chunk, path, data }) => {
+-     const pages = pagesManifest.map(({ chunk, path  title,}) => {
++     const pages = pagesManifest.map(({ chunk, path, title, data }) => {
         const script = assets.find(name => name.includes(`/${chunk}.`) && name.endsWith('.js'))
 
--       return { path, script }
-+       return { path, script, data }
+-       return { path, title, script }
++       return { path, title, script, data }
       })
 
       return htmlTemplate(pages)
@@ -487,8 +489,8 @@ _[scripts/preload-assets.js](scripts/preload-assets.js)_
 + }
 
 const preloadAssets = () => {
--   const { path, scripts } = matchingPages.find(({ exact }) => exact) || matchingPages[0]
-+   const { path, scripts, data } = matchingPages.find(({ exact }) => exact) || matchingPages[0]
+-   const { path, title, scripts } = matchingPages.find(({ exact }) => exact) || matchingPages[0]
++   const { path, title, scripts, data } = matchingPages.find(({ exact }) => exact) || matchingPages[0]
     .
     .
     .
@@ -694,7 +696,7 @@ Additionally and more importantly, we can see that after the HTML file is downlo
 
 This is a lot of precious time (marked in red) that the browser could use to execute scripts and speed up the page's visibility and interactivity.
 <br>
-This inefficiency will reoccur frequently when some of the cache invalidates. It is not something that only happens in the very first page load.
+This inefficiency will reoccur frequently when some of the assets change (partial cache). It is not something that only happens on the very first page load.
 
 So how can we eliminate this idle time?
 <br>
@@ -1364,4 +1366,4 @@ There is a new SSR method called _Streaming SSR_ (in React it is through "Server
 <br>
 However, there are also newer and better CSR frameworks such as Svelte and Solid.js, which have a very small bundle size and are much faster than React (thus greatly improving the FCP on slow networks).
 
-Nevertheless, it's important to note that nothing will ever outperform the instant page transitions that client-side rendering is able to provide, and when using the SWR approach, even repeated page loads are instant.
+Nevertheless, it's important to note that nothing will ever outperform neither the instant page transitions that client-side rendering is able to provide, nor the simple and flexible development flow it offers.
