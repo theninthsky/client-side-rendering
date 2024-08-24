@@ -33,7 +33,7 @@ const preloadAssets = () => {
 
   if (!matchingPages.length) return
 
-  const { path, scripts, data } = matchingPages.find(({ exact }) => exact) || matchingPages[0]
+  const { path, title, scripts, data } = matchingPages.find(({ exact }) => exact) || matchingPages[0]
 
   scripts.forEach(script => {
     document.head.appendChild(
@@ -61,6 +61,8 @@ const preloadAssets = () => {
       )
     }
   })
+
+  if (title) document.title = title
 }
 
 preloadAssets()

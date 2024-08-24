@@ -111,10 +111,10 @@ export default (_, { mode }) => {
         scriptLoading: 'module',
         templateContent: ({ compilation }) => {
           const assets = compilation.getAssets().map(({ name }) => name)
-          const pages = pagesManifest.map(({ chunk, path, data }) => {
+          const pages = pagesManifest.map(({ chunk, path, title, data }) => {
             const scripts = assets.filter(name => new RegExp(`[/.]${chunk}\\.(.+)\\.js$`).test(name))
 
-            return { path, scripts, data }
+            return { path, scripts, title, data }
           })
 
           return htmlTemplate(pages)
