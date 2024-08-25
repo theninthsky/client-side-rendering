@@ -690,12 +690,10 @@ When inspecting our 43kb `react-dom.js` file, we can see that the time it took f
 
 This demonstrates the well-known fact that [RTT](https://en.wikipedia.org/wiki/Round-trip_delay) has a huge impact on web pages load times, sometimes even more than download speed, and even when assets are served from a nearby CDN edge like in our case.
 
-Additionally and more importantly, we can see that after the HTML file is downloaded, we have a large timespan where the browser stays idle and just waits for the scripts to download:
+Additionally and more importantly, we can see that after the HTML file is downloaded, we have a large timespan where the browser stays idle and just waits for the scripts to arrive:
 
 ![Browser Idle Period](images/browser-idle-period.png)
 
-This is a lot of precious time (marked in red) that the browser could use to execute scripts and speed up the page's visibility and interactivity.
-<br>
 This inefficiency will reoccur frequently when some of the assets change (partial cache). It is not something that only happens on the very first page load.
 
 So how can we eliminate this idle time?
@@ -704,7 +702,7 @@ We could inline all the initial (critical) scripts in the document, so that they
 
 ![Inlined Initial Scripts](images/inlined-initial-scripts.png)
 
-We can see that the browser now gets its initial scripts without having to send another request to the CDN. And since the HTML file is streamed sequentially, the browser will execute the scripts as soon as it gets them, without having to wait for the entire file to download.
+We can see that the browser now gets its initial scripts without having to send another request to the CDN.
 <br>
 So the browser will first send requests for the async chunks and the preloaded data, and while these are pending, it will continue to download and execute the main scripts.
 <br>
@@ -861,6 +859,39 @@ The results for an initial (uncached) load are exceptional:
 ![Inlined Scripts CDN Response Time](images/inlined-scripts-cdn-response-time.png)
 
 On the next load, the Cloudflate worker responds with a minimal (1.8kb) HTML document and all assets are immediately served from cache.
+
+This optimization leads us to another one - splitting chunks to even smaller pieces.
+
+As a rule of thumb, splitting the bundle to too many chunks can hurt performance. That's because the page will not be rendered until every last bit of its bundle is downloaded, and the more chunks we have - the bigger the chance for one of them to be fetched with a slight delay (as hardware and network speed are non-linear).
+
+But in our case its irrelevant, since we inline all the relevant chunks and so they are fetched all at once.
+
+_[webpack.config.js](webpack.config.js)_
+
+```diff
+optimization: {
+  realContentHash: false,
+  runtimeChunk: 'single',
+  splitChunks: {
+    chunks: 'initial',
+    cacheGroups: {
+      vendors: {
+        test: /[\\/]node_modules[\\/]/,
+        chunks: 'all',
++       minSize: 10000,
+        name: (module, chunks) => {
+          const allChunksNames = chunks.map(({ name }) => name).join('.')
+          const moduleName = (module.context.match(/[\\/]node_modules[\\/](.*?)([\\/]|$)/) || [])[1]
+
+          return `${moduleName}.${allChunksNames}`.replace('@', '')
+        }
+      }
+    }
+  }
+},
+```
+
+This extreme splitting will lead to a better cache persistence, and in turn to a better performance of partial cache load.
 
 ## Tweaking Further
 
