@@ -694,7 +694,9 @@ Additionally and more importantly, we can see that after the HTML file is downlo
 
 ![Browser Idle Period](images/browser-idle-period.png)
 
-This inefficiency will reoccur frequently when some of the assets change (partial cache). It is not something that only happens on the very first page load.
+This is a lot of precious time (marked in red) that the browser could use to download, parse and compile scripts, speeding up the page's visibility and interactivity.
+<br>
+This inefficiency will reoccur every time assets change (partial cache). This isn't something that only happens on the very first visit.
 
 So how can we eliminate this idle time?
 <br>
@@ -857,12 +859,13 @@ The results for an initial (uncached) load are exceptional:
 
 ![Inlined Scripts](images/inlined-scripts.png)
 ![Inlined Scripts CDN Response Time](images/inlined-scripts-cdn-response-time.png)
+![Inlined Scripts Parsing Breakdown](images/inlined-scripts-parsing-breakdown.png)
 
 On the next load, the Cloudflate worker responds with a minimal (1.8kb) HTML document and all assets are immediately served from cache.
 
 This optimization leads us to another one - splitting chunks to even smaller pieces.
 
-As a rule of thumb, splitting the bundle to too many chunks can hurt performance. That's because the page will not be rendered until every last bit of its bundle is downloaded, and the more chunks we have - the bigger the chance for one of them to be fetched with a slight delay (as hardware and network speed are non-linear).
+As a rule of thumb, splitting the bundle into too many chunks can hurt performance. That's because the page will not be rendered until every last bit of its bundle is downloaded, and the more chunks we have - the bigger the chance for one of them to be fetched with a slight delay (as hardware and network speed are non-linear).
 
 But in our case its irrelevant, since we inline all the relevant chunks and so they are fetched all at once.
 
@@ -891,7 +894,7 @@ optimization: {
 },
 ```
 
-This extreme splitting will lead to a better cache persistence, and in turn to a better performance of partial cache load.
+This extreme splitting will lead to a better cache persistence, and in turn, to faster load times with partial cache.
 
 ## Tweaking Further
 
@@ -1079,11 +1082,15 @@ Whenever we need to update the static data we simply rebuild the app or, if we h
 
 ## Summary
 
-We've managed to make the initial (cacheless) load of our extremely fast, everything that a page requires to load is dynamically injected to it.
+We split our bundle into many small chunks, greatly improving our app's caching abilities.
 <br>
-We even preload the page's data, eliminating the famous data fetching delay that CSR apps are known to have.
+We split every page so that upon loading one, only what is relevent is being downloaded right away.
 <br>
-In addition, we precache other pages, which makes it seem as if they were never separated.
+We've managed to make the initial (cacheless) load of our app extremely fast, everything that a page requires to load is dynamically injected to it.
+<br>
+We even preload the page's data, eliminating the famous data fetching waterfall that CSR apps are known to have.
+<br>
+In addition, we precache all pages, which makes it seem as if they were never split from the main bundle code.
 <br>
 
 All of these were achieved without compromising on the developer experience and without dictating which JS framework to choose.
