@@ -682,6 +682,10 @@ self.addEventListener('fetch', async event => {
 
 Now all pages will be prefetched and cached before the user even tries to navigate to them.
 
+Before going on to the next major change, here is the backup branch containing everything we did so far:
+<br>
+https://github.com/theninthsky/client-side-rendering/tree/before-dynamic-source-inlining
+
 ## Dynamic Source Inlining
 
 When inspecting our 43kb `react-dom.js` file, we can see that the time it took for the request to return was 60ms while the time it took to download the file was 3ms:
