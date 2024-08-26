@@ -24,4 +24,4 @@ await rm('.boilerplate', { recursive: true })
 
 execSync(`npm uninstall ${dependenciesToUninstall.join(' ')}`)
 
-console.log('Project was successfully transformed into a boilerplate')
+console.log('The project was successfully transformed into a boilerplate')

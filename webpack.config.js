@@ -1,10 +1,10 @@
-import path from 'node:path'
+import { join, resolve } from 'node:path'
+import { writeFileSync } from 'node:fs'
 import ReactRefreshPlugin from '@pmmmwh/react-refresh-webpack-plugin'
 import ForkTsCheckerPlugin from 'fork-ts-checker-webpack-plugin'
 import ESLintPlugin from 'eslint-webpack-plugin'
 import { InjectManifest } from 'workbox-webpack-plugin'
 import HtmlPlugin from 'html-webpack-plugin'
-import HtmlInlineScriptPlugin from 'html-inline-script-webpack-plugin'
 import CopyPlugin from 'copy-webpack-plugin'
 
 import pagesManifest from './src/pages-manifest.js'
@@ -21,15 +21,14 @@ export default (_, { mode }) => {
       port: 3000,
       devMiddleware: { stats: 'errors-warnings' }
     },
-    cache: { type: 'filesystem', memoryCacheUnaffected: true },
-    experiments: { cacheUnaffected: true, lazyCompilation: !production },
+    cache: { type: 'filesystem' },
     devtool: production ? 'source-map' : 'inline-source-map',
     resolve: {
-      modules: [path.resolve(__dirname, 'src'), 'node_modules'],
+      modules: [resolve(__dirname, 'src'), 'node_modules'],
       extensions: ['.ts', '.tsx', '.js', '.jsx']
     },
     output: {
-      path: path.join(__dirname, 'build'),
+      path: join(__dirname, 'build'),
       publicPath: '/',
       filename: 'scripts/[name].[contenthash:6].js',
       clean: true
@@ -75,6 +74,7 @@ export default (_, { mode }) => {
       ]
     },
     optimization: {
+      realContentHash: false,
       runtimeChunk: 'single',
       splitChunks: {
         chunks: 'initial',
@@ -82,7 +82,7 @@ export default (_, { mode }) => {
           vendors: {
             test: /[\\/]node_modules[\\/]/,
             chunks: 'all',
-            minSize: 100000,
+            minSize: 10000,
             name: (module, chunks) => {
               const allChunksNames = chunks.map(({ name }) => name).join('.')
               const moduleName = (module.context.match(/[\\/]node_modules[\\/](.*?)([\\/]|$)/) || [])[1]
@@ -95,11 +95,11 @@ export default (_, { mode }) => {
     },
     plugins: [
       ...(production
-        ? ['prefetch', 'swr'].map(
+        ? ['precache', 'swr'].map(
             swType =>
               new InjectManifest({
                 include: [/fonts\//, /scripts\/.+\.js$/],
-                swSrc: path.join(__dirname, 'public', `${swType}-service-worker.js`)
+                swSrc: join(__dirname, 'public', `${swType}-service-worker.js`)
               })
           )
         : [
@@ -110,22 +110,36 @@ export default (_, { mode }) => {
       new HtmlPlugin({
         scriptLoading: 'module',
         templateContent: ({ compilation }) => {
-          const assets = compilation.getAssets().map(({ name }) => name)
+          const assets = compilation.getAssets()
           const pages = pagesManifest.map(({ chunk, path, title, data }) => {
-            const scripts = assets.filter(name => new RegExp(`[/.]${chunk}\\.(.+)\\.js$`).test(name))
+            const scripts = assets
+              .map(({ name }) => name)
+              .filter(name => new RegExp(`[/.]${chunk}\\.(.+)\\.js$`).test(name))
 
-            return { path, scripts, title, data }
+            return { path, title, scripts, data }
           })
+
+          if (production) {
+            const assetsWithSource = assets
+              .filter(({ name }) => /^scripts\/.+\.js$/.test(name))
+              .map(({ name, source }) => ({
+                url: `/${name}`,
+                source: source.source(),
+                parentPaths: pages.filter(({ scripts }) => scripts.includes(name)).map(({ path }) => path)
+              }))
+
+            writeFileSync(join(__dirname, 'public', 'assets.js'), JSON.stringify(assetsWithSource))
+          }
 
           return htmlTemplate(pages)
         }
       }),
-      new HtmlInlineScriptPlugin({ scriptMatchPattern: [/runtime.+[.]js$/] }),
       new CopyPlugin({
         patterns: [
           {
             from: 'public',
-            globOptions: { ignore: ['**/index.js'] }
+            globOptions: { ignore: ['**/index.js'] },
+            info: { minimized: true }
           }
         ]
       })

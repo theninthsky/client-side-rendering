@@ -1,7 +1,9 @@
 /* eslint-disable no-console */
 
+import extractInlinedScripts from './extract-inlined-scripts'
+
 const SERVICE_WORKERS = {
-  prefetch: '/prefetch-service-worker.js',
+  precache: '/precache-service-worker.js',
   swr: '/swr-service-worker.js'
 }
 const ACTIVE_REVALIDATION_INTERVAL = 10 * 60
@@ -11,12 +13,28 @@ const appIsInstalled =
 
 const register = () => {
   window.addEventListener('load', async () => {
-    const serviceWorkerType = appIsInstalled ? 'swr' : 'prefetch'
+    const serviceWorkerType = appIsInstalled ? 'swr' : 'precache'
 
     try {
       const registration = await navigator.serviceWorker.register(SERVICE_WORKERS[serviceWorkerType])
 
       console.log('Service worker registered!')
+
+      const inlinedAssets = extractInlinedScripts()
+
+      if (inlinedAssets.length) {
+        navigator.serviceWorker.ready.then(registration => {
+          registration.active?.postMessage({ type: 'cache-assets', inlinedAssets })
+        })
+      }
+
+      registration.addEventListener('updatefound', () => {
+        registration.installing!.onstatechange = (event: Event) => {
+          const serviceWorker = event.target as ServiceWorker
+
+          if (serviceWorker.state === 'activated') serviceWorker.postMessage({ type: 'precache-assets', inlinedAssets })
+        }
+      })
 
       setInterval(() => registration.update(), ACTIVE_REVALIDATION_INTERVAL * 1000)
     } catch (err) {

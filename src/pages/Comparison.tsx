@@ -194,11 +194,10 @@ const listData = {
             <a href="https://web.dev/cls" target="_blank">
               CLS
             </a>{' '}
-            when performing viewport-based rendering (like when using a{' '}
-            <a href="https://github.com/theninthsky/frontend-essentials/tree/main#media" target="_blank">
-              Media
-            </a>{' '}
-            component).
+            when performing viewport-based rendering which rely on{' '}
+            <a href="https://developer.mozilla.org/en-US/docs/Web/API/Window/matchMedia" target="_blank">
+              window.matchMedia
+            </a>
           </p>
         )
       },
@@ -242,7 +241,7 @@ const listData = {
             accessible to most developers.
             <br />
             Even when using a meta-framework, since the code runs both on the server and on the client, it is crucial to
-            verify which object are usable on each plafrom (see{' '}
+            verify which object are usable on each platform (see{' '}
             <em>
               <a
                 href="https://stackoverflow.com/questions/55151041/window-is-not-defined-in-next-js-react-app"
@@ -335,7 +334,7 @@ const listData = {
       },
       {
         value: 'Same SSR cons as #3, #4, #7, #8 and #9',
-        description: 'While some pages can be prefetched, surely not all pages in large websites can be'
+        description: '#3: static pages cannot even distinguish between desktop and mobile viewports'
       }
     ]
   },
@@ -385,6 +384,20 @@ const listData = {
           <p>
             Many libraries (even fundamental ones) cannot be used with server components.{' '}
             <a href="https://github.com/emotion-js/emotion/issues/2978#issuecomment-1587020120" target="_blank">
+              Article
+            </a>
+          </p>
+        )
+      },
+      {
+        value: 'Critical CSS cannot be inlined',
+        description: (
+          <p>
+            Inlining critical CSS in the document is one of the most important performance optimizations in the SSR
+            realm.
+            <br />
+            However, due to the nature of streaming, it is currently not supported.{' '}
+            <a href="https://github.com/vercel/next.js/discussions/59989" target="_blank">
               Article
             </a>
           </p>

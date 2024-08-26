@@ -2,7 +2,7 @@ const CACHE_NAME = 'my-csr-app'
 const CACHED_URLS = ['/', ...self.__WB_MANIFEST.map(({ url }) => url)]
 const MAX_STALE_DURATION = 7 * 24 * 60 * 60
 
-const preCache = async () => {
+const precacheAssets = async () => {
   await caches.delete(CACHE_NAME)
 
   const cache = await caches.open(CACHE_NAME)
@@ -17,7 +17,7 @@ const staleWhileRevalidate = async request => {
 
   const cache = await caches.open(CACHE_NAME)
   const cachedResponsePromise = await cache.match(request)
-  const networkResponsePromise = fetch(request)
+  const networkResponsePromise = fetch(request, { headers: { 'X-Installed': 'true' } })
 
   if (documentRequest) {
     networkResponsePromise.then(response => cache.put(request, response.clone()))
@@ -33,7 +33,7 @@ const staleWhileRevalidate = async request => {
 }
 
 self.addEventListener('install', event => {
-  event.waitUntil(preCache())
+  event.waitUntil(precacheAssets())
   self.skipWaiting()
 })
 
