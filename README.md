@@ -858,7 +858,9 @@ export default {
 The results for an initial (uncached) load are exceptional:
 
 ![Inlined Scripts](images/inlined-scripts.png)
+
 ![Inlined Scripts CDN Response Time](images/inlined-scripts-cdn-response-time.png)
+
 ![Inlined Scripts Parsing Breakdown](images/inlined-scripts-parsing-breakdown.png)
 
 On the next load, the Cloudflate worker responds with a minimal (1.8kb) HTML document and all assets are immediately served from cache.
