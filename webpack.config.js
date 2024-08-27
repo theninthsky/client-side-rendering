@@ -108,7 +108,7 @@ export default (_, { mode }) => {
             new ESLintPlugin({ extensions: ['js', 'ts', ' jsx', 'tsx'] })
           ]),
       new HtmlPlugin({
-        inject: 'body',
+        scriptLoading: 'module',
         templateContent: ({ compilation }) => {
           const assets = compilation.getAssets()
           const pages = pagesManifest.map(({ chunk, path, title, data }) => {
