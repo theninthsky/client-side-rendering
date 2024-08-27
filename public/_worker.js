@@ -102,9 +102,12 @@ export default {
     const pageAssets = exactMatchingPageAssets.length ? exactMatchingPageAssets : matchingPageAssets
     const uncachedPageAssets = pageAssets.filter(({ url }) => !cachedAssets.includes(url))
 
-    uncachedPageAssets.forEach(({ url, source }) => {
-      body = body.replace('<script id=', () => `<script id="${url}">${source}</script><script id="`)
-    })
+    const uncachedPages = uncachedPageAssets.reduce(
+      (str, { url, source }) => str + `<script id="${url}">${source}</script>`,
+      ''
+    )
+
+    body = body.replace('<div id="root">', () => `<div id="root">${uncachedPages}`)
 
     return new Response(body, { headers })
   }
