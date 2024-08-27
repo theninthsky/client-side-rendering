@@ -107,7 +107,7 @@ export default {
       ''
     )
 
-    body = body.replace('<div id="root">', () => `<div id="root">${uncachedPages}`)
+    body = body.replace('<div id="root"></div>', () => `<div id="root"></div>${uncachedPages}`)
 
     return new Response(body, { headers })
   }
