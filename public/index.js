@@ -28,8 +28,6 @@ export default pages => `
     </head>
     <body>
       <div id="root"></div>
-
-      <!-- INJECT_SCRIPTS_HERE -->
     </body>
   </html>
 `

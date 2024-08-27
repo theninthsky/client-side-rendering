@@ -21,6 +21,7 @@ worker = worker
   .replace('INJECT_INITIAL_SCRIPTS_HERE', () => JSON.stringify(initialScripts))
   .replace('INJECT_ASYNC_SCRIPTS_HERE', () => JSON.stringify(asyncScripts))
   .replace('INJECT_HTML_HERE', () => JSON.stringify(html))
+  .replace('</body>', () => '<!-- INJECT_SCRIPTS_HERE --></body>')
 
 rmSync(join(__dirname, '..', 'public', 'assets.js'))
 writeFileSync(join(__dirname, '..', 'build', '_worker.js'), worker)
