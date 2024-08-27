@@ -7,9 +7,9 @@
   "type": "module",
   "scripts": {
     "postinstall": "npm run fetch-static",
-    "start": "webpack serve --mode development",
+    "start": "rspack serve",
     "prebuild": "npm-run-all -p fetch-static create-sitemap",
-    "build": "webpack --mode production",
+    "build": "rspack build",
     "postbuild": "node scripts/inject-worker-html",
     "serve": "serve build",
     "fetch-static": "node scripts/fetch-static",
@@ -34,6 +34,8 @@
   },
   "devDependencies": {
     "@pmmmwh/react-refresh-webpack-plugin": "^0.5.11",
+    "@rspack/cli": "^1.0.0-rc.1",
+    "@rspack/core": "^1.0.0-rc.1",
     "@svgr/webpack": "^8.0.1",
     "@swc/core": "^1.4.11",
     "@types/react": "^18.0.8",
@@ -45,7 +47,6 @@
     "css-loader": "^7.1.1",
     "eslint": "^8.13.0",
     "eslint-webpack-plugin": "^4.0.0",
-    "fork-ts-checker-webpack-plugin": "^9.0.2",
     "html-webpack-plugin": "^5.5.0",
     "npm-run-all": "^4.1.5",
     "serve": "^14.0.1",
@@ -53,9 +54,6 @@
     "style-loader": "^4.0.0",
     "swc-loader": "^0.2.6",
     "typescript": "^5.0.4",
-    "webpack": "^5.72.0",
-    "webpack-cli": "^5.0.1",
-    "webpack-dev-server": "^5.0.2",
     "workbox-webpack-plugin": "^7.0.0"
   },
   "overrides": {

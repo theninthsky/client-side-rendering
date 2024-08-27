@@ -1,11 +1,10 @@
 import { join, resolve } from 'node:path'
 import { writeFileSync } from 'node:fs'
 import ReactRefreshPlugin from '@pmmmwh/react-refresh-webpack-plugin'
-import ForkTsCheckerPlugin from 'fork-ts-checker-webpack-plugin'
 import ESLintPlugin from 'eslint-webpack-plugin'
 import { InjectManifest } from 'workbox-webpack-plugin'
 import HtmlPlugin from 'html-webpack-plugin'
-import CopyPlugin from 'copy-webpack-plugin'
+import rspack from '@rspack/core'
 
 import pagesManifest from './src/pages-manifest.js'
 import htmlTemplate from './public/index.js'
@@ -21,7 +20,6 @@ export default (_, { mode }) => {
       port: 3000,
       devMiddleware: { stats: 'errors-warnings' }
     },
-    cache: { type: 'filesystem' },
     devtool: production ? 'source-map' : 'inline-source-map',
     resolve: {
       modules: [resolve(__dirname, 'src'), 'node_modules'],
@@ -39,16 +37,16 @@ export default (_, { mode }) => {
           test: /\.(t|j)sx?$/i,
           exclude: /(node_modules)/,
           use: {
-            loader: 'swc-loader',
-            options: {
-              jsc: {
-                parser: { syntax: 'typescript', tsx: true },
-                transform: {
-                  react: { runtime: 'automatic', refresh: true }
-                },
-                target: 'es2017',
-                preserveAllComments: true
-              }
+            loader: 'builtin:swc-loader'
+          },
+          options: {
+            jsc: {
+              parser: { syntax: 'typescript', tsx: true },
+              transform: {
+                react: { runtime: 'automatic', refresh: true }
+              },
+              target: 'es2017',
+              preserveAllComments: true
             }
           }
         },
@@ -102,11 +100,7 @@ export default (_, { mode }) => {
                 swSrc: join(__dirname, 'public', `${swType}-service-worker.js`)
               })
           )
-        : [
-            new ReactRefreshPlugin(),
-            new ForkTsCheckerPlugin(),
-            new ESLintPlugin({ extensions: ['js', 'ts', ' jsx', 'tsx'] })
-          ]),
+        : [new ESLintPlugin({ extensions: ['js', 'ts', ' jsx', 'tsx'] })]),
       new HtmlPlugin({
         scriptLoading: 'module',
         templateContent: ({ compilation }) => {
@@ -134,7 +128,7 @@ export default (_, { mode }) => {
           return htmlTemplate(pages)
         }
       }),
-      new CopyPlugin({
+      new rspack.CopyRspackPlugin({
         patterns: [
           {
             from: 'public',
