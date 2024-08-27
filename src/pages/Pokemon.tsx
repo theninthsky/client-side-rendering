@@ -1,6 +1,5 @@
 import { useEffect, FC } from 'react'
 import { Meta, LazyRender, useFetch } from 'frontend-essentials'
-import startCase from 'lodash/startCase'
 import toLower from 'lodash/toLower'
 import { css } from '@emotion/css'
 import { Skeleton } from '@mui/material'
@@ -61,7 +60,7 @@ const Pokemon: FC<{}> = () => {
                 <Link key={name} className={style.pokemon} to={`/pokemon/${name}`} state={{ id, name, img }}>
                   <img className={style.pokemonImage} src={img} loading="lazy" />
 
-                  <span>{startCase(toLower(name))}</span>
+                  <span>{_.startCase(toLower(name))}</span>
                 </Link>
               )
             }}
