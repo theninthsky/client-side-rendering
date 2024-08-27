@@ -698,7 +698,7 @@ Additionally and more importantly, we can see that after the HTML file is downlo
 
 ![Browser Idle Period](images/browser-idle-period.png)
 
-This is a lot of precious time (marked in red) that the browser could use to download, parse and compile scripts, speeding up the page's visibility and interactivity.
+This is a lot of precious time (marked in red) that the browser could use to download, parse and even execute scripts, speeding up the page's visibility and interactivity.
 <br>
 This inefficiency will reoccur every time assets change (partial cache). This isn't something that only happens on the very first visit.
 
@@ -721,7 +721,7 @@ However, this solution has 2 major issues:
 1. We wouldn’t want users to download the 100kb+ HTML file every time they visit our app. We only want that to happen for the very first visit.
 2. Since we do not inline the async page’s assets as well, we would probably still be waiting for them to fetch even after the entire HTML has finished downloading, parsing and executing.
 
-To overcome thses issues, we can no longer stick to a static HTML file, and so we shall leaverage the power of a server. Or, more precisely, the power of a Cloudflare serverless worker.
+To overcome these issues, we can no longer stick to a static HTML file, and so we shall leaverage the power of a server. Or, more precisely, the power of a Cloudflare serverless worker.
 <br>
 This worker should intercept every HTML document request and tailor a response that fits it perfectly.
 
@@ -734,7 +734,7 @@ The entire flow should be described as follows:
 3. The app will then extract all of the inlined assets, cache them in a service worker and then precache all of the other assets.
 4. The next time the page is reloaded, the service worker will send the HTML document along with an `X-Cached` header specifying all of its cached assets.
 
-\* Both initial and page-specefic assets.
+\* Both initial and page-specific assets.
 
 This ensures that the browser receives exactly the assets it needs (no more, no less) to display the page **in a single roundtrip**!
 
