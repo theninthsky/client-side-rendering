@@ -84,8 +84,8 @@ export default {
 
     uncachedAssets.forEach(({ url, source }) => {
       body = body.replace(
-        `<script type="module" src="${url}"></script>`,
-        () => `<script id="${url}" type="module">${source}</script>`
+        `<script defer="defer" src="${url}"></script>`,
+        () => `<script id="${url}">${source}</script>`
       )
     })
 
@@ -103,7 +103,7 @@ export default {
     const uncachedPageAssets = pageAssets.filter(({ url }) => !cachedAssets.includes(url))
 
     uncachedPageAssets.forEach(({ url, source }) => {
-      body = body.replace('</head>', () => `<script id="${url}" type="module">${source}</script></head>`)
+      body = body.replace('<script id=', () => `<script id="${url}">${source}</script><script id="`)
     })
 
     return new Response(body, { headers })
