@@ -18,7 +18,7 @@ export default pages => `
 
       <title>Client-side Rendering</title>
 
-      <script>
+      <script id="preload-assets">
         const pages = ${JSON.stringify(pages, (_, value) => {
           return typeof value === 'function' ? `func:${value.toString()}` : value
         })}
