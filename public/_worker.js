@@ -86,7 +86,7 @@ export default {
 
     const initialScriptsCombinedString = initialScripts
       .map(({ url, source }) =>
-        cachedScripts.includes(url) ? `<script src="${url}"></script>` : `<script id="${url}">${src}</script>`
+        cachedScripts.includes(url) ? `<script src="${url}"></script>` : `<script id="${url}">${source}</script>`
       )
       .join('\n')
 

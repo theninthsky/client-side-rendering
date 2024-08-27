@@ -17,7 +17,7 @@ html = html
   .replace(/preloadAssets/g, () => 'preloadData')
 
 worker = worker
-  .replace('INJECT_INITIAL_SCRIPTS_STRING_HERE', () => JSON.stringify(initialScriptsString))
+  .replace('INJECT_INITIAL_SCRIPTS_STRING_HERE', () => initialScriptsString)
   .replace('INJECT_INITIAL_SCRIPTS_HERE', () => JSON.stringify(initialScripts))
   .replace('INJECT_ASYNC_SCRIPTS_HERE', () => JSON.stringify(asyncScripts))
   .replace('INJECT_HTML_HERE', () => JSON.stringify(html))
