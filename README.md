@@ -706,7 +706,7 @@ So how can we eliminate this idle time?
 <br>
 We could inline all the initial (critical) scripts in the document, so that they will start to download, parse and execute until the async page assets arrive:
 
-![Inlined Initial Scripts](images/inlined-initial-scripts.png)
+![Inline Initial Scripts](images/inline-initial-scripts.png)
 
 We can see that the browser now gets its initial scripts without having to send another request to the CDN.
 <br>
@@ -780,16 +780,25 @@ import { readFileSync, writeFileSync, rmSync } from 'node:fs'
 
 const __dirname = import.meta.dirname
 
-const assets = readFileSync(join(__dirname, '..', 'public', 'assets.js'), 'utf-8')
+const assets = JSON.parse(readFileSync(join(__dirname, '..', 'public', 'assets.js'), 'utf-8'))
 let html = readFileSync(join(__dirname, '..', 'build', 'index.html'), 'utf-8')
 let worker = readFileSync(join(__dirname, '..', 'build', '_worker.js'), 'utf-8')
+
+const initialScriptsString = html.match(/<script\s+type="module"[^>]*>([\s\S]*?)(?=<\/head>)/)[0]
+const initialScripts = assets.filter(({ url }) => initialScriptsString.includes(url))
+const asyncScripts = assets.filter(asset => !initialScripts.includes(asset))
 
 html = html
   .replace(/,"scripts":\s*\[(.*?)\]/g, () => '')
   .replace(/scripts\.forEach[\s\S]*?data\?\.\s*forEach/, () => 'data?.forEach')
   .replace(/preloadAssets/g, () => 'preloadData')
 
-worker = worker.replace('INJECT_ASSETS_HERE', () => assets).replace('INJECT_HTML_HERE', () => JSON.stringify(html))
+worker = worker
+  .replace('INJECT_INITIAL_SCRIPTS_STRING_HERE', () => JSON.stringify(initialScriptsString))
+  .replace('INJECT_INITIAL_SCRIPTS_HERE', () => JSON.stringify(initialScripts))
+  .replace('INJECT_ASYNC_SCRIPTS_HERE', () => JSON.stringify(asyncScripts))
+  .replace('INJECT_HTML_HERE', () => JSON.stringify(html))
+  .replace('</body>', () => '<!-- INJECT_SCRIPTS_HERE --></body>')
 
 rmSync(join(__dirname, '..', 'public', 'assets.js'))
 writeFileSync(join(__dirname, '..', 'build', '_worker.js'), worker)
@@ -823,21 +832,25 @@ export default {
     if (nonDocument) return env.ASSETS.fetch(request)
 
     const headers = { 'Content-Type': 'text/html; charset=utf-8' }
-    const cachedAssets = request.headers.get('X-Cached')?.split(', ').filter(Boolean) || []
-    const uncachedAssets = allAssets.filter(({ url }) => !cachedAssets.includes(url))
+    const cachedScripts = request.headers.get('X-Cached')?.split(', ').filter(Boolean) || []
+    const uncachedScripts = [...initialScripts, ...asyncScripts].filter(({ url }) => !cachedScripts.includes(url))
 
-    if (!uncachedAssets.length) return new Response(html, { headers })
+    if (!uncachedScripts.length) return new Response(html, { headers })
 
-    let body = html
+    let body = html.replace(initialScriptsString, () => '')
 
-    uncachedAssets.forEach(({ url, source }) => {
-      body = body.replace(
-        `<script type="module" src="${url}"></script>`,
-        () => `<script id="${url}" type="module">${source}</script>`
+    const injectedInitialScriptsString = initialScripts
+      .map(({ url, source }) =>
+        cachedScripts.includes(url) ? `<script src="${url}"></script>` : `<script id="${url}">${source}</script>`
       )
-    })
+      .join('\n')
 
-    const matchingPageAssets = allAssets
+    body = body.replace(
+      '<!-- INJECT_SCRIPTS_HERE -->',
+      () => `<!-- INJECT_SCRIPTS_HERE -->\n${injectedInitialScriptsString}`
+    )
+
+    const matchingPageScripts = asyncScripts
       .map(asset => {
         const parentsPaths = asset.parentPaths.map(path => ({ path, ...isMatch(pathname, path) }))
         const parentPathsExactMatch = parentsPaths.some(({ exact }) => exact)
@@ -846,28 +859,162 @@ export default {
         return { ...asset, exact: parentPathsExactMatch, match: parentPathsMatch }
       })
       .filter(({ match }) => match)
-    const exactMatchingPageAssets = matchingPageAssets.filter(({ exact }) => exact)
-    const pageAssets = exactMatchingPageAssets.length ? exactMatchingPageAssets : matchingPageAssets
-    const uncachedPageAssets = pageAssets.filter(({ url }) => !cachedAssets.includes(url))
+    const exactMatchingPageScripts = matchingPageScripts.filter(({ exact }) => exact)
+    const pageScripts = exactMatchingPageScripts.length ? exactMatchingPageScripts : matchingPageScripts
+    const uncachedPageScripts = pageScripts.filter(({ url }) => !cachedScripts.includes(url))
 
-    uncachedPageAssets.forEach(({ url, source }) => {
-      body = body.replace('</head>', () => `<script id="${url}" type="module">${source}</script></head>`)
-    })
+    const injectedAsyncScriptsString = uncachedPageScripts.reduce(
+      (str, { url, source }) => `${str}\n<script id="${url}">${source}</script>`,
+      ''
+    )
+
+    body = body.replace('<!-- INJECT_SCRIPTS_HERE -->', () => injectedAsyncScriptsString)
 
     return new Response(body, { headers })
   }
 }
 ```
 
-The results for an initial (uncached) load are exceptional:
+_[src/utils/extract-inline-scripts.ts](src/utils/extract-inline-scripts.ts)_
 
-![Inlined Scripts](images/inlined-scripts.png)
+```js
+const extractInlineScripts = () => {
+  const inlineScripts = [...document.body.querySelectorAll('script[id]:not([src])')].map(({ id, textContent }) => ({
+    url: id,
+    source: textContent
+  }))
 
-![Inlined Scripts CDN Response Time](images/inlined-scripts-cdn-response-time.png)
+  return inlineScripts
+}
 
-![Inlined Scripts Parsing Breakdown](images/inlined-scripts-parsing-breakdown.png)
+export default extractInlineScripts
+```
 
-On the next load, the Cloudflate worker responds with a minimal (1.8kb) HTML document and all assets are immediately served from cache.
+_[src/utils/service-worker-registration.ts](src/utils/service-worker-registration.ts)_
+
+```js
+const register = () => {
+  window.addEventListener('load', async () => {
+    try {
+      const registration = await navigator.serviceWorker.register('/precache-service-worker.js')
+
+      console.log('Service worker registered!')
+
+      const inlineAssets = extractInlineScripts()
+
+      if (inlineAssets.length) {
+        navigator.serviceWorker.ready.then(registration => {
+          registration.active?.postMessage({ type: 'cache-assets', inlineAssets })
+        })
+      }
+
+      registration.addEventListener('updatefound', () => {
+        registration.installing!.onstatechange = (event: Event) => {
+          const serviceWorker = event.target as ServiceWorker
+
+          if (serviceWorker.state === 'activated') serviceWorker.postMessage({ type: 'precache-assets', inlineAssets })
+        }
+      })
+
+      setInterval(() => registration.update(), ACTIVE_REVALIDATION_INTERVAL * 1000)
+    } catch (err) {
+      console.error(err)
+    }
+  })
+}
+```
+
+_[public/precache-service-worker.js](public/precache-service-worker.js)_
+
+```js
+const CACHE_NAME = 'my-csr-app'
+
+const allAssets = self.__WB_MANIFEST.map(({ url }) => url)
+
+const getCache = () => caches.open(CACHE_NAME)
+
+const getCachedAssets = async cache => {
+  const keys = await cache.keys()
+
+  return keys.map(({ url }) => `/${url.replace(self.registration.scope, '')}`)
+}
+
+const cacheInlineAssets = async assets => {
+  const cache = await getCache()
+
+  assets.forEach(({ url, source }) => {
+    const response = new Response(source, {
+      headers: {
+        'Cache-Control': 'public, max-age=31536000, immutable',
+        'Content-Type': 'application/javascript'
+      }
+    })
+
+    cache.put(url, response)
+
+    console.log(`Cached %c${url}`, 'color: yellow; font-style: italic;')
+  })
+}
+
+const precacheAssets = async ({ ignoreAssets }) => {
+  const cache = await getCache()
+  const cachedAssets = await getCachedAssets(cache)
+  const assetsToPrecache = allAssets.filter(asset => !cachedAssets.includes(asset) && !ignoreAssets.includes(asset))
+
+  await cache.addAll(assetsToPrecache)
+}
+
+const removeUnusedAssets = async () => {
+  const cache = await getCache()
+  const cachedAssets = await getCachedAssets(cache)
+
+  cachedAssets.forEach(asset => {
+    if (!allAssets.includes(asset)) cache.delete(asset)
+  })
+}
+
+const handleFetch = async request => {
+  const cache = await getCache()
+
+  if (request.destination === 'document') {
+    const cachedAssets = await getCachedAssets(cache)
+
+    return fetch(request, { headers: { 'X-Cached': cachedAssets.join(', ') } })
+  }
+
+  const cachedResponse = await cache.match(request)
+
+  return cachedResponse || fetch(request)
+}
+
+self.addEventListener('install', () => self.skipWaiting())
+
+self.addEventListener('message', event => {
+  const { type, inlineAssets } = event.data
+
+  if (type === 'cache-assets') return cacheInlineAssets(inlineAssets)
+  if (type === 'precache-assets') {
+    precacheAssets({ ignoreAssets: inlineAssets.map(({ url }) => url) })
+    removeUnusedAssets()
+  }
+})
+
+self.addEventListener('fetch', async event => {
+  if (['document', 'font', 'script'].includes(event.request.destination)) {
+    event.respondWith(handleFetch(event.request))
+  }
+})
+```
+
+The results for a fresh (entirely uncached) load are exceptional:
+
+![Inline Scripts](images/inline-scripts.png)
+
+![Inline Scripts CDN Response Time](images/inline-scripts-cdn-response-time.png)
+
+![Inline Scripts Parsing Breakdown](images/inline-scripts-parsing-breakdown.png)
+
+On the next load, the Cloudflare worker responds with a minimal (1.8kb) HTML document and all assets are immediately served from the cache.
 
 This optimization leads us to another one - splitting chunks to even smaller pieces.
 
@@ -879,21 +1026,11 @@ _[webpack.config.js](webpack.config.js)_
 
 ```diff
 optimization: {
-  realContentHash: false,
-  runtimeChunk: 'single',
   splitChunks: {
     chunks: 'initial',
     cacheGroups: {
       vendors: {
-        test: /[\\/]node_modules[\\/]/,
-        chunks: 'all',
 +       minSize: 10000,
-        name: (module, chunks) => {
-          const allChunksNames = chunks.map(({ name }) => name).join('.')
-          const moduleName = (module.context.match(/[\\/]node_modules[\\/](.*?)([\\/]|$)/) || [])[1]
-
-          return `${moduleName}.${allChunksNames}`.replace('@', '')
-        }
       }
     }
   }

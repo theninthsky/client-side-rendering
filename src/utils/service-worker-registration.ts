@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 
-import extractInlinedScripts from './extract-inlined-scripts'
+import extractInlineScripts from './extract-inline-scripts'
 
 const SERVICE_WORKERS = {
   precache: '/precache-service-worker.js',
@@ -20,11 +20,11 @@ const register = () => {
 
       console.log('Service worker registered!')
 
-      const inlinedAssets = extractInlinedScripts()
+      const inlineAssets = extractInlineScripts()
 
-      if (inlinedAssets.length) {
+      if (inlineAssets.length) {
         navigator.serviceWorker.ready.then(registration => {
-          registration.active?.postMessage({ type: 'cache-assets', inlinedAssets })
+          registration.active?.postMessage({ type: 'cache-assets', inlineAssets })
         })
       }
 
@@ -32,7 +32,7 @@ const register = () => {
         registration.installing!.onstatechange = (event: Event) => {
           const serviceWorker = event.target as ServiceWorker
 
-          if (serviceWorker.state === 'activated') serviceWorker.postMessage({ type: 'precache-assets', inlinedAssets })
+          if (serviceWorker.state === 'activated') serviceWorker.postMessage({ type: 'precache-assets', inlineAssets })
         }
       })
 
