@@ -1,6 +1,6 @@
 import { join, resolve } from 'node:path'
 import { writeFileSync } from 'node:fs'
-import ReactRefreshPlugin from '@pmmmwh/react-refresh-webpack-plugin'
+import ReactRefreshPlugin from '@rspack/plugin-react-refresh'
 import ESLintPlugin from 'eslint-webpack-plugin'
 import { InjectManifest } from 'workbox-webpack-plugin'
 import HtmlPlugin from 'html-webpack-plugin'
@@ -37,16 +37,16 @@ export default (_, { mode }) => {
           test: /\.(t|j)sx?$/i,
           exclude: /(node_modules)/,
           use: {
-            loader: 'builtin:swc-loader'
-          },
-          options: {
-            jsc: {
-              parser: { syntax: 'typescript', tsx: true },
-              transform: {
-                react: { runtime: 'automatic', refresh: true }
-              },
-              target: 'es2017',
-              preserveAllComments: true
+            loader: 'builtin:swc-loader',
+            options: {
+              jsc: {
+                parser: { syntax: 'typescript', tsx: true },
+                transform: {
+                  react: { runtime: 'automatic', development: !production, refresh: !production }
+                },
+                target: 'es2017',
+                preserveAllComments: true
+              }
             }
           }
         },
@@ -100,7 +100,7 @@ export default (_, { mode }) => {
                 swSrc: join(__dirname, 'public', `${swType}-service-worker.js`)
               })
           )
-        : [new ESLintPlugin({ extensions: ['js', 'ts', ' jsx', 'tsx'] })]),
+        : [new ReactRefreshPlugin(), new ESLintPlugin({ extensions: ['js', 'ts', ' jsx', 'tsx'] })]),
       new HtmlPlugin({
         scriptLoading: 'module',
         templateContent: ({ compilation }) => {
