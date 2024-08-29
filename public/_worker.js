@@ -1,4 +1,4 @@
-const initialScriptsString = INJECT_INITIAL_SCRIPTS_STRING_HERE
+const initialModuleScriptsString = INJECT_INITIAL_MODULE_SCRIPTS_STRING_HERE
 const initialScripts = INJECT_INITIAL_SCRIPTS_HERE
 const asyncScripts = INJECT_ASYNC_SCRIPTS_HERE
 const html = INJECT_HTML_HERE
@@ -82,7 +82,7 @@ export default {
 
     if (!uncachedScripts.length) return new Response(html, { headers })
 
-    let body = html.replace(initialScriptsString, () => '')
+    let body = html.replace(initialModuleScriptsString, () => '')
 
     const injectedInitialScriptsString = initialScripts
       .map(({ url, source }) =>
@@ -90,10 +90,7 @@ export default {
       )
       .join('\n')
 
-    body = body.replace(
-      '<!-- INJECT_SCRIPTS_HERE -->',
-      () => `<!-- INJECT_SCRIPTS_HERE -->\n${injectedInitialScriptsString}`
-    )
+    body = body.replace('</body>', () => `<!-- INJECT_ASYNC_SCRIPTS_HERE -->${injectedInitialScriptsString}\n</body>`)
 
     const matchingPageScripts = asyncScripts
       .map(asset => {
@@ -107,13 +104,12 @@ export default {
     const exactMatchingPageScripts = matchingPageScripts.filter(({ exact }) => exact)
     const pageScripts = exactMatchingPageScripts.length ? exactMatchingPageScripts : matchingPageScripts
     const uncachedPageScripts = pageScripts.filter(({ url }) => !cachedScripts.includes(url))
-
     const injectedAsyncScriptsString = uncachedPageScripts.reduce(
       (str, { url, source }) => `${str}\n<script id="${url}">${source}</script>`,
       ''
     )
 
-    body = body.replace('<!-- INJECT_SCRIPTS_HERE -->', () => injectedAsyncScriptsString)
+    body = body.replace('<!-- INJECT_ASYNC_SCRIPTS_HERE -->', () => injectedAsyncScriptsString)
 
     return new Response(body, { headers })
   }
