@@ -10,7 +10,7 @@ const getCachedAssets = async cache => {
   return keys.map(({ url }) => `/${url.replace(self.registration.scope, '')}`)
 }
 
-const cacheInlinedAssets = async assets => {
+const cacheInlineAssets = async assets => {
   const cache = await getCache()
 
   assets.forEach(({ url, source }) => {
@@ -61,11 +61,11 @@ const handleFetch = async request => {
 self.addEventListener('install', () => self.skipWaiting())
 
 self.addEventListener('message', event => {
-  const { type, inlinedAssets } = event.data
+  const { type, inlineAssets } = event.data
 
-  if (type === 'cache-assets') return cacheInlinedAssets(inlinedAssets)
+  if (type === 'cache-assets') return cacheInlineAssets(inlineAssets)
   if (type === 'precache-assets') {
-    precacheAssets({ ignoreAssets: inlinedAssets.map(({ url }) => url) })
+    precacheAssets({ ignoreAssets: inlineAssets.map(({ url }) => url) })
     removeUnusedAssets()
   }
 })
