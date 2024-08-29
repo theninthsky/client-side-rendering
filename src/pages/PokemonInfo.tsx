@@ -1,8 +1,6 @@
 import { useLayoutEffect, FC } from 'react'
 import { useParams, useLocation } from 'react-router-dom'
 import { Meta, useFetch } from 'frontend-essentials'
-import startCase from 'lodash/startCase'
-import toLower from 'lodash/toLower'
 import { css, cx } from '@emotion/css'
 import { Skeleton } from '@mui/material'
 
@@ -43,7 +41,11 @@ const PokemonInfo: FC<{}> = () => {
 
   return (
     <div>
-      <Meta title={`${startCase(toLower(name || 'loading'))} | Pokémon Info`} image={image} description={flavorText} />
+      <Meta
+        title={`${_.startCase(_.toLower(name || 'loading'))} | Pokémon Info`}
+        image={image}
+        description={flavorText}
+      />
 
       <Title back>Pokémon Info</Title>
 
@@ -54,7 +56,7 @@ const PokemonInfo: FC<{}> = () => {
           <>
             <div className={style.head}>
               <p>
-                {id}. <strong>{startCase(toLower(name))}</strong>
+                {id}. <strong>{_.startCase(_.toLower(name))}</strong>
               </p>
 
               <div className="items-center">
@@ -62,9 +64,9 @@ const PokemonInfo: FC<{}> = () => {
                   <img
                     key={name}
                     className={style.type}
-                    title={startCase(name)}
+                    title={_.startCase(name)}
                     src={`https://raw.githubusercontent.com/msikma/pokeresources/master/resources/type-icons/gen8/${name}.svg`}
-                    alt={startCase(name)}
+                    alt={_.startCase(name)}
                   />
                 ))}
               </div>

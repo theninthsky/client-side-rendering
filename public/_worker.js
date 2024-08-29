@@ -1,4 +1,6 @@
-const allAssets = INJECT_ASSETS_HERE
+const initialModuleScriptsString = INJECT_INITIAL_MODULE_SCRIPTS_STRING_HERE
+const initialScripts = INJECT_INITIAL_SCRIPTS_HERE
+const asyncScripts = INJECT_ASYNC_SCRIPTS_HERE
 const html = INJECT_HTML_HERE
 
 const BOT_AGENTS = [
@@ -75,21 +77,22 @@ export default {
     if (BOT_AGENTS.some(agent => userAgent.includes(agent))) return fetchPrerendered(request)
 
     const headers = { 'Content-Type': 'text/html; charset=utf-8' }
-    const cachedAssets = request.headers.get('X-Cached')?.split(', ').filter(Boolean) || []
-    const uncachedAssets = allAssets.filter(({ url }) => !cachedAssets.includes(url))
+    const cachedScripts = request.headers.get('X-Cached')?.split(', ').filter(Boolean) || []
+    const uncachedScripts = [...initialScripts, ...asyncScripts].filter(({ url }) => !cachedScripts.includes(url))
 
-    if (!uncachedAssets.length) return new Response(html, { headers })
+    if (!uncachedScripts.length) return new Response(html, { headers })
 
-    let body = html
+    let body = html.replace(initialModuleScriptsString, () => '')
 
-    uncachedAssets.forEach(({ url, source }) => {
-      body = body.replace(
-        `<script type="module" src="${url}"></script>`,
-        () => `<script id="${url}" type="module">${source}</script>`
+    const injectedInitialScriptsString = initialScripts
+      .map(({ url, source }) =>
+        cachedScripts.includes(url) ? `<script src="${url}"></script>` : `<script id="${url}">${source}</script>`
       )
-    })
+      .join('\n')
 
-    const matchingPageAssets = allAssets
+    body = body.replace('</body>', () => `<!-- INJECT_ASYNC_SCRIPTS_HERE -->${injectedInitialScriptsString}\n</body>`)
+
+    const matchingPageScripts = asyncScripts
       .map(asset => {
         const parentsPaths = asset.parentPaths.map(path => ({ path, ...isMatch(pathname, path) }))
         const parentPathsExactMatch = parentsPaths.some(({ exact }) => exact)
@@ -98,13 +101,15 @@ export default {
         return { ...asset, exact: parentPathsExactMatch, match: parentPathsMatch }
       })
       .filter(({ match }) => match)
-    const exactMatchingPageAssets = matchingPageAssets.filter(({ exact }) => exact)
-    const pageAssets = exactMatchingPageAssets.length ? exactMatchingPageAssets : matchingPageAssets
-    const uncachedPageAssets = pageAssets.filter(({ url }) => !cachedAssets.includes(url))
+    const exactMatchingPageScripts = matchingPageScripts.filter(({ exact }) => exact)
+    const pageScripts = exactMatchingPageScripts.length ? exactMatchingPageScripts : matchingPageScripts
+    const uncachedPageScripts = pageScripts.filter(({ url }) => !cachedScripts.includes(url))
+    const injectedAsyncScriptsString = uncachedPageScripts.reduce(
+      (str, { url, source }) => `${str}\n<script id="${url}">${source}</script>`,
+      ''
+    )
 
-    uncachedPageAssets.forEach(({ url, source }) => {
-      body = body.replace('</head>', () => `<script id="${url}" type="module">${source}</script></head>`)
-    })
+    body = body.replace('<!-- INJECT_ASYNC_SCRIPTS_HERE -->', () => injectedAsyncScriptsString)
 
     return new Response(body, { headers })
   }
