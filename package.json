@@ -9,7 +9,7 @@
     "postinstall": "npm run fetch-static",
     "start": "rspack serve",
     "prebuild": "npm-run-all -p fetch-static create-sitemap",
-    "build": "rspack build",
+    "build": "rspack build --mode production",
     "postbuild": "node scripts/inject-worker-html",
     "serve": "serve build",
     "fetch-static": "node scripts/fetch-static",
@@ -33,6 +33,7 @@
     "zustand": "^4.0.0"
   },
   "devDependencies": {
+    "@aaroon/workbox-rspack-plugin": "^0.3.1",
     "@rspack/cli": "^1.0.0",
     "@rspack/core": "^1.0.0",
     "@rspack/plugin-react-refresh": "^1.0.0",
@@ -54,7 +55,6 @@
     "sitemap": "^8.0.0",
     "style-loader": "^4.0.0",
     "swc-loader": "^0.2.6",
-    "typescript": "^5.0.4",
-    "workbox-webpack-plugin": "^7.0.0"
+    "typescript": "^5.0.4"
   }
 }

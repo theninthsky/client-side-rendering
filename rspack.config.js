@@ -1,10 +1,10 @@
 import { join, resolve } from 'node:path'
 import { writeFileSync } from 'node:fs'
+import rspack from '@rspack/core'
 import ReactRefreshPlugin from '@rspack/plugin-react-refresh'
 import ESLintPlugin from 'eslint-webpack-plugin'
-import { InjectManifest } from 'workbox-webpack-plugin'
+import { InjectManifest } from '@aaroon/workbox-rspack-plugin'
 import HtmlPlugin from 'html-webpack-plugin'
-import rspack from '@rspack/core'
 
 import pagesManifest from './src/pages-manifest.js'
 import htmlTemplate from './public/index.js'
