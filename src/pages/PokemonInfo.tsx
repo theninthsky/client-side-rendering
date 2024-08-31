@@ -4,7 +4,7 @@ import { Meta, useFetch } from 'frontend-essentials'
 import { css, cx } from '@emotion/css'
 import { Skeleton } from '@mui/material'
 
-import pagesManifest from 'pages-manifest'
+import pages from 'pages'
 import Title from 'components/common/Title'
 import Info from 'components/common/Info'
 
@@ -17,7 +17,7 @@ $(`#${_.isDate(moment().toDate())}`)
 const {
   description,
   data: [pokemonInfoData, pokemonSpeciesData]
-} = pagesManifest.find(({ chunk }) => chunk === 'pokemon-info')!
+} = pages.find(({ chunk }) => chunk === 'pokemon-info')!
 
 const PokemonInfo: FC<{}> = () => {
   const { name: nameParam } = useParams()

@@ -225,7 +225,7 @@ The way we can solve this issue is by implementing a script in the document that
 _[webpack.config.js](webpack.config.js)_
 
 ```js
-import pagesManifest from './src/pages-manifest.js'
+import pagesManifest from './src/pages.js'
 import htmlTemplate from './public/index.js'
 .
 .
@@ -321,7 +321,7 @@ const preloadAssets = () => {
 preloadAssets()
 ```
 
-The imported `pages-manifest` file can be found [here](src/pages-manifest.js).
+The imported `pages.js` file can be found [here](src/pages.js).
 
 _Please note that other types of assets can be preloaded the same way (like stylesheets)._
 
@@ -516,7 +516,7 @@ const preloadAssets = () => {
 }
 ```
 
-Reminder: the `pages-manifest` file can be found [here](src/pages-manifest.js).
+Reminder: the `pages.js` file can be found [here](src/pages.js).
 
 Now we can see that the data is being fetched right away:
 
@@ -1420,7 +1420,7 @@ _**Facebook**:_
 
 In order to make all of our app pages discoverable to search engines, it is recommended to create a `sitemap.xml` file which specifies all of our website routes.
 
-Since we already have a centralized _[pages-manifest](src/pages-manifest.js)_ file, we can easily generate a sitemap during build time:
+Since we already have a centralized _[pages.js](src/pages.js)_ file, we can easily generate a sitemap during build time:
 
 _[create-sitemap.js](scripts/create-sitemap.js)_
 
@@ -1429,10 +1429,10 @@ import { Readable } from 'stream'
 import { writeFile } from 'fs/promises'
 import { SitemapStream, streamToPromise } from 'sitemap'
 
-import pagesManifest from '../src/pages-manifest.js'
+import pages from '../src/pages.js'
 
 const stream = new SitemapStream({ hostname: 'https://client-side-rendering.pages.dev' })
-const links = pagesManifest.map(({ path }) => ({ url: path, changefreq: 'weekly' }))
+const links = pages.map(({ path }) => ({ url: path, changefreq: 'weekly' }))
 
 streamToPromise(Readable.from(links).pipe(stream))
   .then(data => data.toString())

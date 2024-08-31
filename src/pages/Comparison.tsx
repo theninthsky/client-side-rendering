@@ -2,7 +2,7 @@ import type { FC } from 'react'
 import { Meta } from 'frontend-essentials'
 import { css } from '@emotion/css'
 
-import pagesManifest from 'pages-manifest'
+import pages from 'pages'
 import { DESKTOP_VIEWPORT } from 'styles/constants'
 import Title from 'components/common/Title'
 import Subtitle from 'components/common/Subtitle'
@@ -16,7 +16,7 @@ import $ from 'jquery'
 import moment from 'moment'
 $(`#${_.isDate(moment().toDate())}`)
 
-const { title, description } = pagesManifest.find(({ chunk }) => chunk === 'comparison')!
+const { title, description } = pages.find(({ chunk }) => chunk === 'comparison')!
 
 const listData = {
   csr: {

@@ -1,7 +1,7 @@
 import { lazy, Suspense, FC } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 
-import pagesManifest from 'pages-manifest'
+import pages from 'pages'
 import Navigation from 'components/Navigation'
 import ScrollToTop from 'components/common/ScrollToTop'
 import Layout from 'components/Layout'
@@ -13,9 +13,9 @@ const PokemonInfo = lazy(() => import(/* webpackChunkName: 'pokemon-info' */ 'pa
 const Comparison = lazy(() => import(/* webpackChunkName: 'comparison' */ 'pages/Comparison'))
 const WebVitals = lazy(() => import(/* webpackChunkName: 'core-web-vitals' */ 'pages/WebVitals'))
 
-const pages = [Home, LoremIpsum, Pokemon, PokemonInfo, Comparison, WebVitals]
-const routes = pagesManifest.map(({ path }, ind) => {
-  const Element = pages[ind]
+const pagesComponents = [Home, LoremIpsum, Pokemon, PokemonInfo, Comparison, WebVitals]
+const routes = pages.map(({ path }, ind) => {
+  const Element = pagesComponents[ind]
 
   return <Route key={path} path={path} element={<Element />} />
 })

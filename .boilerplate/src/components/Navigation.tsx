@@ -1,18 +1,18 @@
 import { useMemo } from 'react'
 import { css } from '@emotion/css'
 
-import pagesManifest from 'pages-manifest'
+import pages from 'pages'
 import NavigationLink from 'components/common/NavigationLink'
 
 const Navigation = () => {
   const links = useMemo(
     () =>
-      pagesManifest.map(({ path, title }) => (
+      pages.map(({ path, title }) => (
         <NavigationLink key={path} to={path}>
           {title}
         </NavigationLink>
       )),
-    [pagesManifest]
+    [pages]
   )
 
   return <div className={style.wrapper}>{links}</div>

@@ -2,9 +2,9 @@ import { Readable } from 'stream'
 import { writeFile } from 'fs/promises'
 import { SitemapStream, streamToPromise } from 'sitemap'
 
-import pagesManifest from '../src/pages-manifest.js'
+import pages from '../src/pages.js'
 
-const paths = pagesManifest.filter(({ path }) => !path.includes(':')).map(({ path }) => path)
+const paths = pages.filter(({ path }) => !path.includes(':')).map(({ path }) => path)
 const stream = new SitemapStream({ hostname: 'https://example.com' })
 const links = paths.map(path => ({ url: path, changefreq: 'weekly' }))
 

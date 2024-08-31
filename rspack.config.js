@@ -6,7 +6,7 @@ import ESLintPlugin from 'eslint-webpack-plugin'
 import { InjectManifest } from '@aaroon/workbox-rspack-plugin'
 import HtmlPlugin from 'html-webpack-plugin'
 
-import pagesManifest from './src/pages-manifest.js'
+import pagesManifest from './src/pages.js'
 import htmlTemplate from './public/index.js'
 
 const __dirname = import.meta.dirname

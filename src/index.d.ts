@@ -8,7 +8,7 @@ type PageData = {
   menuPreload: boolean
 }
 
-declare module 'pages-manifest' {
+declare module 'pages' {
   const pages: [
     {
       chunk: string
