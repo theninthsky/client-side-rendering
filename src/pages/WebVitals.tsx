@@ -3,7 +3,7 @@ import { Meta } from 'frontend-essentials'
 import { onCLS, onFCP, onFID, onINP, onLCP, onTTFB } from 'web-vitals'
 import { css } from '@emotion/css'
 
-import pagesManifest from 'pages-manifest'
+import pages from 'pages'
 import Title from 'components/common/Title'
 import Info from 'components/common/Info'
 
@@ -21,7 +21,7 @@ type Metrics = {
 }
 
 const METRICS_ORDER = ['TTFB', 'FCP', 'LCP', 'CLS', 'FID', 'INP']
-const { title, description } = pagesManifest.find(({ chunk }) => chunk === 'core-web-vitals')!
+const { title, description } = pages.find(({ chunk }) => chunk === 'core-web-vitals')!
 
 const WebVitals: FC<{}> = () => {
   const [metrics, setMetrics] = useState<Metrics>({})

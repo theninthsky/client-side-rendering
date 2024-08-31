@@ -4,7 +4,7 @@ import toLower from 'lodash/toLower'
 import { css } from '@emotion/css'
 import { Skeleton } from '@mui/material'
 
-import pagesManifest from 'pages-manifest'
+import pages from 'pages'
 import preconnect from 'utils/preconnect'
 import Title from 'components/common/Title'
 import Info from 'components/common/Info'
@@ -20,10 +20,10 @@ const {
   title,
   description,
   data: [pokemonData]
-} = pagesManifest.find(({ chunk }) => chunk === 'pokemon')!
+} = pages.find(({ chunk }) => chunk === 'pokemon')!
 const {
   data: [pokemonInfoData]
-} = pagesManifest.find(({ chunk }) => chunk === 'pokemon-info')!
+} = pages.find(({ chunk }) => chunk === 'pokemon-info')!
 
 const disableLazyRender = /prerender|googlebot/i.test(navigator.userAgent)
 

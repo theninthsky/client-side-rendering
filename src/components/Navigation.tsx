@@ -3,7 +3,7 @@ import { Media } from 'frontend-essentials'
 import { css, cx } from '@emotion/css'
 import { Drawer } from '@mui/material'
 
-import pagesManifest from 'pages-manifest'
+import pages from 'pages'
 import { MOBILE_VIEWPORT, DESKTOP_VIEWPORT } from 'styles/constants'
 import useStore, { THEME_LIGHT, THEME_DARK } from 'hooks/useStore'
 import NavigationLink from 'components/common/NavigationLink'
@@ -38,7 +38,7 @@ const Navigation = () => {
 
   const links = useMemo(
     () =>
-      pagesManifest
+      pages
         .filter(({ menuItem = true }) => menuItem)
         .map(({ path, title, data }) => (
           <NavigationLink
@@ -50,7 +50,7 @@ const Navigation = () => {
             {title}
           </NavigationLink>
         )),
-    [pagesManifest]
+    [pages]
   )
 
   const positionStyle = css`

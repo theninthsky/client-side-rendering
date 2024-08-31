@@ -7,7 +7,7 @@ import { InjectManifest } from 'workbox-webpack-plugin'
 import HtmlPlugin from 'html-webpack-plugin'
 import CopyPlugin from 'copy-webpack-plugin'
 
-import pagesManifest from './src/pages-manifest.js'
+import pagesManifest from './src/pages.js'
 import htmlTemplate from './public/index.js'
 
 const __dirname = import.meta.dirname

@@ -1,13 +1,13 @@
 import { useState, useEffect, FC } from 'react'
 import { css } from '@emotion/css'
 
-import pagesManifest from 'pages-manifest'
+import pages from 'pages'
 import Title from 'components/common/Title'
 
 const {
   title,
   data: [data]
-} = pagesManifest.find(({ chunk }) => chunk === 'lorem-ipsum')!
+} = pages.find(({ chunk }) => chunk === 'lorem-ipsum')!
 
 const LoremIpsum: FC<{}> = () => {
   const [loremIpsum, setLoremIpsum] = useState<string>()
