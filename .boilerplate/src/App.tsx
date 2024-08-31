@@ -8,9 +8,9 @@ import Layout from 'components/Layout'
 const Home = lazy(() => import(/* webpackChunkName: 'home' */ 'pages/Home'))
 const LoremIpsum = lazy(() => import(/* webpackChunkName: 'lorem-ipsum' */ 'pages/LoremIpsum'))
 
-const pages = [Home, LoremIpsum]
+const pageComponents = [Home, LoremIpsum]
 const routes = pages.map(({ path }, ind) => {
-  const Element = pages[ind]
+  const Element = pageComponents[ind]
 
   return <Route key={path} path={path} element={<Element />} />
 })
