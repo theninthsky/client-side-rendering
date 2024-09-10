@@ -116,9 +116,9 @@ _Note that while this project is implemented with React, the vast majority of it
 
 # Performance
 
-We will assume a standard Webpack 5 setup and add the required customizations as we progress.
+We will assume a standard Webpack (Rspack) setup and add the required customizations as we progress.
 <br>
-Most of the code changes that we'll go throught will be in the _[webpack.config.js](webpack.config.js)_ configuration file and the _[index.js](public/index.js)_ HTML template.
+Most of the code changes that we'll go throught will be in the _[rspack.config.js](rspack.config.js)_ configuration file and the _[index.js](public/index.js)_ HTML template.
 
 ### Bundle Size
 
@@ -144,7 +144,7 @@ Now, what part of our bundle comprises most of its weight? The answer is the **d
 
 So if we could split the vendors to their own hashed chunk, that would allow a separation between our code and the vendors code, leading to less cache invalidations.
 
-Let's add the following part to our _[webpack.config.js](webpack.config.js)_ file:
+Let's add the following part to our _[rspack.config.js](rspack.config.js)_ file:
 
 ```js
 optimization: {
@@ -171,7 +171,7 @@ In such case, the entire vendors chunk's cache will invalidate.
 
 So, in order to improve it even further, we will split **each dependency** to its own hashed chunk:
 
-_[webpack.config.js](webpack.config.js)_
+_[rspack.config.js](rspack.config.js)_
 
 ```diff
 - name: 'vendors'
@@ -222,7 +222,7 @@ Code splitting has one major flaw - the runtime doesn't know which async chunks 
 
 The way we can solve this issue is by implementing a script in the document that will be responsible for preloading relevant assets:
 
-_[webpack.config.js](webpack.config.js)_
+_[rspack.config.js](rspack.config.js)_
 
 ```js
 import pagesManifest from './src/pages.js'
@@ -340,7 +340,7 @@ So if that said dependency is `moment` and it weighs 72kb minzipped, then both a
 
 We need to split this dependency from these async chunks so that it could be shared between them:
 
-_[webpack.config.js](webpack.config.js)_
+_[rspack.config.js](rspack.config.js)_
 
 ```diff
 optimization: {
@@ -366,7 +366,7 @@ However, we have no way of telling which async vendor chunks will be split befor
 
 That's why we will append the chunks names to the async vendor's name:
 
-_[webpack.config.js](webpack.config.js)_
+_[rspack.config.js](rspack.config.js)_
 
 ```diff
 optimization: {
@@ -435,7 +435,7 @@ One of the presumed disadvantages of CSR over SSR is that the page's data (fetch
 
 To overcome this, we will use preloading once again, this time for the data itself:
 
-_[webpack.config.js](webpack.config.js)_
+_[rspack.config.js](rspack.config.js)_
 
 ```diff
 plugins: [
@@ -579,7 +579,7 @@ We would want to prefetch and cache all pages ahead of time.
 
 We can do this by writing a simple service worker:
 
-_[webpack.config.js](webpack.config.js)_
+_[rspack.config.js](rspack.config.js)_
 
 ```js
 plugins: [
@@ -738,7 +738,7 @@ The entire flow should be described as follows:
 
 This ensures that the browser receives exactly the assets it needs (no more, no less) to display the page **in a single roundtrip**!
 
-_[webpack.config.js](webpack.config.js)_
+_[rspack.config.js](rspack.config.js)_
 
 ```js
 plugins: [
@@ -1022,7 +1022,7 @@ As a rule of thumb, splitting the bundle into too many chunks can hurt performan
 
 But in our case its irrelevant, since we inline all the relevant chunks and so they are fetched all at once.
 
-_[webpack.config.js](webpack.config.js)_
+_[rspack.config.js](rspack.config.js)_
 
 ```diff
 optimization: {
@@ -1535,7 +1535,7 @@ We saw that client-side rendering performance is on par and sometimes even bette
 <br>
 We've also seen that Googlebot can perfectly index client-side rendered apps, and that we can easily set up a prerender server to serve all other bots and crawlers.
 <br>
-And above all - we have achieved all this mainly by modifiying 2 files (the Webpack config and HTML template) and using a prerender service, so every existing CSR app should be able to quickly and easily implement these modifications and benefit from them.
+And above all - we have achieved all this mainly by modifiying 2 files (the Webpack/Rspack config and HTML template) and using a prerender service, so every existing CSR app should be able to quickly and easily implement these modifications and benefit from them.
 
 These facts lead to the conclusion that there is no particular reason to use SSR, it would only add a lot of complexity and limitations to our app and degrade the developer and user experience.
 
