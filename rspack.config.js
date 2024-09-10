@@ -97,7 +97,8 @@ export default (_, { mode }) => {
             swType =>
               new InjectManifest({
                 include: [/fonts\//, /scripts\/.+\.js$/],
-                swSrc: join(__dirname, 'public', `${swType}-service-worker.js`)
+                swSrc: join(__dirname, 'public', `${swType}-service-worker.js`),
+                compileSrc: false
               })
           )
         : [new ReactRefreshPlugin(), new ESLintPlugin({ extensions: ['js', 'ts', ' jsx', 'tsx'] })]),
