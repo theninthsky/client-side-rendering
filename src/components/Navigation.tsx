@@ -1,4 +1,5 @@
 import { useState, useMemo, useRef, useEffect } from 'react'
+import { useShallow } from 'zustand/shallow'
 import { Media } from 'frontend-essentials'
 import { css, cx } from '@emotion/css'
 import { Drawer } from '@mui/material'
@@ -14,7 +15,7 @@ import MoonIcon from 'images/moon.svg'
 const NAVIGATION_HEIGHT = 55
 
 const Navigation = () => {
-  const { theme, setTheme } = useStore(({ theme, setTheme }) => ({ theme, setTheme }))
+  const { theme, setTheme } = useStore(useShallow(({ theme, setTheme }) => ({ theme, setTheme })))
 
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [stickyPosition, setStickyPosition] = useState(-NAVIGATION_HEIGHT)

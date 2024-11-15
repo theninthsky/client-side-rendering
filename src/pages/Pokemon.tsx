@@ -58,7 +58,7 @@ const Pokemon: FC<{}> = () => {
 
               return (
                 <Link key={name} className={style.pokemon} to={`/pokemon/${name}`} state={{ id, name, img }}>
-                  <img className={style.pokemonImage} src={img} loading="lazy" />
+                  <img className={style.pokemonImage} src={img} alt={name} loading="lazy" />
 
                   <span>{_.startCase(toLower(name))}</span>
                 </Link>

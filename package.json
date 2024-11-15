@@ -20,7 +20,7 @@
     "@emotion/css": "^11.9.0",
     "@emotion/react": "^11.9.0",
     "@emotion/styled": "^11.9.0",
-    "@mui/material": "^5.6.2",
+    "@mui/material": "^6.1.7",
     "@tanstack/react-table": "^8.9.3",
     "frontend-essentials": "^7.0.0",
     "jquery": "^3.7.0",
@@ -30,7 +30,7 @@
     "react-dom": "^18.0.0",
     "react-router-dom": "^6.3.0",
     "web-vitals": "^4.1.1",
-    "zustand": "^4.0.0"
+    "zustand": "^5.0.1"
   },
   "devDependencies": {
     "@aaroon/workbox-rspack-plugin": "^0.3.1",

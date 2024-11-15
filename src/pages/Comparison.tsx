@@ -396,7 +396,7 @@ const listData = {
             Inlining critical CSS in the document is one of the most important performance optimizations in the SSR
             realm.
             <br />
-            However, due to the nature of streaming, it is currently not supported.{' '}
+            However, due to the nature of streaming, it is currently unsupported.{' '}
             <a href="https://github.com/vercel/next.js/discussions/59989" target="_blank">
               Article
             </a>
