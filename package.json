@@ -34,8 +34,8 @@
   },
   "devDependencies": {
     "@aaroon/workbox-rspack-plugin": "^0.3.1",
-    "@rspack/cli": "^1.0.0",
-    "@rspack/core": "^1.0.0",
+    "@rspack/cli": "^1.1.0",
+    "@rspack/core": "^1.1.0",
     "@rspack/plugin-react-refresh": "^1.0.0",
     "@svgr/webpack": "^8.0.1",
     "@swc/core": "^1.4.11",
