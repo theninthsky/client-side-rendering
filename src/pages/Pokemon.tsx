@@ -45,7 +45,7 @@ const Pokemon: FC<{}> = () => {
         image={`${window.location.origin}/icons/og-pokemon.png`}
       />
 
-      <Title>{title}</Title>
+      <Title>{title} Test</Title>
 
       <Info className={style.info}>{description}</Info>
 
