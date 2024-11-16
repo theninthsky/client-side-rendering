@@ -1,5 +1,6 @@
 import { join } from 'node:path'
 import { readFileSync, writeFileSync, rmSync } from 'node:fs'
+import { createHash } from 'node:crypto'
 
 const __dirname = import.meta.dirname
 
@@ -14,6 +15,7 @@ const initialScripts = assets
   .map(asset => ({ ...asset, order: initialModuleScripts.findIndex(script => script.includes(asset.url)) }))
   .sort((a, b) => a.order - b.order)
 const asyncScripts = assets.filter(asset => !initialScripts.includes(asset))
+const etag = createHash('sha256').update(html).digest('base64')
 
 html = html
   .replace(/,"scripts":\s*\[(.*?)\]/g, () => '')
@@ -25,6 +27,7 @@ worker = worker
   .replace('INJECT_INITIAL_SCRIPTS_HERE', () => JSON.stringify(initialScripts))
   .replace('INJECT_ASYNC_SCRIPTS_HERE', () => JSON.stringify(asyncScripts))
   .replace('INJECT_HTML_HERE', () => JSON.stringify(html))
+  .replace('INJECT_ETAG_HERE', () => JSON.stringify(etag))
 
 rmSync(join(__dirname, '..', 'public', 'assets.js'))
 writeFileSync(join(__dirname, '..', 'build', '_worker.js'), worker)

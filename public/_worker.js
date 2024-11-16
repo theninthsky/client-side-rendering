@@ -2,6 +2,7 @@ const initialModuleScriptsString = INJECT_INITIAL_MODULE_SCRIPTS_STRING_HERE
 const initialScripts = INJECT_INITIAL_SCRIPTS_HERE
 const asyncScripts = INJECT_ASYNC_SCRIPTS_HERE
 const html = INJECT_HTML_HERE
+const etag = INJECT_ETAG_HERE
 
 const BOT_AGENTS = [
   'bingbot',
@@ -69,6 +70,7 @@ export default {
   fetch(request, env) {
     const pathname = new URL(request.url).pathname.toLowerCase()
     const userAgent = (request.headers.get('User-Agent') || '').toLowerCase()
+    const ifNoneMatch = request.headers.get('If-None-Match')
     const nonDocument = pathname.includes('.')
     const appInstalled = request.headers.get('X-Installed')
     const googlebot = userAgent.includes('googlebot')
@@ -80,7 +82,11 @@ export default {
     const cachedScripts = request.headers.get('X-Cached')?.split(', ').filter(Boolean) || []
     const uncachedScripts = [...initialScripts, ...asyncScripts].filter(({ url }) => !cachedScripts.includes(url))
 
-    if (!uncachedScripts.length) return new Response(html, { headers })
+    if (!uncachedScripts.length) {
+      if (ifNoneMatch === etag) return new Response(null, { status: 304 })
+
+      return new Response(html, { headers: { ...headers, ETag: etag } })
+    }
 
     let body = html.replace(initialModuleScriptsString, () => '')
 
