@@ -2,7 +2,9 @@ const initialModuleScriptsString = INJECT_INITIAL_MODULE_SCRIPTS_STRING_HERE
 const initialScripts = INJECT_INITIAL_SCRIPTS_HERE
 const asyncScripts = INJECT_ASYNC_SCRIPTS_HERE
 const html = INJECT_HTML_HERE
-const etag = INJECT_ETAG_HERE
+const htmlChecksum = INJECT_HTML_CHECKSUM_HERE
+
+const documentHeaders = { 'Cache-Control': 'public, max-age=5', 'Content-Type': 'text/html; charset=utf-8' }
 
 const BOT_AGENTS = [
   'bingbot',
@@ -68,9 +70,12 @@ const isMatch = (pathname, path) => {
 
 export default {
   fetch(request, env) {
+    const ifNoneMatch = request.headers.get('If-None-Match')
+
+    if (ifNoneMatch === htmlChecksum) return new Response(null, { status: 304, headers: documentHeaders })
+
     const pathname = new URL(request.url).pathname.toLowerCase()
     const userAgent = (request.headers.get('User-Agent') || '').toLowerCase()
-    const ifNoneMatch = request.headers.get('If-None-Match')
     const nonDocument = pathname.includes('.')
     const appInstalled = request.headers.get('X-Installed')
     const googlebot = userAgent.includes('googlebot')
@@ -78,15 +83,10 @@ export default {
     if (nonDocument || appInstalled || googlebot) return env.ASSETS.fetch(request)
     if (BOT_AGENTS.some(agent => userAgent.includes(agent))) return fetchPrerendered(request)
 
-    const headers = { 'Content-Type': 'text/html; charset=utf-8' }
     const cachedScripts = request.headers.get('X-Cached')?.split(', ').filter(Boolean) || []
     const uncachedScripts = [...initialScripts, ...asyncScripts].filter(({ url }) => !cachedScripts.includes(url))
 
-    if (!uncachedScripts.length) {
-      if (ifNoneMatch === etag) return new Response(null, { status: 304 })
-
-      return new Response(html, { headers: { ...headers, ETag: etag } })
-    }
+    if (!uncachedScripts.length) return new Response(html, { headers: { ...documentHeaders, ETag: htmlChecksum } })
 
     let body = html.replace(initialModuleScriptsString, () => '')
 
@@ -117,6 +117,6 @@ export default {
 
     body = body.replace('<!-- INJECT_ASYNC_SCRIPTS_HERE -->', () => injectedAsyncScriptsString)
 
-    return new Response(body, { headers })
+    return new Response(body, { headers: documentHeaders })
   }
 }

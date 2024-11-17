@@ -15,7 +15,7 @@ const initialScripts = assets
   .map(asset => ({ ...asset, order: initialModuleScripts.findIndex(script => script.includes(asset.url)) }))
   .sort((a, b) => a.order - b.order)
 const asyncScripts = assets.filter(asset => !initialScripts.includes(asset))
-const etag = createHash('sha256').update(html).digest('base64')
+const htmlChecksum = createHash('sha256').update(html).digest('hex')
 
 html = html
   .replace(/,"scripts":\s*\[(.*?)\]/g, () => '')
@@ -27,7 +27,7 @@ worker = worker
   .replace('INJECT_INITIAL_SCRIPTS_HERE', () => JSON.stringify(initialScripts))
   .replace('INJECT_ASYNC_SCRIPTS_HERE', () => JSON.stringify(asyncScripts))
   .replace('INJECT_HTML_HERE', () => JSON.stringify(html))
-  .replace('INJECT_ETAG_HERE', () => JSON.stringify(etag))
+  .replace('INJECT_HTML_CHECKSUM_HERE', () => JSON.stringify(htmlChecksum))
 
 rmSync(join(__dirname, '..', 'public', 'assets.js'))
 writeFileSync(join(__dirname, '..', 'build', '_worker.js'), worker)
