@@ -33,6 +33,8 @@ const precacheAssets = async ({ ignoreAssets }) => {
   const assetsToPrecache = allAssets.filter(asset => !cachedAssets.includes(asset) && !ignoreAssets.includes(asset))
 
   await cache.addAll(assetsToPrecache)
+
+  fetchDocument()
 }
 
 const removeUnusedAssets = async () => {
@@ -44,14 +46,28 @@ const removeUnusedAssets = async () => {
   })
 }
 
+const fetchDocument = async () => {
+  const cache = await getCache()
+  const cachedAssets = await getCachedAssets(cache)
+  const cachedDocument = await cache.match('/')
+  const contentHash = cachedDocument?.headers.get('X-Content-Hash')
+
+  const response = await fetch('/', {
+    headers: { 'X-Cached': cachedAssets.join(', '), 'X-Content-Hash': contentHash }
+  })
+
+  if (!response.ok) return
+  if (response.status === 304) return cachedDocument
+
+  cache.put('/', response.clone())
+
+  return response
+}
+
 const handleFetch = async request => {
   const cache = await getCache()
 
-  if (request.destination === 'document') {
-    const cachedAssets = await getCachedAssets(cache)
-
-    return fetch(request, { headers: { 'X-Cached': cachedAssets.join(', ') } })
-  }
+  if (request.destination === 'document') return fetchDocument()
 
   const cachedResponse = await cache.match(request)
 
