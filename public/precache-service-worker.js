@@ -57,6 +57,7 @@ const fetchDocument = async () => {
   })
 
   if (response.status === 304) return cachedDocument
+  if (!response.ok) return response
 
   cache.put('/', response.clone())
 
