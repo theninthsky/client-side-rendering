@@ -4,7 +4,7 @@ const asyncScripts = INJECT_ASYNC_SCRIPTS_HERE
 const html = INJECT_HTML_HERE
 const htmlChecksum = INJECT_HTML_CHECKSUM_HERE
 
-const documentHeaders = { 'Cache-Control': 'public, max-age=5', 'Content-Type': 'text/html; charset=utf-8' }
+const documentHeaders = { 'Cache-Control': 'public, max-age=0', 'Content-Type': 'text/html; charset=utf-8' }
 
 const BOT_AGENTS = [
   'bingbot',

@@ -56,7 +56,6 @@ const fetchDocument = async () => {
     headers: { 'X-Cached': cachedAssets.join(', '), 'X-Content-Hash': contentHash }
   })
 
-  if (!response.ok) return
   if (response.status === 304) return cachedDocument
 
   cache.put('/', response.clone())
