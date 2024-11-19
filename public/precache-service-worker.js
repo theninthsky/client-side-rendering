@@ -34,7 +34,7 @@ const precacheAssets = async ({ ignoreAssets }) => {
 
   await cache.addAll(assetsToPrecache)
 
-  fetchDocument()
+  fetchDocument('/')
 }
 
 const removeUnusedAssets = async () => {
@@ -46,13 +46,13 @@ const removeUnusedAssets = async () => {
   })
 }
 
-const fetchDocument = async () => {
+const fetchDocument = async url => {
   const cache = await getCache()
   const cachedAssets = await getCachedAssets(cache)
   const cachedDocument = await cache.match('/')
   const contentHash = cachedDocument?.headers.get('X-Content-Hash')
 
-  const response = await fetch('/', {
+  const response = await fetch(url, {
     headers: { 'X-Cached': cachedAssets.join(', '), 'X-Content-Hash': contentHash }
   })
 
@@ -67,7 +67,7 @@ const fetchDocument = async () => {
 const handleFetch = async request => {
   const cache = await getCache()
 
-  if (request.destination === 'document') return fetchDocument()
+  if (request.destination === 'document') return fetchDocument(request.url)
 
   const cachedResponse = await cache.match(request)
 
