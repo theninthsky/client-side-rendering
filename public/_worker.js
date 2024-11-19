@@ -4,7 +4,7 @@ const asyncScripts = INJECT_ASYNC_SCRIPTS_HERE
 const html = INJECT_HTML_HERE
 const htmlChecksum = INJECT_HTML_CHECKSUM_HERE
 
-const documentHeaders = { 'Cache-Control': 'public, max-age=5', 'Content-Type': 'text/html; charset=utf-8' }
+const documentHeaders = { 'Cache-Control': 'public, max-age=0', 'Content-Type': 'text/html; charset=utf-8' }
 
 const BOT_AGENTS = [
   'bingbot',
@@ -70,9 +70,9 @@ const isMatch = (pathname, path) => {
 
 export default {
   fetch(request, env) {
-    const ifNoneMatch = request.headers.get('If-None-Match')
+    const contentHash = request.headers.get('X-Content-Hash')
 
-    if (ifNoneMatch === htmlChecksum) return new Response(null, { status: 304, headers: documentHeaders })
+    if (contentHash === htmlChecksum) return new Response(null, { status: 304, headers: documentHeaders })
 
     const pathname = new URL(request.url).pathname.toLowerCase()
     const userAgent = (request.headers.get('User-Agent') || '').toLowerCase()
@@ -86,7 +86,9 @@ export default {
     const cachedScripts = request.headers.get('X-Cached')?.split(', ').filter(Boolean) || []
     const uncachedScripts = [...initialScripts, ...asyncScripts].filter(({ url }) => !cachedScripts.includes(url))
 
-    if (!uncachedScripts.length) return new Response(html, { headers: { ...documentHeaders, ETag: htmlChecksum } })
+    if (!uncachedScripts.length) {
+      return new Response(html, { headers: { ...documentHeaders, 'X-Content-Hash': htmlChecksum } })
+    }
 
     let body = html.replace(initialModuleScriptsString, () => '')
 
