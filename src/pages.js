@@ -28,6 +28,7 @@ export default [
       {
         url: 'https://pokeapi.co/api/v2/pokemon?limit=10000',
         crossorigin: 'anonymous',
+        preconnectURL: 'https://raw.githubusercontent.com',
         menuPreload: true
       }
     ]
