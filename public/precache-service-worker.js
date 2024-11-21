@@ -2,6 +2,9 @@ const CACHE_NAME = 'my-csr-app'
 
 const allAssets = self.__WB_MANIFEST.map(({ url }) => url)
 
+let cacheAssetsPromiseResolve
+const cacheAssetsPromise = new Promise(resolve => (cacheAssetsPromiseResolve = resolve))
+
 const getCache = () => caches.open(CACHE_NAME)
 
 const getCachedAssets = async cache => {
@@ -33,8 +36,8 @@ const precacheAssets = async ({ ignoreAssets }) => {
   const assetsToPrecache = allAssets.filter(asset => !cachedAssets.includes(asset) && !ignoreAssets.includes(asset))
 
   await cache.addAll(assetsToPrecache)
-
-  fetchDocument('/')
+  await removeUnusedAssets()
+  await fetchDocument('/')
 }
 
 const removeUnusedAssets = async () => {
@@ -74,16 +77,20 @@ const handleFetch = async request => {
   return cachedResponse || fetch(request)
 }
 
-self.addEventListener('install', () => self.skipWaiting())
+self.addEventListener('install', event => {
+  event.waitUntil(cacheAssetsPromise)
+  self.skipWaiting()
+})
 
-self.addEventListener('message', event => {
+self.addEventListener('message', async event => {
   const { type, inlineAssets } = event.data
 
-  if (type === 'cache-assets') return cacheInlineAssets(inlineAssets)
-  if (type === 'precache-assets') {
-    precacheAssets({ ignoreAssets: inlineAssets.map(({ url }) => url) })
-    removeUnusedAssets()
-  }
+  if (type !== 'cache-assets') return
+
+  await cacheInlineAssets(inlineAssets)
+  await precacheAssets({ ignoreAssets: inlineAssets.map(({ url }) => url) })
+
+  cacheAssetsPromiseResolve()
 })
 
 self.addEventListener('fetch', async event => {
