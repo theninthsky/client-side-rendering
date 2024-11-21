@@ -26,7 +26,7 @@ An in-depth comparison of all rendering methods can be found on this project's _
   - [Splitting Async Vendors](#splitting-async-vendors)
   - [Preloading Data](#preloading-data)
   - [Precaching Async Pages](#precaching-async-pages)
-  - [Dynamic Source Inlining](#dynamic-source-inlining)
+  - [Adaptive Source Inlining](#adaptive-source-inlining)
   - [Tweaking Further](#tweaking-further)
     - [Transitioning Async Pages](#transitioning-async-pages)
     - [Preloading Other Pages Data](#preloading-other-pages-data)
@@ -686,7 +686,7 @@ Before going on to the next major change, here is the backup branch containing e
 <br>
 https://github.com/theninthsky/client-side-rendering/tree/before-dynamic-source-inlining
 
-## Dynamic Source Inlining
+## Adaptive Source Inlining
 
 When inspecting our 43kb `react-dom.js` file, we can see that the time it took for the request to return was 60ms while the time it took to download the file was 3ms:
 
