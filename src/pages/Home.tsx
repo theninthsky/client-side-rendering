@@ -20,7 +20,7 @@ const Home: FC<{}> = () => {
         image={`${window.location.origin}/icons/og-icon.png`}
       />
 
-      <Title>{title}</Title>
+      <Title>Test {title}</Title>
 
       <Info className={style.info}>{description}</Info>
 
