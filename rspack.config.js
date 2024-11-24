@@ -1,13 +1,11 @@
 import { join, resolve } from 'node:path'
-import { writeFileSync } from 'node:fs'
 import rspack from '@rspack/core'
 import ReactRefreshPlugin from '@rspack/plugin-react-refresh'
 import ESLintPlugin from 'eslint-webpack-plugin'
 import { InjectManifest } from '@aaroon/workbox-rspack-plugin'
 import HtmlPlugin from 'html-webpack-plugin'
 
-import pagesManifest from './src/pages.js'
-import htmlTemplate from './public/index.js'
+import ExtractAssetsPlugin from './scripts/extract-assets-plugin.js'
 
 const __dirname = import.meta.dirname
 
@@ -93,47 +91,24 @@ export default (_, { mode }) => {
     },
     plugins: [
       ...(production
-        ? ['precache', 'swr'].map(
-            swType =>
-              new InjectManifest({
-                include: [/fonts\//, /scripts\/.+\.js$/],
-                swSrc: join(__dirname, 'public', `${swType}-service-worker.js`),
-                compileSrc: false
-              })
-          )
+        ? [
+            ...['precache', 'swr'].map(
+              swType =>
+                new InjectManifest({
+                  include: [/fonts\//, /scripts\/.+\.js$/],
+                  swSrc: join(__dirname, 'public', `${swType}-service-worker.js`),
+                  compileSrc: false
+                })
+            ),
+            new ExtractAssetsPlugin()
+          ]
         : [new ReactRefreshPlugin(), new ESLintPlugin({ extensions: ['js', 'ts', ' jsx', 'tsx'] })]),
-      new HtmlPlugin({
-        scriptLoading: 'module',
-        templateContent: ({ compilation }) => {
-          const assets = compilation.getAssets()
-          const pages = pagesManifest.map(({ chunk, path, title, data }) => {
-            const scripts = assets
-              .map(({ name }) => name)
-              .filter(name => new RegExp(`[/.]${chunk}\\.(.+)\\.js$`).test(name))
-
-            return { path, title, scripts, data }
-          })
-
-          if (production) {
-            const assetsWithSource = assets
-              .filter(({ name }) => /^scripts\/.+\.js$/.test(name))
-              .map(({ name, source }) => ({
-                url: `/${name}`,
-                source: source.source(),
-                parentPaths: pages.filter(({ scripts }) => scripts.includes(name)).map(({ path }) => path)
-              }))
-
-            writeFileSync(join(__dirname, 'public', 'assets.js'), JSON.stringify(assetsWithSource))
-          }
-
-          return htmlTemplate(pages)
-        }
-      }),
+      new HtmlPlugin({ scriptLoading: 'module', template: 'public/index.html' }),
       new rspack.CopyRspackPlugin({
         patterns: [
           {
             from: 'public',
-            globOptions: { ignore: ['**/index.js'] },
+            globOptions: { ignore: ['**/index.html'] },
             info: { minimized: true }
           }
         ]

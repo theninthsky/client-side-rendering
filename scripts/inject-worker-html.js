@@ -5,6 +5,8 @@ import { createHash } from 'node:crypto'
 const __dirname = import.meta.dirname
 
 const assets = JSON.parse(readFileSync(join(__dirname, '..', 'public', 'assets.js'), 'utf-8'))
+const pages = JSON.parse(readFileSync(join(__dirname, '..', 'public', 'pages.js'), 'utf-8'))
+const preloadData = readFileSync(join(__dirname, '..', 'scripts', 'preload-data.js'), 'utf-8')
 let html = readFileSync(join(__dirname, '..', 'build', 'index.html'), 'utf-8')
 let worker = readFileSync(join(__dirname, '..', 'build', '_worker.js'), 'utf-8')
 
@@ -17,10 +19,10 @@ const initialScripts = assets
 const asyncScripts = assets.filter(asset => !initialScripts.includes(asset))
 const htmlChecksum = createHash('sha256').update(html).digest('hex')
 
-html = html
-  .replace(/,"scripts":\s*\[(.*?)\]/g, () => '')
-  .replace(/scripts\.forEach[\s\S]*?data\?\.\s*forEach/, () => 'data?.forEach')
-  .replace(/preloadAssets/g, () => 'preloadData')
+html = html.replace(
+  '</head>',
+  () => `<script id="preload-data">const pages=${JSON.stringify(pages)}\n${preloadData}</script></head>`
+)
 
 worker = worker
   .replace('INJECT_INITIAL_MODULE_SCRIPTS_STRING_HERE', () => JSON.stringify(initialModuleScriptsString))
@@ -30,4 +32,6 @@ worker = worker
   .replace('INJECT_HTML_CHECKSUM_HERE', () => JSON.stringify(htmlChecksum))
 
 rmSync(join(__dirname, '..', 'public', 'assets.js'))
+rmSync(join(__dirname, '..', 'public', 'pages.js'))
+writeFileSync(join(__dirname, '..', 'build', 'index.html'), html)
 writeFileSync(join(__dirname, '..', 'build', '_worker.js'), worker)
