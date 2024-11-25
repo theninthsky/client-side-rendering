@@ -1,5 +1,4 @@
 build
 node_modules
 public/json
-public/assets.js
 public/sitemap.xml
