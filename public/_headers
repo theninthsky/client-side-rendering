@@ -6,6 +6,3 @@
 
 /scripts/*
     Cache-Control: public, max-age=31536000, immutable
-
-/json/*
-    Cache-Control: public, max-age=5

@@ -1,21 +1,22 @@
-const preloadRequests = {}
+const preloadResponses = {}
 
 const originalFetch = window.fetch
 
 window.fetch = async (input, options) => {
   const requestID = `${input.toString()}${options?.body?.toString() || ''}`
-  const preloadedRequest = preloadRequests[requestID]
+  const preloadResponse = preloadResponses[requestID]
 
-  if (preloadedRequest) {
-    delete preloadRequests[requestID]
-    return preloadedRequest
+  if (preloadResponse) {
+    if (!options?.preload) delete preloadResponses[requestID]
+
+    return preloadResponse
   }
 
-  const fetchPromise = originalFetch(input, options)
+  const response = originalFetch(input, options)
 
-  if (options?.preload) preloadRequests[requestID] = fetchPromise
+  if (options?.preload) preloadResponses[requestID] = response
 
-  return fetchPromise
+  return response
 }
 
 const isMatch = (pathname, path) => {
