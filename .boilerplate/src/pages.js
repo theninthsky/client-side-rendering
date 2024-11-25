@@ -10,8 +10,7 @@ export default [
     title: 'Lorem Ipsum',
     data: [
       {
-        url: 'https://client-side-rendering.pages.dev/json/lorem-ipsum.json',
-        crossorigin: 'anonymous'
+        url: 'https://client-side-rendering.pages.dev/json/lorem-ipsum.json'
       }
     ]
   }

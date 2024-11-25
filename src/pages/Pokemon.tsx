@@ -28,9 +28,10 @@ const {
 const disableLazyRender = /prerender|googlebot/i.test(navigator.userAgent)
 
 const Pokemon: FC<{}> = () => {
-  const { data: pokemon } = useFetch(pokemonData.url, {
+  const { data: { data: { pokemons } = {} } = {} } = useFetch(pokemonData.url, {
     uuid: 'pokemon',
-    immutable: true
+    immutable: true,
+    ...pokemonData
   })
 
   useEffect(() => {
@@ -50,10 +51,9 @@ const Pokemon: FC<{}> = () => {
       <Info className={style.info}>{description}</Info>
 
       <main className={style.main}>
-        {pokemon ? (
-          <LazyRender uuid="pokemon" items={pokemon.results} batch={disableLazyRender ? Infinity : 50}>
-            {({ name, url }) => {
-              const id = url.split('/')[6]
+        {pokemons ? (
+          <LazyRender uuid="pokemon" items={pokemons.results} batch={disableLazyRender ? Infinity : 50}>
+            {({ id, name }) => {
               const img = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`
 
               return (

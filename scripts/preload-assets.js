@@ -61,19 +61,12 @@ const preloadAssets = () => {
     )
   })
 
-  data?.forEach(({ url, crossorigin, preconnectURL }) => {
+  data?.forEach(({ url, preconnectURL, ...request }) => {
     if (url.startsWith('func:')) url = eval(url.replace('func:', ''))
 
     const fullURL = typeof url === 'string' ? url : url(getDynamicProperties(pathname, path))
 
-    document.head.appendChild(
-      Object.assign(document.createElement('link'), {
-        rel: 'preload',
-        href: fullURL,
-        as: 'fetch',
-        crossOrigin: crossorigin
-      })
-    )
+    fetch(fullURL, { ...request, preload: true })
 
     if (preconnectURL) {
       document.head.appendChild(

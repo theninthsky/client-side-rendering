@@ -26,8 +26,21 @@ export default [
       "Demonstrated here is dynamic data that is fetched in parallel with all of the page's assets and passed directly to its sub-pages.",
     data: [
       {
-        url: 'https://pokeapi.co/api/v2/pokemon?limit=10000',
-        crossorigin: 'anonymous',
+        method: 'post',
+        url: 'https://graphql-pokeapi.graphcdn.app',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          query: `query pokemons($limit: Int, $offset: Int) {
+            pokemons(limit: $limit, offset: $offset) {
+              results {
+                id
+                url
+                name
+              }
+            }
+          }`,
+          variables: { limit: 2000, offset: 0 }
+        }),
         preconnectURL: 'https://raw.githubusercontent.com',
         menuPreload: true
       }
@@ -40,12 +53,10 @@ export default [
     data: [
       {
         url: ({ name }) => `https://pokeapi.co/api/v2/pokemon/${name}`,
-        crossorigin: 'anonymous',
         preconnectURL: 'https://raw.githubusercontent.com'
       },
       {
-        url: ({ name }) => `https://pokeapi.co/api/v2/pokemon-species/${name}`,
-        crossorigin: 'anonymous'
+        url: ({ name }) => `https://pokeapi.co/api/v2/pokemon-species/${name}`
       }
     ],
     menuItem: false

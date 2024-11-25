@@ -1,19 +1,12 @@
 import { useRef, FC } from 'react'
 import { NavLink, NavLinkProps } from 'react-router-dom'
-import { useTransitionNavigate, useMedia } from 'frontend-essentials'
+import { useTransitionNavigate } from 'frontend-essentials'
 import { css, cx } from '@emotion/css'
 
-import preload from 'utils/preload'
 import { MOBILE_VIEWPORT } from 'styles/constants'
-
-export type Data = {
-  url: string
-  crossorigin?: string
-}
 
 export type NavigationLinkProps = NavLinkProps & {
   to: string
-  data?: Data[]
 }
 
 const NavigationLink: FC<NavigationLinkProps> = ({
@@ -23,7 +16,6 @@ const NavigationLink: FC<NavigationLinkProps> = ({
   state,
   preventScrollReset,
   relative,
-  data,
   onClick,
   children,
   ...otherProps
@@ -31,8 +23,6 @@ const NavigationLink: FC<NavigationLinkProps> = ({
   const ref = useRef<HTMLAnchorElement>(null)
 
   const navigate = useTransitionNavigate()
-
-  const { hoverable } = useMedia({ hoverable: '(hover: hover) and (pointer: fine)' })
 
   const baseURL = to.replace('/*', '')
 
@@ -49,9 +39,6 @@ const NavigationLink: FC<NavigationLinkProps> = ({
       to={baseURL}
       end
       onClick={onLinkClick}
-      onMouseEnter={() => {
-        hoverable ? data?.forEach(({ url, crossorigin }) => preload({ url, crossorigin })) : undefined
-      }}
       {...otherProps}
     >
       {children}

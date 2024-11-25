@@ -41,13 +41,8 @@ const Navigation = () => {
     () =>
       pages
         .filter(({ menuItem = true }) => menuItem)
-        .map(({ path, title, data }) => (
-          <NavigationLink
-            key={path}
-            to={path}
-            data={data?.filter(({ menuPreload }) => menuPreload)}
-            onClick={() => setDrawerOpen(false)}
-          >
+        .map(({ path, title }) => (
+          <NavigationLink key={path} to={path} onClick={() => setDrawerOpen(false)}>
             {title}
           </NavigationLink>
         )),
