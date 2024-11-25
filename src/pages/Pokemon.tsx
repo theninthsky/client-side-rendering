@@ -53,17 +53,13 @@ const Pokemon: FC<{}> = () => {
       <main className={style.main}>
         {pokemons ? (
           <LazyRender uuid="pokemon" items={pokemons.results} batch={disableLazyRender ? Infinity : 50}>
-            {({ id, name }) => {
-              const img = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`
+            {({ id, name, artwork }) => (
+              <Link key={name} className={style.pokemon} to={`/pokemon/${name}`} state={{ id, name, img: artwork }}>
+                <img className={style.pokemonImage} src={artwork} alt={name} loading="lazy" />
 
-              return (
-                <Link key={name} className={style.pokemon} to={`/pokemon/${name}`} state={{ id, name, img }}>
-                  <img className={style.pokemonImage} src={img} alt={name} loading="lazy" />
-
-                  <span>{_.startCase(toLower(name))}</span>
-                </Link>
-              )
-            }}
+                <span>{_.startCase(toLower(name))}</span>
+              </Link>
+            )}
           </LazyRender>
         ) : (
           <MainSkeleton />
