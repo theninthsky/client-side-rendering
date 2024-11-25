@@ -28,9 +28,10 @@ const {
 const disableLazyRender = /prerender|googlebot/i.test(navigator.userAgent)
 
 const Pokemon: FC<{}> = () => {
-  const { data: pokemon } = useFetch(pokemonData.url, {
+  const { data: { data: { pokemons } = {} } = {} } = useFetch(pokemonData.url, {
     uuid: 'pokemon',
-    immutable: true
+    immutable: true,
+    ...pokemonData
   })
 
   useEffect(() => {
@@ -50,20 +51,15 @@ const Pokemon: FC<{}> = () => {
       <Info className={style.info}>{description}</Info>
 
       <main className={style.main}>
-        {pokemon ? (
-          <LazyRender uuid="pokemon" items={pokemon.results} batch={disableLazyRender ? Infinity : 50}>
-            {({ name, url }) => {
-              const id = url.split('/')[6]
-              const img = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`
+        {pokemons ? (
+          <LazyRender uuid="pokemon" items={pokemons.results} batch={disableLazyRender ? Infinity : 50}>
+            {({ id, name, artwork }) => (
+              <Link key={name} className={style.pokemon} to={`/pokemon/${name}`} state={{ id, name, img: artwork }}>
+                <img className={style.pokemonImage} src={artwork} alt={name} loading="lazy" />
 
-              return (
-                <Link key={name} className={style.pokemon} to={`/pokemon/${name}`} state={{ id, name, img }}>
-                  <img className={style.pokemonImage} src={img} alt={name} loading="lazy" />
-
-                  <span>{_.startCase(toLower(name))}</span>
-                </Link>
-              )
-            }}
+                <span>{_.startCase(toLower(name))}</span>
+              </Link>
+            )}
           </LazyRender>
         ) : (
           <MainSkeleton />

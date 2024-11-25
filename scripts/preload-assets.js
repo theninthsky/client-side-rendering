@@ -1,3 +1,23 @@
+const preloadRequests = {}
+
+const originalFetch = window.fetch
+
+window.fetch = async (input, options) => {
+  const requestID = `${input.toString()}${options?.body?.toString() || ''}`
+  const preloadedRequest = preloadRequests[requestID]
+
+  if (preloadedRequest) {
+    delete preloadRequests[requestID]
+    return preloadedRequest
+  }
+
+  const fetchPromise = originalFetch(input, options)
+
+  if (options?.preload) preloadRequests[requestID] = fetchPromise
+
+  return fetchPromise
+}
+
 const isMatch = (pathname, path) => {
   if (pathname === path) return { exact: true, match: true }
   if (!path.includes(':')) return { match: false }
@@ -41,19 +61,12 @@ const preloadAssets = () => {
     )
   })
 
-  data?.forEach(({ url, crossorigin, preconnectURL }) => {
+  data?.forEach(({ url, preconnectURL, ...request }) => {
     if (url.startsWith('func:')) url = eval(url.replace('func:', ''))
 
     const fullURL = typeof url === 'string' ? url : url(getDynamicProperties(pathname, path))
 
-    document.head.appendChild(
-      Object.assign(document.createElement('link'), {
-        rel: 'preload',
-        href: fullURL,
-        as: 'fetch',
-        crossOrigin: crossorigin
-      })
-    )
+    fetch(fullURL, { ...request, preload: true })
 
     if (preconnectURL) {
       document.head.appendChild(

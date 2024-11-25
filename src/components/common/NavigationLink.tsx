@@ -3,12 +3,10 @@ import { NavLink, NavLinkProps } from 'react-router-dom'
 import { useTransitionNavigate, useMedia } from 'frontend-essentials'
 import { css, cx } from '@emotion/css'
 
-import preload from 'utils/preload'
 import { MOBILE_VIEWPORT } from 'styles/constants'
 
-export type Data = {
+export type Data = Partial<Request> & {
   url: string
-  crossorigin?: string
 }
 
 export type NavigationLinkProps = NavLinkProps & {
@@ -50,7 +48,8 @@ const NavigationLink: FC<NavigationLinkProps> = ({
       end
       onClick={onLinkClick}
       onMouseEnter={() => {
-        hoverable ? data?.forEach(({ url, crossorigin }) => preload({ url, crossorigin })) : undefined
+        // @ts-ignore
+        hoverable ? data?.forEach(({ url, ...request }) => fetch(url, { ...request, preload: true })) : undefined
       }}
       {...otherProps}
     >

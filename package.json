@@ -10,7 +10,6 @@
     "start": "rspack serve",
     "prebuild": "npm-run-all -p fetch-static create-sitemap",
     "build": "rspack build --mode production",
-    "postbuild": "node scripts/inject-worker-html",
     "serve": "serve build",
     "fetch-static": "node scripts/fetch-static",
     "create-sitemap": "node scripts/create-sitemap",
