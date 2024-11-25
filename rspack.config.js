@@ -5,7 +5,7 @@ import ESLintPlugin from 'eslint-webpack-plugin'
 import { InjectManifest } from '@aaroon/workbox-rspack-plugin'
 import HtmlPlugin from 'html-webpack-plugin'
 
-import ExtractAssetsPlugin from './scripts/extract-assets-plugin.js'
+import InjectAssetsPlugin from './scripts/inject-assets-plugin.js'
 
 const __dirname = import.meta.dirname
 
@@ -91,19 +91,16 @@ export default (_, { mode }) => {
     },
     plugins: [
       ...(production
-        ? [
-            ...['precache', 'swr'].map(
-              swType =>
-                new InjectManifest({
-                  include: [/fonts\//, /scripts\/.+\.js$/],
-                  swSrc: join(__dirname, 'public', `${swType}-service-worker.js`),
-                  compileSrc: false
-                })
-            ),
-            new ExtractAssetsPlugin()
-          ]
+        ? ['precache', 'swr'].map(
+            swType =>
+              new InjectManifest({
+                include: [/fonts\//, /scripts\/.+\.js$/],
+                swSrc: join(__dirname, 'public', `${swType}-service-worker.js`),
+                compileSrc: false
+              })
+          )
         : [new ReactRefreshPlugin(), new ESLintPlugin({ extensions: ['js', 'ts', ' jsx', 'tsx'] })]),
-      new HtmlPlugin({ scriptLoading: 'module', template: 'public/index.html' }),
+      new HtmlPlugin({ template: 'public/index.html', scriptLoading: 'module' }),
       new rspack.CopyRspackPlugin({
         patterns: [
           {
@@ -112,7 +109,8 @@ export default (_, { mode }) => {
             info: { minimized: true }
           }
         ]
-      })
+      }),
+      new InjectAssetsPlugin()
     ]
   }
 }

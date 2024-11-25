@@ -44,7 +44,7 @@ const getDynamicProperties = (pathname, path) => {
   return dynamicProperties
 }
 
-const preloadData = () => {
+const preloadAssets = () => {
   let { pathname } = window.location
 
   if (pathname !== '/') pathname = pathname.replace(/\/$/, '')
@@ -53,14 +53,27 @@ const preloadData = () => {
 
   if (!matchingPages.length) return
 
-  const { path, title, data } = matchingPages.find(({ exact }) => exact) || matchingPages[0]
+  const { path, title, scripts, data } = matchingPages.find(({ exact }) => exact) || matchingPages[0]
 
-  data?.forEach(({ url, body, preconnectURL }) => {
+  scripts.forEach(script => {
+    document.head.appendChild(
+      Object.assign(document.createElement('link'), { rel: 'preload', href: '/' + script, as: 'script' })
+    )
+  })
+
+  data?.forEach(({ url, crossorigin, preconnectURL }) => {
     if (url.startsWith('func:')) url = eval(url.replace('func:', ''))
 
     const fullURL = typeof url === 'string' ? url : url(getDynamicProperties(pathname, path))
 
-    fetch(fullURL, { body, preload: true })
+    document.head.appendChild(
+      Object.assign(document.createElement('link'), {
+        rel: 'preload',
+        href: fullURL,
+        as: 'fetch',
+        crossOrigin: crossorigin
+      })
+    )
 
     if (preconnectURL) {
       document.head.appendChild(
@@ -72,4 +85,4 @@ const preloadData = () => {
   if (title) document.title = title
 }
 
-preloadData()
+preloadAssets()
