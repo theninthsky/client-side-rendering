@@ -16,7 +16,7 @@ const {
   title,
   description,
   data: [loremIpsumData]
-} = pages.find(({ chunk }) => chunk === 'lorem-ipsum')!
+} = pages['lorem-ipsum']
 
 const LoremIpsum: FC<{}> = () => {
   const { data: loremIpsum } = useFetch(loremIpsumData.url, {

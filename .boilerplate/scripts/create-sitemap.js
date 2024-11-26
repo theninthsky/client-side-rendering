@@ -4,7 +4,9 @@ import { SitemapStream, streamToPromise } from 'sitemap'
 
 import pages from '../src/pages.js'
 
-const paths = pages.filter(({ path }) => !path.includes(':')).map(({ path }) => path)
+const paths = Object.values(pages)
+  .filter(({ path }) => !path.includes(':'))
+  .map(({ path }) => path)
 const stream = new SitemapStream({ hostname: 'https://example.com' })
 const links = paths.map(path => ({ url: path, changefreq: 'weekly' }))
 

@@ -15,7 +15,7 @@ class InjectAssetsPlugin {
 
       const rawAssets = compilation.getAssets()
 
-      const pages = pagesManifest.map(({ chunk, path, title, data }) => {
+      const pages = Object.entries(pagesManifest).map(([chunk, { path, title, data }]) => {
         const scripts = rawAssets
           .map(({ name }) => name)
           .filter(name => new RegExp(`[/.]${chunk}\\.(.+)\\.js$`).test(name))

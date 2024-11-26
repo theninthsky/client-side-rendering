@@ -1,11 +1,9 @@
-export default [
-  {
-    chunk: 'home',
+export default {
+  home: {
     path: '/',
     title: 'Home'
   },
-  {
-    chunk: 'lorem-ipsum',
+  'lorem-ipsum': {
     path: '/lorem-ipsum',
     title: 'Lorem Ipsum',
     data: [
@@ -14,4 +12,4 @@ export default [
       }
     ]
   }
-]
+}

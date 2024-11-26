@@ -9,7 +9,7 @@ const Home = lazy(() => import(/* webpackChunkName: 'home' */ 'pages/Home'))
 const LoremIpsum = lazy(() => import(/* webpackChunkName: 'lorem-ipsum' */ 'pages/LoremIpsum'))
 
 const pageComponents = [Home, LoremIpsum]
-const routes = pages.map(({ path }, ind) => {
+const routes = Object.values(pages).map(({ path }, ind) => {
   const Element = pageComponents[ind]
 
   return <Route key={path} path={path} element={<Element />} />

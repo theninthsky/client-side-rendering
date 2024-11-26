@@ -1,12 +1,10 @@
-export default [
-  {
-    chunk: 'home',
+export default {
+  home: {
     path: '/',
     title: 'Home',
     description: 'Demonstrated here is a simple page which all of its assets are fetched in parallel.'
   },
-  {
-    chunk: 'lorem-ipsum',
+  'lorem-ipsum': {
     path: '/lorem-ipsum',
     title: 'Lorem Ipsum',
     description:
@@ -18,8 +16,7 @@ export default [
       }
     ]
   },
-  {
-    chunk: 'pokemon',
+  pokemon: {
     path: '/pokemon',
     title: 'Pokémon',
     description:
@@ -42,13 +39,11 @@ export default [
           }`,
           variables: { limit: 2000, offset: 0 }
         }),
-        preconnectURL: 'https://raw.githubusercontent.com',
-        menuPreload: true
+        preconnectURL: 'https://raw.githubusercontent.com'
       }
     ]
   },
-  {
-    chunk: 'pokemon-info',
+  'pokemon-info': {
     path: '/pokemon/:name',
     description: "Demonstrated here is dynamic path data that is fetched in parallel with all of the page's assets.",
     data: [
@@ -62,17 +57,15 @@ export default [
     ],
     menuItem: false
   },
-  {
-    chunk: 'comparison',
+  comparison: {
     path: '/comparison',
     title: 'Comparison',
     description:
       'This page compares all rendering methods, listing their pros and cons.\nYou can click on each point to view a detailed explanation.'
   },
-  {
-    chunk: 'core-web-vitals',
+  'core-web-vitals': {
     path: '/web-vitals',
     title: 'Web Vitals',
     description: 'This page specifies the values of core web vitals.'
   }
-]
+}

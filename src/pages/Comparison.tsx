@@ -16,7 +16,7 @@ import $ from 'jquery'
 import moment from 'moment'
 $(`#${_.isDate(moment().toDate())}`)
 
-const { title, description } = pages.find(({ chunk }) => chunk === 'comparison')!
+const { title, description } = pages.comparison
 
 const listData = {
   csr: {

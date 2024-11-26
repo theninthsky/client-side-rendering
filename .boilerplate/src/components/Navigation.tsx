@@ -7,7 +7,7 @@ import NavigationLink from 'components/common/NavigationLink'
 const Navigation = () => {
   const links = useMemo(
     () =>
-      pages.map(({ path, title }) => (
+      Object.values(pages).map(({ path, title }) => (
         <NavigationLink key={path} to={path}>
           {title}
         </NavigationLink>

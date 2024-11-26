@@ -5,7 +5,7 @@ import pages from 'pages'
 import Title from 'components/common/Title'
 import Logo from 'images/logo.svg'
 
-const { title } = pages.find(({ chunk }) => chunk === 'home')!
+const { title } = pages.home
 
 const Home: FC<{}> = () => {
   return (

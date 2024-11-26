@@ -20,10 +20,10 @@ const {
   title,
   description,
   data: [pokemonData]
-} = pages.find(({ chunk }) => chunk === 'pokemon')!
+} = pages.pokemon
 const {
-  data: [pokemonInfoData]
-} = pages.find(({ chunk }) => chunk === 'pokemon-info')!
+  data: [{ preconnectURL }]
+} = pages['pokemon-info']
 
 const disableLazyRender = /prerender|googlebot/i.test(navigator.userAgent)
 
@@ -35,7 +35,7 @@ const Pokemon: FC<{}> = () => {
   })
 
   useEffect(() => {
-    preconnect(pokemonInfoData.preconnectURL)
+    preconnect(preconnectURL!)
   }, [])
 
   return (

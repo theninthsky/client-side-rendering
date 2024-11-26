@@ -17,7 +17,7 @@ $(`#${_.isDate(moment().toDate())}`)
 const {
   description,
   data: [pokemonInfoData, pokemonSpeciesData]
-} = pages.find(({ chunk }) => chunk === 'pokemon-info')!
+} = pages['pokemon-info']
 
 const PokemonInfo: FC<{}> = () => {
   const { name: nameParam } = useParams()

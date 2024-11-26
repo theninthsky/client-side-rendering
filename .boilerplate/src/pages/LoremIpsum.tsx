@@ -7,7 +7,7 @@ import Title from 'components/common/Title'
 const {
   title,
   data: [data]
-} = pages.find(({ chunk }) => chunk === 'lorem-ipsum')!
+} = pages.home
 
 const LoremIpsum: FC<{}> = () => {
   const [loremIpsum, setLoremIpsum] = useState<string>()
