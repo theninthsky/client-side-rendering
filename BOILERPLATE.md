@@ -77,8 +77,7 @@ _[pages.js](src/pages.js)_
     data?:
       {
         url: string | ((params: { [x: string]: string }) => string)
-        crossorigin?: string
-        preconnectURL?: string
+        preconnect?: string
       }[]
   }
 ]
@@ -104,9 +103,7 @@ For example:
   }
 ```
 
-`crossorigin` is for _[CORS-enabled fetches](https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/rel/preload#cors-enabled_fetches)_.
-
-`preconnectURL` is for cases where the fetch request will be followed by requests to resources from a different origin.
+`preconnect` is for cases where the fetch request will be followed by requests to resources from a different origin.
 
 ## Recommendations
 

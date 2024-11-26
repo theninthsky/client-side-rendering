@@ -38,23 +38,23 @@ export default {
             }
           }`,
           variables: { limit: 2000, offset: 0 }
-        }),
-        preconnectURL: 'https://raw.githubusercontent.com'
+        })
       }
-    ]
+    ],
+    preconnect: ['https://raw.githubusercontent.com']
   },
   'pokemon-info': {
     path: '/pokemon/:name',
     description: "Demonstrated here is dynamic path data that is fetched in parallel with all of the page's assets.",
     data: [
       {
-        url: ({ name }) => `https://pokeapi.co/api/v2/pokemon/${name}`,
-        preconnectURL: 'https://raw.githubusercontent.com'
+        url: ({ name }) => `https://pokeapi.co/api/v2/pokemon/${name}`
       },
       {
         url: ({ name }) => `https://pokeapi.co/api/v2/pokemon-species/${name}`
       }
     ],
+    preconnect: ['https://raw.githubusercontent.com'],
     menuItem: false
   },
   comparison: {

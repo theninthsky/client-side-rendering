@@ -1,4 +1,4 @@
-import { useEffect, FC } from 'react'
+import { FC } from 'react'
 import { Meta, LazyRender, useFetch } from 'frontend-essentials'
 import toLower from 'lodash/toLower'
 import { css } from '@emotion/css'
@@ -19,13 +19,13 @@ $(`#${_.isDate(moment().toDate())}`)
 const {
   title,
   description,
-  data: [pokemonData]
+  data: [pokemonData],
+  preconnect: [imagesHost]
 } = pages.pokemon
-const {
-  data: [{ preconnectURL }]
-} = pages['pokemon-info']
 
 const disableLazyRender = /prerender|googlebot/i.test(navigator.userAgent)
+
+preconnect(imagesHost)
 
 const Pokemon: FC<{}> = () => {
   const { data: { data: { pokemons } = {} } = {} } = useFetch(pokemonData.url, {
@@ -33,10 +33,6 @@ const Pokemon: FC<{}> = () => {
     immutable: true,
     ...pokemonData
   })
-
-  useEffect(() => {
-    preconnect(preconnectURL!)
-  }, [])
 
   return (
     <div>

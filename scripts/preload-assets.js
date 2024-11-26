@@ -54,7 +54,7 @@ const preloadAssets = () => {
 
   if (!matchingPages.length) return
 
-  const { path, title, scripts, data } = matchingPages.find(({ exact }) => exact) || matchingPages[0]
+  const { path, title, scripts, data, preconnect } = matchingPages.find(({ exact }) => exact) || matchingPages[0]
 
   scripts.forEach(script => {
     document.head.appendChild(
@@ -62,18 +62,16 @@ const preloadAssets = () => {
     )
   })
 
-  data?.forEach(({ url, preconnectURL, ...request }) => {
+  data?.forEach(({ url, preconnect, ...request }) => {
     if (url.startsWith('func:')) url = eval(url.replace('func:', ''))
 
     const fullURL = typeof url === 'string' ? url : url(getDynamicProperties(pathname, path))
 
     fetch(fullURL, { ...request, preload: true })
+  })
 
-    if (preconnectURL) {
-      document.head.appendChild(
-        Object.assign(document.createElement('link'), { rel: 'preconnect', href: preconnectURL })
-      )
-    }
+  preconnect?.forEach(url => {
+    document.head.appendChild(Object.assign(document.createElement('link'), { rel: 'preconnect', href: url }))
   })
 
   if (title) document.title = title

@@ -494,7 +494,7 @@ const preloadAssets = () => {
     .
     .
     .
-+   data?.forEach(({ url, crossorigin, preconnectURL }) => {
++   data?.forEach(({ url, preconnect }) => {
 +     if (url.startsWith('func:')) url = eval(url.replace('func:', ''))
 +     const fullURL = typeof url === 'string' ? url : url(getDynamicProperties(pathname, path))
 +
@@ -502,14 +502,13 @@ const preloadAssets = () => {
 +       Object.assign(document.createElement('link'), {
 +         rel: 'preload',
 +         href: fullURL,
-+         as: 'fetch',
-+         crossOrigin: crossorigin
++         as: 'fetch'
 +       })
 +     )
 +
-+     if (preconnectURL) {
++     if (preconnect) {
 +       document.head.appendChild(
-+         Object.assign(document.createElement('link'), { rel: 'preconnect', href: preconnectURL })
++         Object.assign(document.createElement('link'), { rel: 'preconnect', href: preconnect })
 +       )
 +     }
 +   })
