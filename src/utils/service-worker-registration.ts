@@ -7,7 +7,7 @@ const SERVICE_WORKERS = {
   swr: '/swr-service-worker.js'
 }
 const ACTIVE_REVALIDATION_INTERVAL = 10 * 60
-const shouldRegisterServiceWorker = process.env.NODE_ENV !== 'development' && navigator.userAgent !== 'Prerender'
+const shouldRegister = process.env.NODE_ENV !== 'development'
 const appIsInstalled =
   window.matchMedia('(display-mode: standalone)').matches || document.referrer.includes('android-app://')
 
@@ -44,6 +44,6 @@ const unregister = async () => {
 }
 
 if ('serviceWorker' in navigator) {
-  if (shouldRegisterServiceWorker) register()
+  if (shouldRegister) register()
   else unregister()
 }

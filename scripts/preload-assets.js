@@ -65,9 +65,9 @@ const preloadAssets = () => {
   data?.forEach(({ url, preconnect, ...request }) => {
     if (url.startsWith('func:')) url = eval(url.replace('func:', ''))
 
-    const fullURL = typeof url === 'string' ? url : url(getDynamicProperties(pathname, path))
+    const constructedURL = typeof url === 'string' ? url : url(getDynamicProperties(pathname, path))
 
-    fetch(fullURL, { ...request, preload: true })
+    fetch(constructedURL, { ...request, preload: true })
   })
 
   preconnect?.forEach(url => {
