@@ -70,6 +70,7 @@ const preloadAssets = () => {
     fetch(constructedURL, { ...request, preload: true })
   })
 
+  // https://issues.chromium.org/issues/380896837
   preconnect?.forEach(url => {
     document.head.appendChild(Object.assign(document.createElement('link'), { rel: 'preconnect', href: url }))
   })
