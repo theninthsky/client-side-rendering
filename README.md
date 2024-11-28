@@ -262,6 +262,8 @@ class InjectAssetsPlugin {
   apply(compiler) {
     compiler.hooks.compilation.tap('InjectAssetsPlugin', compilation => {
       HtmlPlugin.getCompilationHooks(compilation).beforeEmit.tapAsync('InjectAssetsPlugin', (data, callback) => {
+        const preloadAssets = readFileSync(join(__dirname, '..', 'scripts', 'preload-assets.js'), 'utf-8')
+
         const rawAssets = compilation.getAssets()
         const pages = getPages(rawAssets)
 
@@ -269,7 +271,7 @@ class InjectAssetsPlugin {
 
         html = html.replace(
           '</title>',
-          () => `</title><script id="preload-data">const pages=${JSON.stringify(pages)}</script>`
+          () => `</title><script id="preload-data">const pages=${stringifiedPages}\n${preloadAssets}</script>`
         )
 
         callback(null, { ...data, html })
@@ -400,23 +402,6 @@ const getPages = rawAssets => {
 
   return pages
 }
-
-HtmlPlugin.getCompilationHooks(compilation).beforeEmit.tapAsync('InjectAssetsPlugin', (data, callback) => {
-+ const preloadAssets = readFileSync(join(__dirname, '..', 'scripts', 'preload-assets.js'), 'utf-8')
-
-  const rawAssets = compilation.getAssets()
-  const pages = getPages(rawAssets)
-
-  let { html } = data
-
-  html = html.replace(
-    '</title>',
--    () => `</title><script id="preload-data">const pages=${JSON.stringify(pages)}</script>`
-+    () => `</title><script id="preload-data">const pages=${JSON.stringify(pages)}\n${preloadAssets}</script>`
-  )
-
-  callback(null, { ...data, html })
-})
 ```
 
 _[scripts/preload-assets.js](scripts/preload-assets.js)_
@@ -450,8 +435,7 @@ _[scripts/inject-assets-plugin.js](scripts/inject-assets-plugin.js)_
 const getPages = rawAssets => {
 -  const pages = Object.entries(pagesManifest).map(([chunk, { path, title }]) => {
 +  const pages = Object.entries(pagesManifest).map(([chunk, { path, title, data, preconnect }]) => {
--   const script = rawAssets.find(name => name.includes(`/${chunk}.`) && name.endsWith('.js'))
-+   const scripts = rawAssets.filter(name => new RegExp(`[/.]${chunk}\\.(.+)\\.js$`).test(name))
+  const scripts = rawAssets.filter(name => new RegExp(`[/.]${chunk}\\.(.+)\\.js$`).test(name))
 
 -   return { path, title, script }
 +   return { path, title, scripts, data, preconnect }
@@ -484,17 +468,17 @@ HtmlPlugin.getCompilationHooks(compilation).beforeEmit.tapAsync('InjectAssetsPlu
 _[scripts/preload-assets.js](scripts/preload-assets.js)_
 
 ```diff
-+ const getDynamicProperties = (pathname, path) => {
-+   const pathParts = path.split('/')
-+   const pathnameParts = pathname.split('/')
-+   const dynamicProperties = {}
-+
-+   for (let i = 0; i < pathParts.length; i++) {
-+     if (pathParts[i].startsWith(':')) dynamicProperties[pathParts[i].slice(1)] = pathnameParts[i]
-+   }
-+
-+   return dynamicProperties
-+ }
+ const getDynamicProperties = (pathname, path) => {
+  const pathParts = path.split('/')
+  const pathnameParts = pathname.split('/')
+  const dynamicProperties = {}
+
+  for (let i = 0; i < pathParts.length; i++) {
+    if (pathParts[i].startsWith(':')) dynamicProperties[pathParts[i].slice(1)] = pathnameParts[i]
+  }
+
+  return dynamicProperties
+ }
 
 const preloadAssets = () => {
 -   const { path, title, scripts } = matchingPages.find(({ exact }) => exact) || matchingPages[0]
@@ -502,17 +486,17 @@ const preloadAssets = () => {
     .
     .
     .
-+   data?.forEach(({ url, ...request }) => {
-+     if (url.startsWith('func:')) url = eval(url.replace('func:', ''))
+  data?.forEach(({ url, ...request }) => {
+    if (url.startsWith('func:')) url = eval(url.replace('func:', ''))
 
-+     const constructedURL = typeof url === 'string' ? url : url(getDynamicProperties(pathname, path))
+    const constructedURL = typeof url === 'string' ? url : url(getDynamicProperties(pathname, path))
 
-+     fetch(constructedURL, { ...request, preload: true })
-+   })
+    fetch(constructedURL, { ...request, preload: true })
+  })
 
-+   preconnect?.forEach(url => {
-+     document.head.appendChild(Object.assign(document.createElement('link'), { rel: 'preconnect', href: url }))
-+   })
+  preconnect?.forEach(url => {
+    document.head.appendChild(Object.assign(document.createElement('link'), { rel: 'preconnect', href: url }))
+  })
 }
 ```
 
@@ -705,7 +689,11 @@ class InjectAssetsPlugin {
   apply(compiler) {
     const production = compiler.options.mode === 'production'
 
-    compiler.hooks.compilation.tap('InjectAssetsPlugin', compilation => {...})
+    compiler.hooks.compilation.tap('InjectAssetsPlugin', compilation => {
+      .
+      .
+      .
+    })
 
     if (!production) return
 
