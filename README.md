@@ -31,7 +31,6 @@ An in-depth comparison of all rendering methods can be found on this project's _
     - [Transitioning Async Pages](#transitioning-async-pages)
     - [Preloading Other Pages Data](#preloading-other-pages-data)
     - [Revalidating Active Apps](#revalidating-active-apps)
-    - [Generating Static Data](#generating-static-data)
   - [Summary](#summary)
   - [Deploying](#deploying)
   - [Benchmark](#benchmark)
@@ -117,8 +116,6 @@ _Note that while this project is implemented with React, the vast majority of it
 # Performance
 
 We will assume a standard Webpack (Rspack) setup and add the required customizations as we progress.
-<br>
-Most of the code changes that we'll go throught will be in the _[rspack.config.js](rspack.config.js)_ configuration file and the _[index.js](public/index.js)_ HTML template.
 
 ### Bundle Size
 
@@ -144,17 +141,23 @@ Now, what part of our bundle comprises most of its weight? The answer is the **d
 
 So if we could split the vendors to their own hashed chunk, that would allow a separation between our code and the vendors code, leading to less cache invalidations.
 
-Let's add the following part to our _[rspack.config.js](rspack.config.js)_ file:
+Let's add the following _optimization_ to our config file:
+
+_[rspack.config.js](rspack.config.js)_
 
 ```js
-optimization: {
-  runtimeChunk: 'single',
-  splitChunks: {
-    chunks: 'initial',
-    cacheGroups: {
-      vendors: {
-        test: /[\\/]node_modules[\\/]/,
-        name: 'vendors'
+export default () => {
+  return {
+    optimization: {
+      runtimeChunk: 'single',
+      splitChunks: {
+        chunks: 'initial',
+        cacheGroups: {
+          vendors: {
+            test: /[\\/]node_modules[\\/]/,
+            name: 'vendors'
+          }
+        }
       }
     }
   }
@@ -220,67 +223,62 @@ Code splitting has one major flaw - the runtime doesn't know which async chunks 
 
 ![Network Code Splitting](images/network-code-splitting.png)
 
-The way we can solve this issue is by implementing a script in the document that will be responsible for preloading relevant assets:
+The way we can solve this issue is by writing a custom plugin that will embed a script in the document which will be responsible of preloading relevant assets:
 
 _[rspack.config.js](rspack.config.js)_
 
 ```js
-import pagesManifest from './src/pages.js'
-import htmlTemplate from './public/index.js'
-.
-.
-.
-plugins: [
-  new HtmlPlugin({
-    scriptLoading: 'module',
-    templateContent: ({ compilation }) => {
-      const assets = compilation.getAssets().map(({ name }) => name)
-      const pages = pagesManifest.map(({ chunk, path, title }) => {
-        const script = assets.find(name => name.includes(`/${chunk}.`) && name.endsWith('.js'))
+import InjectAssetsPlugin from './scripts/inject-assets-plugin.js'
 
-        return { path, title, script }
-      })
-
-      return htmlTemplate(pages)
-    }
-  })
-]
+export default () => {
+  return {
+    plugins: [new InjectAssetsPlugin()]
+  }
+}
 ```
 
-_[public/index.js](public/index.js)_
+_[scripts/inject-assets-plugin.js](scripts/inject-assets-plugin.js)_
 
 ```js
 import { join } from 'node:path'
 import { readFileSync } from 'node:fs'
+import HtmlPlugin from 'html-webpack-plugin'
+
+import pagesManifest from '../src/pages.js'
 
 const __dirname = import.meta.dirname
 
-export default pages => `
-  <!DOCTYPE html>
-  <html lang="en">
-    <head>
-      <meta charset="utf-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1">
-      <meta name="theme-color" content="#1e90ff">
-      <meta name="google-site-verification" content="VizFjhwWDUBYMsq1bJtp6N2NPjz8sLdGH1513MlrytU" />
+const getPages = rawAssets => {
+  const pages = Object.entries(pagesManifest).map(([chunk, { path, title }]) => {
+    const script = rawAssets.find(name => name.includes(`/${chunk}.`) && name.endsWith('.js'))
 
-      <link rel="shortcut icon" href="/icons/favicon.ico">
-      <link rel="manifest" href="/manifest.json">
-      <link rel="preload" href="/fonts/montserrat.woff2" as="font" type="font/woff2" crossorigin>
+    return { path, script, title }
+  })
 
-      <title>Client-side Rendering</title>
+  return pages
+}
 
-      <script>
-        const pages = ${JSON.stringify(pages)}
+class InjectAssetsPlugin {
+  apply(compiler) {
+    compiler.hooks.compilation.tap('InjectAssetsPlugin', compilation => {
+      HtmlPlugin.getCompilationHooks(compilation).beforeEmit.tapAsync('InjectAssetsPlugin', (data, callback) => {
+        const rawAssets = compilation.getAssets()
+        const pages = getPages(rawAssets)
 
-        ${readFileSync(join(__dirname, '..', 'scripts', 'preload-assets.js'))}
-      </script>
-    </head>
-    <body>
-      <div id="root"></div>
-    </body>
-  </html>
-`
+        let { html } = data
+
+        html = html.replace(
+          '</title>',
+          () => `</title><script id="preload-data">const pages=${JSON.stringify(pages)}</script>`
+        )
+
+        callback(null, { ...data, html })
+      })
+    })
+  }
+}
+
+export default InjectAssetsPlugin
 ```
 
 _[scripts/preload-assets.js](scripts/preload-assets.js)_
@@ -323,9 +321,7 @@ preloadAssets()
 
 The imported `pages.js` file can be found [here](src/pages.js).
 
-_Please note that other types of assets can be preloaded the same way (like stylesheets)._
-
-This way, the browser is able to fetch the page-related script chunk **in parallel** with render-critical assets:
+This way, the browser is able to fetch the page-specific script chunk **in parallel** with render-critical assets:
 
 ![Network Async Chunks Preload](images/network-async-chunks-preload.png)
 
@@ -387,27 +383,40 @@ optimization: {
       }
     }
   }
-},
-.
-.
-.
-plugins: [
-  new HtmlPlugin({
-    scriptLoading: 'module',
-    templateContent: ({ compilation }) => {
-      const assets = compilation.getAssets().map(({ name }) => name)
-      const pages = pagesManifest.map(({ chunk, path, title }) => {
--       const script = assets.find(name => name.includes(`/${chunk}.`) && name.endsWith('.js'))
-+       const scripts = assets.filter(name => new RegExp(`[/.]${chunk}\\.(.+)\\.js$`).test(name))
+}
+```
 
--       return { path, title, script }
-+       return { path, title, scripts }
-      })
+_[scripts/inject-assets-plugin.js](scripts/inject-assets-plugin.js)_
 
-      return htmlTemplate(pages)
-    }
+```diff
+const getPages = rawAssets => {
+  const pages = Object.entries(pagesManifest).map(([chunk, { path, title }]) => {
+-   const script = rawAssets.find(name => name.includes(`/${chunk}.`) && name.endsWith('.js'))
++   const scripts = rawAssets.filter(name => new RegExp(`[/.]${chunk}\\.(.+)\\.js$`).test(name))
+
+-   return { path, title, script }
++   return { path, title, scripts }
   })
-]
+
+  return pages
+}
+
+HtmlPlugin.getCompilationHooks(compilation).beforeEmit.tapAsync('InjectAssetsPlugin', (data, callback) => {
++ const preloadAssets = readFileSync(join(__dirname, '..', 'scripts', 'preload-assets.js'), 'utf-8')
+
+  const rawAssets = compilation.getAssets()
+  const pages = getPages(rawAssets)
+
+  let { html } = data
+
+  html = html.replace(
+    '</title>',
+-    () => `</title><script id="preload-data">const pages=${JSON.stringify(pages)}</script>`
++    () => `</title><script id="preload-data">const pages=${JSON.stringify(pages)}\n${preloadAssets}</script>`
+  )
+
+  callback(null, { ...data, html })
+})
 ```
 
 _[scripts/preload-assets.js](scripts/preload-assets.js)_
@@ -433,49 +442,48 @@ One of the presumed disadvantages of CSR over SSR is that the page's data (fetch
 
 ![Network Data](images/network-data.png)
 
-To overcome this, we will use preloading once again, this time for the data itself:
+To overcome this, we will use preloading once again, this time for the data itself, by patching the `fetch` API:
 
-_[rspack.config.js](rspack.config.js)_
+_[scripts/inject-assets-plugin.js](scripts/inject-assets-plugin.js)_
 
 ```diff
-plugins: [
-  new HtmlPlugin({
-    scriptLoading: 'module',
-    templateContent: ({ compilation }) => {
-      const assets = compilation.getAssets().map(({ name }) => name)
--     const pages = pagesManifest.map(({ chunk, path  title,}) => {
-+     const pages = pagesManifest.map(({ chunk, path, title, data }) => {
-        const script = assets.find(name => name.includes(`/${chunk}.`) && name.endsWith('.js'))
+const getPages = rawAssets => {
+-  const pages = Object.entries(pagesManifest).map(([chunk, { path, title }]) => {
++  const pages = Object.entries(pagesManifest).map(([chunk, { path, title, data, preconnect }]) => {
+-   const script = rawAssets.find(name => name.includes(`/${chunk}.`) && name.endsWith('.js'))
++   const scripts = rawAssets.filter(name => new RegExp(`[/.]${chunk}\\.(.+)\\.js$`).test(name))
 
--       return { path, title, script }
-+       return { path, title, script, data }
-      })
-
-      return htmlTemplate(pages)
-    }
+-   return { path, title, script }
++   return { path, title, scripts, data, preconnect }
   })
-]
-```
 
-_[public/index.js](public/index.js)_
+  return pages
+}
 
-```diff
-<script>
-- const pages = ${JSON.stringify(pages)}
-+ const pages = ${JSON.stringify(pages, (_, value) => {
+HtmlPlugin.getCompilationHooks(compilation).beforeEmit.tapAsync('InjectAssetsPlugin', (data, callback) => {
+  const preloadAssets = readFileSync(join(__dirname, '..', 'scripts', 'preload-assets.js'), 'utf-8')
+
+  const rawAssets = compilation.getAssets()
+  const pages = getPages(rawAssets)
++ const stringifiedPages = JSON.stringify(pages, (_, value) => {
 +   return typeof value === 'function' ? `func:${value.toString()}` : value
-+ })}
++ })
 
-  ${readFileSync(join(__dirname, '..', 'scripts', 'preload-assets.js'))}
-</script>
+  let { html } = data
+
+  html = html.replace(
+    '</title>',
+-   () => `</title><script id="preload-data">const pages=${JSON.stringify(pages)}\n${preloadAssets}</script>`
++   () => `</title><script id="preload-data">const pages=${stringifiedPages}\n${preloadAssets}</script>`
+  )
+
+  callback(null, { ...data, html })
+})
 ```
 
 _[scripts/preload-assets.js](scripts/preload-assets.js)_
 
 ```diff
-.
-.
-.
 + const getDynamicProperties = (pathname, path) => {
 +   const pathParts = path.split('/')
 +   const pathnameParts = pathname.split('/')
@@ -490,27 +498,20 @@ _[scripts/preload-assets.js](scripts/preload-assets.js)_
 
 const preloadAssets = () => {
 -   const { path, title, scripts } = matchingPages.find(({ exact }) => exact) || matchingPages[0]
-+   const { path, title, scripts, data } = matchingPages.find(({ exact }) => exact) || matchingPages[0]
++   const { path, title, scripts, data, preconnect } = matchingPages.find(({ exact }) => exact) || matchingPages[0]
     .
     .
     .
-+   data?.forEach(({ url, preconnect }) => {
++   data?.forEach(({ url, ...request }) => {
 +     if (url.startsWith('func:')) url = eval(url.replace('func:', ''))
-+     const fullURL = typeof url === 'string' ? url : url(getDynamicProperties(pathname, path))
-+
-+     document.head.appendChild(
-+       Object.assign(document.createElement('link'), {
-+         rel: 'preload',
-+         href: fullURL,
-+         as: 'fetch'
-+       })
-+     )
-+
-+     if (preconnect) {
-+       document.head.appendChild(
-+         Object.assign(document.createElement('link'), { rel: 'preconnect', href: preconnect })
-+       )
-+     }
+
++     const constructedURL = typeof url === 'string' ? url : url(getDynamicProperties(pathname, path))
+
++     fetch(constructedURL, { ...request, preload: true })
++   })
+
++   preconnect?.forEach(url => {
++     document.head.appendChild(Object.assign(document.createElement('link'), { rel: 'preconnect', href: url }))
 +   })
 }
 ```
@@ -522,51 +523,6 @@ Now we can see that the data is being fetched right away:
 ![Network Data Preload](images/network-data-preload.png)
 
 With the above script, we can even preload dynamic routes data (such as _[pokemon/:name](https://client-side-rendering.pages.dev/pokemon/pikachu)_).
-
-The only limitation is that we can only preload GET resources. However, we can easily implement an endpoint that transforms GET requests with query params to POST requests with body.
-<br>
-Here's an example of such transform proxy as a Cloudflare Worker:
-
-```js
-export default {
-  async fetch(request, env) {
-    const { pathname, searchParams } = new URL(request.url)
-    const headers = new Headers(request.headers)
-    const body = Object.fromEntries(
-      [...searchParams.entries()].map(([key, value]) => {
-        try {
-          value = JSON.parse(value)
-        } catch (err) {}
-
-        return [key, value]
-      })
-    )
-
-    headers.set('Content-Type', 'application/json')
-
-    return await fetch(new Request(pathname.slice(1), { method: 'post', headers, body: JSON.stringify(body) }))
-  }
-}
-```
-
-The worker above will transform the following request:
-
-```
-[GET] https://my-transform-proxy.com/https://my-server-url.com/posts?title=Test&description=A test request
-```
-
-to:
-
-```
-[POST] https://my-server-url.com/posts
-
-{
-  "title": "Test",
-  "description": "A test request"
-}
-```
-
-_Note that in order for the preload to work, the server has to send a `Cache-Control` header with a `max-age` of at least a few seconds._
 
 ### Precaching Async Pages
 
@@ -581,16 +537,25 @@ We can do this by writing a simple service worker:
 _[rspack.config.js](rspack.config.js)_
 
 ```js
-plugins: [
-  ...(production
-    ? [
-        new InjectManifest({
-          include: [/fonts\//, /scripts\/.+\.js$/],
-          swSrc: path.join(__dirname, 'public', 'precache-service-worker.js')
-        })
-      ]
-    : [])
-]
+import { InjectManifestPlugin } from 'inject-manifest-plugin'
+
+import InjectAssetsPlugin from './scripts/inject-assets-plugin.js'
+
+export default () => {
+  return {
+    plugins: [
+      ...(production
+        ? [
+            new InjectManifestPlugin({
+              include: [/fonts\//, /scripts\/.+\.js$/],
+              swSrc: path.join(__dirname, 'public', 'precache-service-worker.js')
+            })
+          ]
+        : []),
+      new InjectAssetsPlugin()
+    ]
+  }
+}
 ```
 
 _[service-worker-registration.ts](src/utils/service-worker-registration.ts)_
@@ -681,10 +646,6 @@ self.addEventListener('fetch', async event => {
 
 Now all pages will be prefetched and cached before the user even tries to navigate to them.
 
-Before going on to the next major change, here is the backup branch containing everything we did so far:
-<br>
-https://github.com/theninthsky/client-side-rendering/tree/before-dynamic-source-inlining
-
 ## Adaptive Source Inlining
 
 When inspecting our 43kb `react-dom.js` file, we can see that the time it took for the request to return was 60ms while the time it took to download the file was 3ms:
@@ -735,79 +696,71 @@ The entire flow should be described as follows:
 
 \* Both initial and page-specific assets.
 
-This ensures that the browser receives exactly the assets it needs (no more, no less) to display the page **in a single roundtrip**!
+This ensures that the browser receives exactly the assets it needs (no more, no less) to display the current page **in a single roundtrip**!
 
-_[rspack.config.js](rspack.config.js)_
-
-```js
-plugins: [
-  new HtmlPlugin({
-    scriptLoading: 'module',
-    templateContent: ({ compilation }) => {
-      const assets = compilation.getAssets()
-      const pages = pagesManifest.map(({ chunk, path, data }) => {
-        const scripts = assets
-          .map(({ name }) => name)
-          .filter(name => new RegExp(`[/.]${chunk}\\.(.+)\\.js$`).test(name))
-
-        return { path, scripts, data }
-      })
-
-      if (production) {
-        const assetsWithSource = assets
-          .filter(({ name }) => /^scripts\/.+\.js$/.test(name))
-          .map(({ name, source }) => ({
-            url: `/${name}`,
-            source: source.source(),
-            parentPaths: pages.filter(({ scripts }) => scripts.includes(name)).map(({ path }) => path)
-          }))
-
-        writeFileSync(join(__dirname, 'public', 'assets.js'), JSON.stringify(assetsWithSource))
-      }
-
-      return htmlTemplate(pages)
-    }
-  })
-]
-```
-
-_[scripts/inject-worker-html.js](scripts/inject-worker-html.js)_
+_[scripts/inject-assets-plugin.js](scripts/inject-assets-plugin.js)_
 
 ```js
-import { join } from 'node:path'
-import { readFileSync, writeFileSync, rmSync } from 'node:fs'
+class InjectAssetsPlugin {
+  apply(compiler) {
+    const production = compiler.options.mode === 'production'
 
-const __dirname = import.meta.dirname
+    compiler.hooks.compilation.tap('InjectAssetsPlugin', compilation => {...})
 
-const assets = JSON.parse(readFileSync(join(__dirname, '..', 'public', 'assets.js'), 'utf-8'))
-let html = readFileSync(join(__dirname, '..', 'build', 'index.html'), 'utf-8')
-let worker = readFileSync(join(__dirname, '..', 'build', '_worker.js'), 'utf-8')
+    if (!production) return
 
-const initialScriptsString = html.match(/<script\s+type="module"[^>]*>([\s\S]*?)(?=<\/head>)/)[0]
-const initialScripts = assets.filter(({ url }) => initialScriptsString.includes(url))
-const asyncScripts = assets.filter(asset => !initialScripts.includes(asset))
+    compiler.hooks.afterEmit.tapAsync('InjectAssetsPlugin', (compilation, callback) => {
+      let html = readFileSync(join(__dirname, '..', 'build', 'index.html'), 'utf-8')
+      let worker = readFileSync(join(__dirname, '..', 'build', '_worker.js'), 'utf-8')
 
-html = html
-  .replace(/,"scripts":\s*\[(.*?)\]/g, () => '')
-  .replace(/scripts\.forEach[\s\S]*?data\?\.\s*forEach/, () => 'data?.forEach')
-  .replace(/preloadAssets/g, () => 'preloadData')
+      const rawAssets = compilation.getAssets()
+      const pages = getPages(rawAssets)
+      const assets = rawAssets
+        .filter(({ name }) => /^scripts\/.+\.js$/.test(name))
+        .map(({ name, source }) => ({
+          url: `/${name}`,
+          source: source.source(),
+          parentPaths: pages.filter(({ scripts }) => scripts.includes(name)).map(({ path }) => path)
+        }))
 
-worker = worker
-  .replace('INJECT_INITIAL_SCRIPTS_STRING_HERE', () => JSON.stringify(initialScriptsString))
-  .replace('INJECT_INITIAL_SCRIPTS_HERE', () => JSON.stringify(initialScripts))
-  .replace('INJECT_ASYNC_SCRIPTS_HERE', () => JSON.stringify(asyncScripts))
-  .replace('INJECT_HTML_HERE', () => JSON.stringify(html))
-  .replace('</body>', () => '<!-- INJECT_SCRIPTS_HERE --></body>')
+      const initialModuleScriptsString = html.match(/<script\s+type="module"[^>]*>([\s\S]*?)(?=<\/head>)/)[0]
+      const initialModuleScripts = initialModuleScriptsString.split('</script>')
+      const initialScripts = assets
+        .filter(({ url }) => initialModuleScriptsString.includes(url))
+        .map(asset => ({ ...asset, order: initialModuleScripts.findIndex(script => script.includes(asset.url)) }))
+        .sort((a, b) => a.order - b.order)
+      const asyncScripts = assets.filter(asset => !initialScripts.includes(asset))
 
-rmSync(join(__dirname, '..', 'public', 'assets.js'))
-writeFileSync(join(__dirname, '..', 'build', '_worker.js'), worker)
+      html = html
+        .replace(/,"scripts":\s*\[(.*?)\]/g, () => '')
+        .replace(/scripts\.forEach[\s\S]*?data\?\.\s*forEach/, () => 'data?.forEach')
+        .replace(/preloadAssets/g, () => 'preloadData')
+
+      worker = worker
+        .replace('INJECT_INITIAL_MODULE_SCRIPTS_STRING_HERE', () => JSON.stringify(initialModuleScriptsString))
+        .replace('INJECT_INITIAL_SCRIPTS_HERE', () => JSON.stringify(initialScripts))
+        .replace('INJECT_ASYNC_SCRIPTS_HERE', () => JSON.stringify(asyncScripts))
+        .replace('INJECT_HTML_HERE', () => JSON.stringify(html))
+
+      writeFileSync(join(__dirname, '..', 'build', '_worker.js'), worker)
+
+      callback()
+    })
+  }
+}
+
+export default InjectAssetsPlugin
 ```
 
 _[public/\_worker.js](public/_worker.js)_
 
 ```js
-const allAssets = INJECT_ASSETS_HERE
+const initialModuleScriptsString = INJECT_INITIAL_MODULE_SCRIPTS_STRING_HERE
+const initialScripts = INJECT_INITIAL_SCRIPTS_HERE
+const asyncScripts = INJECT_ASYNC_SCRIPTS_HERE
 const html = INJECT_HTML_HERE
+
+const documentHeaders = { 'Cache-Control': 'public, max-age=0', 'Content-Type': 'text/html; charset=utf-8' }
 
 const isMatch = (pathname, path) => {
   if (pathname === path) return { exact: true, match: true }
@@ -826,17 +779,19 @@ const isMatch = (pathname, path) => {
 export default {
   fetch(request, env) {
     const pathname = new URL(request.url).pathname.toLowerCase()
-    const nonDocument = pathname.includes('.')
+    const userAgent = (request.headers.get('User-Agent') || '').toLowerCase()
+    const bypassWorker = request.headers.get('X-Bypass') || userAgent.includes('googlebot') || pathname.includes('.')
 
-    if (nonDocument) return env.ASSETS.fetch(request)
+    if (bypassWorker) return env.ASSETS.fetch(request)
 
-    const headers = { 'Content-Type': 'text/html; charset=utf-8' }
     const cachedScripts = request.headers.get('X-Cached')?.split(', ').filter(Boolean) || []
     const uncachedScripts = [...initialScripts, ...asyncScripts].filter(({ url }) => !cachedScripts.includes(url))
 
-    if (!uncachedScripts.length) return new Response(html, { headers })
+    if (!uncachedScripts.length) {
+      return new Response(html, { headers: documentHeaders })
+    }
 
-    let body = html.replace(initialScriptsString, () => '')
+    let body = html.replace(initialModuleScriptsString, () => '')
 
     const injectedInitialScriptsString = initialScripts
       .map(({ url, source }) =>
@@ -844,10 +799,7 @@ export default {
       )
       .join('\n')
 
-    body = body.replace(
-      '<!-- INJECT_SCRIPTS_HERE -->',
-      () => `<!-- INJECT_SCRIPTS_HERE -->\n${injectedInitialScriptsString}`
-    )
+    body = body.replace('</body>', () => `<!-- INJECT_ASYNC_SCRIPTS_HERE -->${injectedInitialScriptsString}\n</body>`)
 
     const matchingPageScripts = asyncScripts
       .map(asset => {
@@ -861,15 +813,14 @@ export default {
     const exactMatchingPageScripts = matchingPageScripts.filter(({ exact }) => exact)
     const pageScripts = exactMatchingPageScripts.length ? exactMatchingPageScripts : matchingPageScripts
     const uncachedPageScripts = pageScripts.filter(({ url }) => !cachedScripts.includes(url))
-
     const injectedAsyncScriptsString = uncachedPageScripts.reduce(
       (str, { url, source }) => `${str}\n<script id="${url}">${source}</script>`,
       ''
     )
 
-    body = body.replace('<!-- INJECT_SCRIPTS_HERE -->', () => injectedAsyncScriptsString)
+    body = body.replace('<!-- INJECT_ASYNC_SCRIPTS_HERE -->', () => injectedAsyncScriptsString)
 
-    return new Response(body, { headers })
+    return new Response(body, { headers: documentHeaders })
   }
 }
 ```
@@ -892,27 +843,19 @@ export default extractInlineScripts
 _[src/utils/service-worker-registration.ts](src/utils/service-worker-registration.ts)_
 
 ```js
+import extractInlineScripts from './extract-inline-scripts'
+
 const register = () => {
   window.addEventListener('load', async () => {
+    const serviceWorkerType = appIsInstalled ? 'swr' : 'precache'
+
     try {
       const registration = await navigator.serviceWorker.register('/precache-service-worker.js')
 
       console.log('Service worker registered!')
 
-      const inlineAssets = extractInlineScripts()
-
-      if (inlineAssets.length) {
-        navigator.serviceWorker.ready.then(registration => {
-          registration.active?.postMessage({ type: 'cache-assets', inlineAssets })
-        })
-      }
-
       registration.addEventListener('updatefound', () => {
-        registration.installing!.onstatechange = (event: Event) => {
-          const serviceWorker = event.target as ServiceWorker
-
-          if (serviceWorker.state === 'activated') serviceWorker.postMessage({ type: 'precache-assets', inlineAssets })
-        }
+        registration.installing?.postMessage({ type: 'cache-assets', inlineAssets: extractInlineScripts() })
       })
 
       setInterval(() => registration.update(), ACTIVE_REVALIDATION_INTERVAL * 1000)
@@ -929,6 +872,9 @@ _[public/precache-service-worker.js](public/precache-service-worker.js)_
 const CACHE_NAME = 'my-csr-app'
 
 const allAssets = self.__WB_MANIFEST.map(({ url }) => url)
+
+let cacheAssetsPromiseResolve
+const cacheAssetsPromise = new Promise(resolve => (cacheAssetsPromiseResolve = resolve))
 
 const getCache = () => caches.open(CACHE_NAME)
 
@@ -961,6 +907,8 @@ const precacheAssets = async ({ ignoreAssets }) => {
   const assetsToPrecache = allAssets.filter(asset => !cachedAssets.includes(asset) && !ignoreAssets.includes(asset))
 
   await cache.addAll(assetsToPrecache)
+  await removeUnusedAssets()
+  await fetchDocument('/')
 }
 
 const removeUnusedAssets = async () => {
@@ -972,30 +920,42 @@ const removeUnusedAssets = async () => {
   })
 }
 
+const fetchDocument = async url => {
+  const cache = await getCache()
+  const cachedAssets = await getCachedAssets(cache)
+  const cachedDocument = await cache.match('/')
+
+  const response = await fetch(url, {
+    headers: { 'X-Cached': cachedAssets.join(', ') }
+  })
+
+  return response
+}
+
 const handleFetch = async request => {
   const cache = await getCache()
 
-  if (request.destination === 'document') {
-    const cachedAssets = await getCachedAssets(cache)
-
-    return fetch(request, { headers: { 'X-Cached': cachedAssets.join(', ') } })
-  }
+  if (request.destination === 'document') return fetchDocument(request.url)
 
   const cachedResponse = await cache.match(request)
 
   return cachedResponse || fetch(request)
 }
 
-self.addEventListener('install', () => self.skipWaiting())
+self.addEventListener('install', event => {
+  event.waitUntil(cacheAssetsPromise)
+  self.skipWaiting()
+})
 
-self.addEventListener('message', event => {
+self.addEventListener('message', async event => {
   const { type, inlineAssets } = event.data
 
-  if (type === 'cache-assets') return cacheInlineAssets(inlineAssets)
-  if (type === 'precache-assets') {
-    precacheAssets({ ignoreAssets: inlineAssets.map(({ url }) => url) })
-    removeUnusedAssets()
-  }
+  if (type !== 'cache-assets') return
+
+  await cacheInlineAssets(inlineAssets)
+  await precacheAssets({ ignoreAssets: inlineAssets.map(({ url }) => url) })
+
+  cacheAssetsPromiseResolve()
 })
 
 self.addEventListener('fetch', async event => {
@@ -1115,21 +1075,10 @@ Now async pages will feel like they were never split from the main app.
 
 We can preload other pages data when hovering over links (desktop) or when links enter the viewport (mobile):
 
-_[NavigationLink.tsx](src/components/NavigationLink.tsx)_
+_[NavigationLink.tsx](src/components/common/NavigationLink.tsx)_
 
 ```js
-const preload = ({ url, as = 'fetch', crossorigin }) => {
-  const preloadElement = document.head.appendChild(
-    Object.assign(document.createElement('link'), {
-      rel: 'preload',
-      href: url,
-      as,
-      crossOrigin: crossorigin
-    })
-  )
-
-  preloadElement.addEventListener('load', () => document.head.removeChild(preloadElement))
-}
+<NavLink onMouseEnter={() => fetch(url, { ...request, preload: true })}>{children}</NavLink>
 ```
 
 _Note that this may unnecessarily load the API server._
@@ -1145,11 +1094,16 @@ _[service-worker-registration.ts](src/utils/service-worker-registration.ts)_
 
 const register = () => {
   window.addEventListener('load', async () => {
+    const serviceWorkerType = appIsInstalled ? 'swr' : 'precache'
+
     try {
--     await navigator.serviceWorker.register('/prefetch-service-worker.js')
-+     const registration = await navigator.serviceWorker.register('/prefetch-service-worker.js')
+      const registration = await navigator.serviceWorker.register(SERVICE_WORKERS[serviceWorkerType])
 
       console.log('Service worker registered!')
+
+      registration.addEventListener('updatefound', () => {
+        registration.installing?.postMessage({ type: 'cache-assets', inlineAssets: extractInlineScripts() })
+      })
 
 +     setInterval(() => registration.update(), ACTIVE_REVALIDATION_INTERVAL * 1000)
     } catch (err) {
@@ -1164,63 +1118,6 @@ The code above revalidates the app every 10 minutes.
 The revalidation process is extremely cheap, since it only involves refetching the service worker (which will return a _304 Not Modified_ status code if not changed).
 <br>
 When the service worker **does** change, it means that new assets are available, and so they will be selectively downloaded and cached.
-
-### Generating Static Data
-
-If we take a closer look, here is what SSG essentially does: it creates a cacheable HTML file and injects static data into it.
-<br>
-This can be useful for data that is not highly dynamic, such as content from CMS.
-
-So how can we also create static data?
-
-The preferred method would be to have our API server create JSON files from static data and to serve those when requested.
-<br>
-However, if we wanted to do something similar ourselves, we could execute the following script during build time:
-
-_[fetch-static.js](scripts/fetch-static.js)_
-
-```js
-import { mkdir, writeFile } from 'fs/promises'
-import axios from 'axios'
-
-const path = 'public/json'
-const axiosOptions = { transformResponse: res => res }
-
-mkdir(path, { recursive: true })
-
-const fetchLoremIpsum = async () => {
-  const { data } = await axios.get('https://loripsum.net/api/100/long/plaintext', axiosOptions)
-
-  writeFile(`${path}/lorem-ipsum.json`, JSON.stringify(data))
-}
-
-fetchLoremIpsum()
-```
-
-_[package.json](package.json)_
-
-```json
-"scripts": {
-  "postinstall": "npm run fetch-static",
-  "prebuild": "npm run fetch-static",
-  "fetch-static": "node scripts/fetch-static"
-}
-```
-
-The above script would create a `json/lorem-ipsum.json` file that will be stored in our CDN.
-
-Then we simply fetch the static data in our app:
-
-```js
-fetch('json/lorem-ipsum.json')
-```
-
-There are some advantages to this approach:
-
-- We generate static data ourselves so we don't bother our server or CMS for every user request.
-- The data will be fetched faster from a nearby CDN edge than from a remote server.
-
-Whenever we need to update the static data we simply rebuild the app or, if we have control over our build files in production, just rerun the script.
 
 ## Summary
 
