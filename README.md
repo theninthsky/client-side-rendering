@@ -2,16 +2,6 @@
 
 This project is a case study of CSR, it explores the potential of client-side rendered apps compared to server-side rendering.
 
-To use this project as a production-ready boilerplate, refer to the _[BOILTERPLATE.md](BOILERPLATE.md)_ instruction file.
-
-### Legend
-
-**CSR**: Client-side Rendering
-<br>
-**SSR**: Server-side Rendering
-<br>
-**SSG**: Static Site Generation
-
 An in-depth comparison of all rendering methods can be found on this project's _Comparison_ page: https://client-side-rendering.pages.dev/comparison
 
 ## Table of Contents
@@ -51,31 +41,29 @@ An in-depth comparison of all rendering methods can be found on this project's _
 
 # Intro
 
-**Client-side rendering** is the practice of sending the web browser static assets and leaving it to perform the entire rendering process of the app.
+**Client-side rendering (CSR)** refers to sending static assets to the web browser and allowing it to handle the entire rendering process of the app.  
+**Server-side rendering (SSR)** involves rendering the entire app (or page) on the server and delivering a pre-rendered HTML document ready for display.  
+**Static Site Generation (SSG)** is the process of pre-generating HTML pages as static assets, which are then sent and displayed by the browser.
+
+Contrary to common belief, the SSR process in modern frameworks like **React**, **Angular**, **Vue**, and **Svelte** results in the app rendering twice: once on the server and again on the browser (this is known as "hydration"). Without this second render, the app would be static and uninteractive, essentially behaving like a "lifeless" web page.
 <br>
-**Server-side rendering** is the practice of rendering the entire app (or page) on the server, sending to the browser a pre-rendered HTML document ready to be displayed.
+Interestingly, the hydration process does not appear to be faster than a typical render (excluding the painting phase, of course).
 <br>
-**Static Site Generation** is the practice of pre-generating HTML pages as static assets to be sent and displayed by the browser.
+It's also important to note that SSG apps must undergo hydration as well.
 
-Contrary to popular belief, the SSR process of modern frameworks such as React, Angular, Vue and Svelte, makes the app render twice: one time on the server and another time on the browser (this is called "hydration"). Without the latter, the app will not be interactive and would just act as a "lifeless" web page.
-<br>
-The hydration process doesn't seem to be any faster than a normal render (excluding the painting procedure of course).
-<br>
-Needless to say that SSG apps have to be "hydrated" aswell.
+In both SSR and SSG, the HTML document is fully constructed, providing the following benefits:
 
-The HTML document is fully constucted in both SSR and SSG, which gives them the following advantages:
+- Web crawlers can index the pages out-of-the-box, which is crucial for SEO.
+- The first contentful paint (FCP) is usually very fast (although in SSR, this depends heavily on API server response times).
 
-1. Web crawlers will be able to crawl their pages out-of-the-box, which is critical for SEO.
-2. The _[FCP](https://web.dev/fcp)_ of the page is usually very good (in SSR it heavily depends on the API server response times).
+On the other hand, CSR apps offer the following advantages:
 
-On the other hand, CSR apps have the following advantages:
+- The app is completely decoupled from the server, meaning it loads independently of the API server's response times, enabling smooth page transitions.
+- The developer experience is streamlined, as there's no need to worry about which parts of the code run on the server and which run in the browser.
 
-1. The app itself is completely decoupled from the server, which means it loads without being affected by the API server's response times, allowing for seemless page transitions.
-2. The developer experience is seemless, there is no need to pay attention to which pieces of code will run on the server and which will run in the browser.
+In this case study, we'll focus on CSR and explore ways to overcome its apparent limitations while leveraging its strengths to the peak.
 
-In this case-study, we will focus on CSR and how to overcome its (seemingly) inherent shortages while leaveraging its strong points.
-
-Each optimization will be included in the deployed app that can be found here: https://client-side-rendering.pages.dev
+All optimizations will be incorporated into the deployed app, which can be found here: [https://client-side-rendering.pages.dev](https://client-side-rendering.pages.dev).
 
 # Motivation
 
@@ -87,32 +75,33 @@ _Thing is, despite what everyone might be telling you, you probably don't need S
 
 _~[Prerender SPA Plugin](https://github.com/chrisvfritz/prerender-spa-plugin#what-is-prerendering)_
 
-Over the last few years, server-side rendering has started to (re)gain popularity in the form of frameworks such as _[Next.js](https://nextjs.org)_ and _[Remix](https://remix.run)_ to the point that developers just start working with them as a default, without understanding their limitations and even in apps which do not require SEO at all (like those who have a login requirement).
+In recent years, server-side rendering has gained significant popularity in the form of frameworks such as _[Next.js](https://nextjs.org)_ and _[Remix](https://remix.run)_ to the point that developers often default to using them without fully understanding their limitations, even in apps that don't need SEO (e.g., those with login requirements).
 <br>
-While SSR has some advantages, these frameworks keep emphasizing how fast they are (_"Performance as a default"_), implying client-side rendering is slow.
+While SSR has its advantages, these frameworks continue to emphasize their speed ("Performance as a default"), suggesting that client-side rendering (CSR) is inherently slow.
 <br>
-In addition, it is a common misconception that perfect SEO can only be achieved by using SSR, and that there's nothing we can do to improve the way search engines crawl CSR apps.
+Additionally, there is a widespread misconception that perfect SEO can only be achieved with SSR, and that CSR apps cannot be optimized for search engine crawlers.
 
-Another claim that is often raised regarding the advantages of SSR is that web apps are getting bigger, and so their loading times will only keep increasing (which means bad _[FCP](https://web.dev/fcp)_ for CSR apps).
+Another common argument for SSR is that as web apps grow larger, their loading times will continue to increase, leading to poor _[FCP](https://web.dev/fcp)_ performance for CSR apps.
 
-While it’s true that apps are naturally expanding, the size of a single page should only **get smaller** as time passes.
+While it’s true that apps are becoming more feature-rich, the size of a single page should actually **decrease** over time.
 <br>
-This is due to a popular trend of making smaller and more efficient versions of packages, as seen with _zustand_, _day.js_, _headless-ui_ and _react-router v6_.
+This is due to the trend of creating smaller, more efficient versions of libraries and frameworks, such as _zustand_, _day.js_, _headless-ui_, and _react-router v6_.
 <br>
-It can also be observed in the decreasing sizes of frameworks in correlation with their release dates: Angular (74.1kb), React (44.5kb), Vue (34kb), Solid (7.6kb) and Svelte (1.7kb).
+We can also observe a reduction in the size of frameworks over time: Angular (74.1kb), React (44.5kb), Vue (34kb), Solid (7.6kb), and Svelte (1.7kb).
 <br>
-These packages consist the most of a web page’s scripts weight.
+These libraries contribute significantly to the overall weight of a web page’s scripts.
 <br>
-And so, when properly utilizing code-splitting, the initial loading time of a single page might even **decrease** over time.
+With proper code-splitting, the initial loading time of a page could **decrease** over time.
 
-This project implements a basic CSR app with some tweaks such as code-splitting and preloading, with the ambition that as the app scales, the loading time of a single page would mostly remain unaffected.
-The objective is to simulate the number of packages used in a production grade app and try to decrease its loading time as much as possible, mostly by parallelizing requests.
+This project implements a basic CSR app with optimizations like code-splitting and preloading. The goal is for the loading time of individual pages to remain stable as the app scales.
+<br>
+The objective is to simulate a production-grade app's package structure and minimize loading times through parallelized requests.
 
-It is important to note that improving performance should not come at the expense of the developer experience, so the way this project is architected should vary only slightly compared to "normal" react projects, and it won't be as extremely opinionated as Next.js (or as limiting as SSR is in general).
+It’s important to note that improving performance should not come at the cost of developer experience. Therefore, the architecture of this project will be only slightly modified from a typical React setup, avoiding the rigid, opinionated structure of frameworks like Next.js, or the limitations of SSR in general.
 
-This case study will cover two major aspects: performance and SEO. We will see how we can achieve top scores in both of them.
+This case study will focus on two main aspects: performance and SEO. We will explore how to achieve top scores in both areas.
 
-_Note that while this project is implemented with React, the vast majority of its tweaks are not tied to any framework and are purely based on the bundler and the web browser._
+_Note that although this project is implemented using React, most of the optimizations are framework-agnostic and are purely based on the bundler and the web browser._
 
 # Performance
 
@@ -120,13 +109,13 @@ We will assume a standard Webpack (Rspack) setup and add the required customizat
 
 ### Bundle Size
 
-The first rule of thumb is to use as fewer dependencies as possible, and among those, to select the ones with smaller filesize.
+The first rule of thumb is to minimize dependencies and, among those, choose the ones with the smallest file sizes.
 
 For example:
 <br>
-We can use _[day.js](https://www.npmjs.com/package/dayjs)_ instead of _[moment](https://www.npmjs.com/package/moment)_, _[zustand](https://www.npmjs.com/package/zustand)_ instead of _[redux toolkit](https://www.npmjs.com/package/@reduxjs/toolkit)_ etc.
+We can use _[day.js](https://www.npmjs.com/package/dayjs)_ instead of _[moment](https://www.npmjs.com/package/moment)_, _[zustand](https://www.npmjs.com/package/zustand)_ instead of _[redux toolkit](https://www.npmjs.com/package/@reduxjs/toolkit)_ , etc.
 
-This is crucial not only for CSR apps, but also for SSR (and SSG) apps, since the bigger our bundle is - the longer it will take the page to be visible or interactive.
+This is important not only for CSR apps but also for SSR (and SSG) apps, as larger bundles result in longer load times, delaying when the page becomes visible or interactive.
 
 ### Caching
 
@@ -1462,50 +1451,47 @@ As mentioned above, an in-depth comparison of all rendering methods can be found
 
 ## Why Not SSG?
 
-We have seen the advantages of static files: they are cacheable and they can be served from a nearby CDN without requiring a server.
-
-This may lead us to believe that SSG combines both CSR and SSR advantages: it makes our app visually appear very fast (_[FCP](https://web.dev/fcp)_) and independently from our API server's response times.
-
+We have seen the advantages of static files: they are cacheable and can be served from a nearby CDN without requiring a server.
+<br>
+This might lead us to believe that SSG combines the benefits of both CSR and SSR: it makes our app visually load very fast (_[FCP](https://web.dev/fcp)_) and independently of our API server's response times.
+<br>  
 However, in reality, SSG has a major limitation:
 <br>
-Since JS isn't active during the first moments, everything that relies on JS to be presented simply won't be visible, or it will be visible in its incorrect state (like components which rely on the `window.matchMedia` function to be displayed).
+Since JS isn't active during the initial moments, everything that relies on JS to be presented simply won't be visible or will be displayed incorrectly (like components that depend on the `window.matchMedia` function to render).
 
-A classic example of this problems is demonstrated by the following website:
-<br>
+A classic example of this issue can be seen on the following website:  
 https://death-to-ie11.com
 
-Notice how the timer isn't available right away? that's because its generated by JS, which takes time to download and execute.
+Notice how the timer isn’t visible immediately? That’s because it’s generated by JS, which takes time to download and execute.
 
-We can also see that while refreshing Vercel's 'Guides' page when some filters are applied:
+We also see a similar issue when refreshing Vercel's 'Guides' page with some filters applied:
 <br>
 https://vercel.com/guides?topics=analytics
 
-This is caused by the fact that there are `65536 (2^16)` possible filter combinations, and storing every combination as a full HTML file takes a lot of storage on the server.
+This happens because there are `65536 (2^16)` possible filter combinations, and storing each combination as a separate HTML file would require a lot of server storage.
 <br>
-So they only generate a single `guides.html` file which contains all of the data of all pages, but this static file doesn't know which filters are applied until JS is loaded, so we see this layout shift.
+So, they generate a single `guides.html` file that contains all the data, but this static file doesn’t know which filters are applied until JS is loaded, causing a layout shift.
 
-It is important to note that even when using _[Incremental Static Regeneration](https://nextjs.org/docs/pages/building-your-application/data-fetching/incremental-static-regeneration)_, users will have to wait for server response when visiting pages that are yet to be cached on the server (just like in SSR).
+It’s important to note that even with _[Incremental Static Regeneration](https://nextjs.org/docs/pages/building-your-application/data-fetching/incremental-static-regeneration)_, users will still have to wait for a server response when visiting pages that have not yet been cached (just like in SSR).
 
-Another example for this is JS animations - they would first appear static and start animating only when JS is loaded.
+Another example of this issue is JS animations—they might appear static initially and only start animating once JS is loaded.
 
-There are various examples of how this delayed functionality negatively impacts the user experience, like the way some websites only show the navigation bar after JS has been loaded (since they cannot access the Local Storage to check if it has a user info entry).
+There are many instances where this delayed functionality harms the user experience, such as when websites only show the navigation bar after JS is loaded (since they rely on Local Storage to check if a user info entry exists).
 
-Another issue, which can be especially critical for E-commere websites, is that SSG pages might reflect outdated data (a product's price or availability for example).
-<br>
-That is the reason why no popular E-commerce website uses SSG.
+Another critical issue, especially for E-commerce websites, is that SSG pages may display outdated data (like a product's price or availability).
+
+This is precisely why no major E-commerce website uses SSG.
 
 ## The Cost of Hydration
 
-It is a fact that under fast internet connection, both CSR and SSR perform great (as long as they are both optimized), and the higher the connection speed - the closer they get in terms of loading times.
-
+It is a fact that under fast internet connection, both CSR and SSR perform great (as long as they are both optimized), and the higher the connection speed - the closer they get in terms of loading times.  
 However, when dealing with slow connections (such as mobile networks), it seems that SSR has an edge over CSR regarding loading times.
-<br>
-Since SSR apps are rendered on the server, the browser receives the fully-constructed HTML file, and so it can show the page to the user without waiting for JS to download. When JS is eventually download and parsed, the framework is able to "hydrate" the DOM with functionality (without having to reconstruct it).
 
-Although it seems like a big advantage, this behaviour introduces an undesired side-effect, especially on slower connections:
-<br>
-Until JS is loaded, users can click wherever they desire but the app won't react to any of their JS-based events.
-<br>
+Since SSR apps are rendered on the server, the browser receives the fully-constructed HTML file, and so it can show the page to the user without waiting for JS to download. When JS is eventually downloaded and parsed, the framework is able to "hydrate" the DOM with functionality (without having to reconstruct it).
+
+Although it seems like a big advantage, this behaviour introduces an undesired side-effect, especially on slower connections:  
+Until JS is loaded, users can click wherever they desire, but the app won't react to any of their JS-based events.
+
 It is a bad user experience when buttons don't respond to user interactions, but it becomes a much larger problem when default events are not being prevented.
 
 This is a comparison between Next.js's website and our Client-side Rendering app on a fast 3G connection:
@@ -1514,10 +1500,10 @@ This is a comparison between Next.js's website and our Client-side Rendering app
 ![CSR Load 3G](images/csr-load-3g.gif)
 
 What happened here?
+
+Since JS hasn't been loaded yet, Next.js's website could not prevent the default behaviour of anchor tag elements (`<a>`) to navigate to another page, resulting in every click on them triggering a full page reload.  
 <br>
-Since JS hasn't been loaded yet, Next.js's website could not prevent the default behaviour of anchor tag elements (`<a>`) to navigate to another page, resulting in every click on them triggering a full page reload.
-<br>
-And the slower the connection is - the more severe this issue becomes.
+And the slower the connection is - the more severe this issue becomes.  
 <br>
 In other words, where SSR should have had a performance edge over CSR, we see a very "dangerous" behavior that might significantly degrade the user experience.
 
@@ -1527,18 +1513,17 @@ It is impossible for this issue to occur in CSR apps, since the moment they rend
 
 We saw that client-side rendering performance is on par and sometimes even better than SSR in terms of initial loading times (and far surpasses it in navigation times).
 <br>
-We've also seen that Googlebot can perfectly index client-side rendered apps, and that we can easily set up a prerender server to serve all other bots and crawlers.
+We’ve also seen that Googlebot can perfectly index client-side rendered apps, and that we can easily set up a prerender server to serve all other bots and crawlers.
 <br>
-And above all - we have achieved all this mainly by modifiying 2 files (the Webpack/Rspack config and HTML template) and using a prerender service, so every existing CSR app should be able to quickly and easily implement these modifications and benefit from them.
+And above all, we have achieved all this just by adding a few files and using a prerender service, so every existing CSR app should be able to quickly and easily implement these changes and benefit from them.
 
-These facts lead to the conclusion that there is no particular reason to use SSR, it would only add a lot of complexity and limitations to our app and degrade the developer and user experience.
+These facts lead to the conclusion that there is no compelling reason to use SSR. Doing so would only add unnecessary complexity and limitations to our app, degrading both the developer and user experience, while also incurring higher server costs.
 
 ## What Might Change in the Future
 
-As time passes, [connection speed is getting faster](https://www.speedtest.net/global-index) and end-user devices get stronger. So the performance differences between all possible website rendering methods are guarenteed to be mitigated even further (except for SSR which depends on the API server response times).
+As time passes, [connection speeds are getting faster](https://www.speedtest.net/global-index) and end-user devices are becoming more powerful. As a result, the performance differences between various website rendering methods are guaranteed to diminish further (except for SSR, which still depends on API server response times).
 
-There is a new SSR method called _Streaming SSR_ (in React it is through "Server Components") and new frameworks (such as Qwik) which are able to stream responses to the browser without having to wait for the API server's response.
-<br>
-However, there are also newer and better CSR frameworks such as Svelte and Solid.js, which have a very small bundle size and are much faster than React (thus greatly improving the FCP on slow networks).
+A new SSR method called _Streaming SSR_ (in React, this is through "Server Components") and newer frameworks like Qwik are capable of streaming responses to the browser without waiting for the API server’s response.
+However, there are also newer and more efficient CSR frameworks like Svelte and Solid.js, which have much smaller bundle sizes and are significantly faster than React (greatly improving FCP on slow networks).
 
-Nevertheless, it's important to note that nothing will ever outperform neither the instant page transitions that client-side rendering is able to provide, nor the simple and flexible development flow it offers.
+Nevertheless, it's important to note that nothing will ever outperform the instant page transitions that client-side rendering provides, nor the simple and flexible development flow it offers.
