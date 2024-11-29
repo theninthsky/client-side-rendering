@@ -25,8 +25,9 @@ An in-depth comparison of all rendering methods can be found on this project's _
   - [Preloading Async Pages](#preloading-async-pages)
   - [Splitting Async Vendors](#splitting-async-vendors)
   - [Preloading Data](#preloading-data)
-  - [Precaching Async Pages](#precaching-async-pages)
+  - [Precaching](#precaching)
   - [Adaptive Source Inlining](#adaptive-source-inlining)
+  - [Leveraging the 304 Status Code](#leveraging-the-304-status-code)
   - [Tweaking Further](#tweaking-further)
     - [Transitioning Async Pages](#transitioning-async-pages)
     - [Preloading Other Pages Data](#preloading-other-pages-data)
@@ -192,8 +193,6 @@ This will create files like `react-dom.[hash].js` which contain a single big ven
 More info about the default configurations (such as the split threshold size) can be found here:
 <br>
 https://webpack.js.org/plugins/split-chunks-plugin/#defaults
-
-This approach will also ensure a much better _[code caching](https://v8.dev/blog/code-caching-for-devs)_ persistence.
 
 ### Code Splitting
 
@@ -508,7 +507,7 @@ Now we can see that the data is being fetched right away:
 
 With the above script, we can even preload dynamic routes data (such as _[pokemon/:name](https://client-side-rendering.pages.dev/pokemon/pikachu)_).
 
-### Precaching Async Pages
+### Precaching
 
 Users should have a smooth navigation experience in our app.
 <br>
@@ -628,7 +627,9 @@ self.addEventListener('fetch', async event => {
 })
 ```
 
-Now all pages will be prefetched and cached before the user even tries to navigate to them.
+Now all pages will be prefetched and cached even before the user tries to navigate to them.
+
+This approach will also generate a full _[code cache](https://v8.dev/blog/code-caching-for-devs#use-service-worker-caches)_.
 
 ## Adaptive Source Inlining
 
@@ -965,8 +966,8 @@ On the next load, the Cloudflare worker responds with a minimal (1.8kb) HTML doc
 
 This optimization leads us to another one - splitting chunks to even smaller pieces.
 
-As a rule of thumb, splitting the bundle into too many chunks can hurt performance. That's because the page will not be rendered until every last bit of its bundle is downloaded, and the more chunks we have - the bigger the chance for one of them to be fetched with a slight delay (as hardware and network speed are non-linear).
-
+As a rule of thumb, splitting the bundle into too many chunks can hurt performance. This is because the page won't be rendered until all of its files are downloaded, and the more chunks there are, the greater the likelihood that one of them will be delayed (as hardware and network speed are non-linear).
+<br>
 But in our case its irrelevant, since we inline all the relevant chunks and so they are fetched all at once.
 
 _[rspack.config.js](rspack.config.js)_
@@ -985,6 +986,115 @@ optimization: {
 ```
 
 This extreme splitting will lead to a better cache persistence, and in turn, to faster load times with partial cache.
+
+### Leveraging the 304 Status Code
+
+When a static asset is fetched from a CDN, it includes an `ETag` header, which is a content hash of the resource. On subsequent requests, the browser checks if it has a stored ETag. If it does, it sends the ETag in an `If-None-Match` header. The CDN then compares the received ETag with the current one: if they match, it returns a `304 Not Modified` status, indicating the browser can use the cached asset; if not, it returns the new asset with a `200` status.
+
+In a traditional CSR app, reloading a page results in the HTML getting a `304 Not Modified`, with other assets served from the cache. Each route has a unique ETag, so `/lorem-ipsum` and `/pokemon` have different cache entries, even if their ETags are identical.
+
+In a CSR SPA, since there's only one HTML file, the same ETag is used for every page request. However, because the ETag is stored per route, the browser won't send an `If-None-Match` header for unvisited pages, leading to a `200` status and a redownload of the HTML, even though it's the same file.
+
+However, we can easily create our own (improved) implementation of this behavior through collaboration between the workers:
+
+_[scripts/inject-assets-plugin.js](scripts/inject-assets-plugin.js)_
+
+```diff
++import { createHash } from 'node:crypto'
+
+class InjectAssetsPlugin {
+  apply(compiler) {
+    .
+    .
+    .
+    compiler.hooks.afterEmit.tapAsync('InjectAssetsPlugin', (compilation, callback) => {
+      let html = readFileSync(join(__dirname, '..', 'build', 'index.html'), 'utf-8')
+      let worker = readFileSync(join(__dirname, '..', 'build', '_worker.js'), 'utf-8')
+      .
+      .
+      .
++     const htmlChecksum = createHash('sha256').update(html).digest('hex')
+      .
+      .
+      .
+      worker = worker
+        .replace('INJECT_INITIAL_MODULE_SCRIPTS_STRING_HERE', () => JSON.stringify(initialModuleScriptsString))
+        .replace('INJECT_INITIAL_SCRIPTS_HERE', () => JSON.stringify(initialScripts))
+        .replace('INJECT_ASYNC_SCRIPTS_HERE', () => JSON.stringify(asyncScripts))
+        .replace('INJECT_HTML_HERE', () => JSON.stringify(html))
++       .replace('INJECT_HTML_CHECKSUM_HERE', () => JSON.stringify(htmlChecksum))
+
+      writeFileSync(join(__dirname, '..', 'build', '_worker.js'), worker)
+
+      callback()
+    })
+  }
+}
+```
+
+_[public/\_worker.js](public/_worker.js)_
+
+```diff
++const htmlChecksum = INJECT_HTML_CHECKSUM_HERE
+.
+.
+.
+export default {
+  fetch(request, env) {
++   const contentHash = request.headers.get('X-Content-Hash')
+
++   if (contentHash === htmlChecksum) return new Response(null, { status: 304, headers: documentHeaders })
+    .
+    .
+    .
+  }
+}
+```
+
+_[public/precache-service-worker.js](public/precache-service-worker.js)_
+
+```diff
+.
+.
+.
+const precacheAssets = async ({ ignoreAssets }) => {
+  .
+  .
+  .
++ await fetchDocument('/')
+}
+
+const fetchDocument = async url => {
+  const cache = await getCache()
+  const cachedAssets = await getCachedAssets(cache)
+  const cachedDocument = await cache.match('/')
+  const contentHash = cachedDocument?.headers.get('X-Content-Hash')
+
+  const response = await fetch(url, {
+    headers: { 'X-Cached': cachedAssets.join(', '), 'X-Content-Hash': contentHash }
+  })
+
+  if (response.status === 304) return cachedDocument
+  if (!response.ok) return response
+
+  cache.put('/', response.clone())
+
+  return response
+}
+
+const handleFetch = async request => {
+  const cache = await getCache()
+
++ if (request.destination === 'document') return fetchDocument(request.url)
+
+  const cachedResponse = await cache.match(request)
+
+  return cachedResponse || fetch(request)
+}
+
+```
+
+Now our serverless worker will always respond with a `304 Not Modified` status code whenever there are no changes, even for unvisited pages.
 
 ## Tweaking Further
 
