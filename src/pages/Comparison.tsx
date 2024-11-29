@@ -55,18 +55,6 @@ const listData = {
         )
       },
       {
-        value: 'Unmatched performance with SWR',
-        description: (
-          <p>
-            When using{' '}
-            <a href="https://github.com/theninthsky/client-side-rendering#the-swr-approach" target="_blank">
-              SWR
-            </a>{' '}
-            for the app shell, the app always loads instantly
-          </p>
-        )
-      },
-      {
         value: 'Is completely free to host',
         description:
           'Some CDN vendors (such as Cloudflare Pages) host static apps without requiring any kind of fee and with no limits at all (unless the app has a very heavy traffic)'

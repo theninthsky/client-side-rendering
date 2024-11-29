@@ -516,14 +516,12 @@ import InjectAssetsPlugin from './scripts/inject-assets-plugin.js'
 export default () => {
   return {
     plugins: [
-      ...(production
-        ? [
-            new InjectManifestPlugin({
-              include: [/fonts\//, /scripts\/.+\.js$/],
-              swSrc: path.join(__dirname, 'public', 'precache-service-worker.js')
-            })
-          ]
-        : []),
+      new InjectManifest({
+        include: [/fonts\//, /scripts\/.+\.js$/],
+        swSrc: join(__dirname, 'public', 'service-worker.js'),
+        compileSrc: false,
+        maximumFileSizeToCacheInBytes: 10000000
+      }),
       new InjectAssetsPlugin()
     ]
   }
@@ -536,7 +534,7 @@ _[service-worker-registration.ts](src/utils/service-worker-registration.ts)_
 const register = () => {
   window.addEventListener('load', async () => {
     try {
-      await navigator.serviceWorker.register('/precache-service-worker.js')
+      await navigator.serviceWorker.register('/service-worker.js')
 
       console.log('Service worker registered!')
     } catch (err) {
@@ -563,7 +561,7 @@ if ('serviceWorker' in navigator) {
 }
 ```
 
-_[public/precache-service-worker.js](public/precache-service-worker.js)_
+_[public/service-worker.js](public/service-worker.js)_
 
 ```js
 const CACHE_NAME = 'my-csr-app'
@@ -825,10 +823,8 @@ import extractInlineScripts from './extract-inline-scripts'
 
 const register = () => {
   window.addEventListener('load', async () => {
-    const serviceWorkerType = appIsInstalled ? 'swr' : 'precache'
-
     try {
-      const registration = await navigator.serviceWorker.register('/precache-service-worker.js')
+      const registration = await navigator.serviceWorker.register('/service-worker.js')
 
       console.log('Service worker registered!')
 
@@ -844,7 +840,7 @@ const register = () => {
 }
 ```
 
-_[public/precache-service-worker.js](public/precache-service-worker.js)_
+_[public/service-worker.js](public/service-worker.js)_
 
 ```js
 const CACHE_NAME = 'my-csr-app'
@@ -1040,7 +1036,7 @@ export default {
 }
 ```
 
-_[public/precache-service-worker.js](public/precache-service-worker.js)_
+_[public/service-worker.js](public/service-worker.js)_
 
 ```diff
 .
@@ -1134,7 +1130,7 @@ const useTransitionNavigate = () => {
 export default useTransitionNavigate
 ```
 
-_[NavigationLink.tsx](src/components/common/NavigationLink.tsx)_
+_[NavigationLink.tsx](src/components/NavigationLink.tsx)_
 
 ```js
 const NavigationLink = ({ to, onClick, children }) => {
@@ -1181,10 +1177,8 @@ _[service-worker-registration.ts](src/utils/service-worker-registration.ts)_
 
 const register = () => {
   window.addEventListener('load', async () => {
-    const serviceWorkerType = appIsInstalled ? 'swr' : 'precache'
-
     try {
-      const registration = await navigator.serviceWorker.register(SERVICE_WORKERS[serviceWorkerType])
+      const registration = await navigator.serviceWorker.register('/service-worker.js')
 
       console.log('Service worker registered!')
 
@@ -1210,7 +1204,7 @@ When the service worker **does** change, it means that new assets are available,
 
 We split our bundle into many small chunks, greatly improving our app's caching abilities.
 <br>
-We split every page so that upon loading one, only what is relevant is being downloaded right away.
+We split every page so that upon loading one, only what is relevent is being downloaded right away.
 <br>
 We've managed to make the initial (cacheless) load of our app extremely fast, everything that a page requires to load is dynamically injected to it.
 <br>
@@ -1260,7 +1254,7 @@ These are the results:
 
 As it turns out, performance is **not** a default in Next.js.
 
-_Note that this benchmark only tests the first load of the page, without even considering how the app performs when it is fully cached (where our SWR implementation really shines)._
+_Note that this benchmark only tests the first load of the page, without even considering how the app performs when it is fully cached (where CSR really shines)._
 
 ## Areas for Improvement
 
@@ -1515,7 +1509,7 @@ We saw that client-side rendering performance is on par and sometimes even bette
 <br>
 We’ve also seen that Googlebot can perfectly index client-side rendered apps, and that we can easily set up a prerender server to serve all other bots and crawlers.
 <br>
-And above all, we have achieved all this just by adding a few files and using a prerender service, so every existing CSR app should be able to quickly and easily implement these changes and benefit from them.
+And most importantly, we have achieved all this just by adding a few files and using a prerender service, so every existing CSR app should be able to quickly and easily implement these changes and benefit from them.
 
 These facts lead to the conclusion that there is no compelling reason to use SSR. Doing so would only add unnecessary complexity and limitations to our app, degrading both the developer and user experience, while also incurring higher server costs.
 

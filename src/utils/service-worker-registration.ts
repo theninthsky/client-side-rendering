@@ -2,21 +2,12 @@
 
 import extractInlineScripts from './extract-inline-scripts'
 
-const SERVICE_WORKERS = {
-  precache: '/precache-service-worker.js',
-  swr: '/swr-service-worker.js'
-}
 const ACTIVE_REVALIDATION_INTERVAL = 10 * 60
-const shouldRegister = process.env.NODE_ENV !== 'development'
-const appIsInstalled =
-  window.matchMedia('(display-mode: standalone)').matches || document.referrer.includes('android-app://')
 
 const register = () => {
   window.addEventListener('load', async () => {
-    const serviceWorkerType = appIsInstalled ? 'swr' : 'precache'
-
     try {
-      const registration = await navigator.serviceWorker.register(SERVICE_WORKERS[serviceWorkerType])
+      const registration = await navigator.serviceWorker.register('/service-worker.js')
 
       console.log('Service worker registered!')
 
@@ -44,6 +35,6 @@ const unregister = async () => {
 }
 
 if ('serviceWorker' in navigator) {
-  if (shouldRegister) register()
+  if (process.env.NODE_ENV !== 'development') register()
   else unregister()
 }

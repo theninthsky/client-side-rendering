@@ -23,8 +23,8 @@ export default {
       "Demonstrated here is dynamic data that is fetched in parallel with all of the page's assets and passed directly to its sub-pages.",
     data: [
       {
-        method: 'post',
         url: 'https://graphql-pokeapi.graphcdn.app',
+        method: 'post',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           query: `query pokemons($limit: Int, $offset: Int) {
