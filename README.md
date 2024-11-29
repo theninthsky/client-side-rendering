@@ -1134,7 +1134,7 @@ const useTransitionNavigate = () => {
 export default useTransitionNavigate
 ```
 
-_[NavigationLink.tsx](src/components/NavigationLink.tsx)_
+_[NavigationLink.tsx](src/components/common/NavigationLink.tsx)_
 
 ```js
 const NavigationLink = ({ to, onClick, children }) => {
@@ -1210,7 +1210,7 @@ When the service worker **does** change, it means that new assets are available,
 
 We split our bundle into many small chunks, greatly improving our app's caching abilities.
 <br>
-We split every page so that upon loading one, only what is relevent is being downloaded right away.
+We split every page so that upon loading one, only what is relevant is being downloaded right away.
 <br>
 We've managed to make the initial (cacheless) load of our app extremely fast, everything that a page requires to load is dynamically injected to it.
 <br>
