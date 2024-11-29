@@ -899,11 +899,15 @@ const fetchDocument = async url => {
   const cachedAssets = await getCachedAssets(cache)
   const cachedDocument = await cache.match('/')
 
-  const response = await fetch(url, {
-    headers: { 'X-Cached': cachedAssets.join(', ') }
-  })
+  try {
+    const response = await fetch(url, {
+      headers: { 'X-Cached': cachedAssets.join(', ') }
+    })
 
-  return response
+    return response
+  } catch (err) {
+    return cachedDocument
+  }
 }
 
 const handleFetch = async request => {
@@ -1055,16 +1059,19 @@ const fetchDocument = async url => {
   const cachedDocument = await cache.match('/')
   const contentHash = cachedDocument?.headers.get('X-Content-Hash')
 
-  const response = await fetch(url, {
-    headers: { 'X-Cached': cachedAssets.join(', '), 'X-Content-Hash': contentHash }
-  })
+  try {
+    const response = await fetch(url, {
+      headers: { 'X-Cached': cachedAssets.join(', '), 'X-Content-Hash': contentHash }
+    })
 
-  if (response.status === 304) return cachedDocument
-  if (!response.ok) return response
+    if (response.status === 304) return cachedDocument
 
-  cache.put('/', response.clone())
+    cache.put('/', response.clone())
 
-  return response
+    return response
+  } catch (err) {
+    return cachedDocument
+  }
 }
 
 const handleFetch = async request => {
