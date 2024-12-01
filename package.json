@@ -12,8 +12,7 @@
     "build": "rspack build --mode production",
     "serve": "serve build",
     "fetch-static": "node scripts/fetch-static",
-    "create-sitemap": "node scripts/create-sitemap",
-    "boilerplatify": "node .boilerplate/boilerplatify"
+    "create-sitemap": "node scripts/create-sitemap"
   },
   "dependencies": {
     "@emotion/css": "^11.9.0",

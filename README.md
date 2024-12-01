@@ -2,16 +2,6 @@
 
 This project is a case study of CSR, it explores the potential of client-side rendered apps compared to server-side rendering.
 
-To use this project as a production-ready boilerplate, refer to the _[BOILTERPLATE.md](BOILERPLATE.md)_ instruction file.
-
-### Legend
-
-**CSR**: Client-side Rendering
-<br>
-**SSR**: Server-side Rendering
-<br>
-**SSG**: Static Site Generation
-
 An in-depth comparison of all rendering methods can be found on this project's _Comparison_ page: https://client-side-rendering.pages.dev/comparison
 
 ## Table of Contents
@@ -25,13 +15,13 @@ An in-depth comparison of all rendering methods can be found on this project's _
   - [Preloading Async Pages](#preloading-async-pages)
   - [Splitting Async Vendors](#splitting-async-vendors)
   - [Preloading Data](#preloading-data)
-  - [Precaching Async Pages](#precaching-async-pages)
+  - [Precaching](#precaching)
   - [Adaptive Source Inlining](#adaptive-source-inlining)
+  - [Leveraging the 304 Status Code](#leveraging-the-304-status-code)
   - [Tweaking Further](#tweaking-further)
     - [Transitioning Async Pages](#transitioning-async-pages)
     - [Preloading Other Pages Data](#preloading-other-pages-data)
     - [Revalidating Active Apps](#revalidating-active-apps)
-    - [Generating Static Data](#generating-static-data)
   - [Summary](#summary)
   - [Deploying](#deploying)
   - [Benchmark](#benchmark)
@@ -51,31 +41,29 @@ An in-depth comparison of all rendering methods can be found on this project's _
 
 # Intro
 
-**Client-side rendering** is the practice of sending the web browser static assets and leaving it to perform the entire rendering process of the app.
+**Client-side rendering (CSR)** refers to sending static assets to the web browser and allowing it to handle the entire rendering process of the app.  
+**Server-side rendering (SSR)** involves rendering the entire app (or page) on the server and delivering a pre-rendered HTML document ready for display.  
+**Static Site Generation (SSG)** is the process of pre-generating HTML pages as static assets, which are then sent and displayed by the browser.
+
+Contrary to common belief, the SSR process in modern frameworks like **React**, **Angular**, **Vue**, and **Svelte** results in the app rendering twice: once on the server and again on the browser (this is known as "hydration"). Without this second render, the app would be static and uninteractive, essentially behaving like a "lifeless" web page.
 <br>
-**Server-side rendering** is the practice of rendering the entire app (or page) on the server, sending to the browser a pre-rendered HTML document ready to be displayed.
+Interestingly, the hydration process does not appear to be faster than a typical render (excluding the painting phase, of course).
 <br>
-**Static Site Generation** is the practice of pre-generating HTML pages as static assets to be sent and displayed by the browser.
+It's also important to note that SSG apps must undergo hydration as well.
 
-Contrary to popular belief, the SSR process of modern frameworks such as React, Angular, Vue and Svelte, makes the app render twice: one time on the server and another time on the browser (this is called "hydration"). Without the latter, the app will not be interactive and would just act as a "lifeless" web page.
-<br>
-The hydration process doesn't seem to be any faster than a normal render (excluding the painting procedure of course).
-<br>
-Needless to say that SSG apps have to be "hydrated" aswell.
+In both SSR and SSG, the HTML document is fully constructed, providing the following benefits:
 
-The HTML document is fully constucted in both SSR and SSG, which gives them the following advantages:
+- Web crawlers can index the pages out-of-the-box, which is crucial for SEO.
+- The first contentful paint (FCP) is usually very fast (although in SSR, this depends heavily on API server response times).
 
-1. Web crawlers will be able to crawl their pages out-of-the-box, which is critical for SEO.
-2. The _[FCP](https://web.dev/fcp)_ of the page is usually very good (in SSR it heavily depends on the API server response times).
+On the other hand, CSR apps offer the following advantages:
 
-On the other hand, CSR apps have the following advantages:
+- The app is completely decoupled from the server, meaning it loads independently of the API server's response times, enabling smooth page transitions.
+- The developer experience is streamlined, as there's no need to worry about which parts of the code run on the server and which run in the browser.
 
-1. The app itself is completely decoupled from the server, which means it loads without being affected by the API server's response times, allowing for seemless page transitions.
-2. The developer experience is seemless, there is no need to pay attention to which pieces of code will run on the server and which will run in the browser.
+In this case study, we'll focus on CSR and explore ways to overcome its apparent limitations while leveraging its strengths to the peak.
 
-In this case-study, we will focus on CSR and how to overcome its (seemingly) inherent shortages while leaveraging its strong points.
-
-Each optimization will be included in the deployed app that can be found here: https://client-side-rendering.pages.dev
+All optimizations will be incorporated into the deployed app, which can be found here: [https://client-side-rendering.pages.dev](https://client-side-rendering.pages.dev).
 
 # Motivation
 
@@ -87,48 +75,47 @@ _Thing is, despite what everyone might be telling you, you probably don't need S
 
 _~[Prerender SPA Plugin](https://github.com/chrisvfritz/prerender-spa-plugin#what-is-prerendering)_
 
-Over the last few years, server-side rendering has started to (re)gain popularity in the form of frameworks such as _[Next.js](https://nextjs.org)_ and _[Remix](https://remix.run)_ to the point that developers just start working with them as a default, without understanding their limitations and even in apps which do not require SEO at all (like those who have a login requirement).
+In recent years, server-side rendering has gained significant popularity in the form of frameworks such as _[Next.js](https://nextjs.org)_ and _[Remix](https://remix.run)_ to the point that developers often default to using them without fully understanding their limitations, even in apps that don't need SEO (e.g., those with login requirements).
 <br>
-While SSR has some advantages, these frameworks keep emphasizing how fast they are (_"Performance as a default"_), implying client-side rendering is slow.
+While SSR has its advantages, these frameworks continue to emphasize their speed ("Performance as a default"), suggesting that client-side rendering (CSR) is inherently slow.
 <br>
-In addition, it is a common misconception that perfect SEO can only be achieved by using SSR, and that there's nothing we can do to improve the way search engines crawl CSR apps.
+Additionally, there is a widespread misconception that perfect SEO can only be achieved with SSR, and that CSR apps cannot be optimized for search engine crawlers.
 
-Another claim that is often raised regarding the advantages of SSR is that web apps are getting bigger, and so their loading times will only keep increasing (which means bad _[FCP](https://web.dev/fcp)_ for CSR apps).
+Another common argument for SSR is that as web apps grow larger, their loading times will continue to increase, leading to poor _[FCP](https://web.dev/fcp)_ performance for CSR apps.
 
-While it’s true that apps are naturally expanding, the size of a single page should only **get smaller** as time passes.
+While it’s true that apps are becoming more feature-rich, the size of a single page should actually **decrease** over time.
 <br>
-This is due to a popular trend of making smaller and more efficient versions of packages, as seen with _zustand_, _day.js_, _headless-ui_ and _react-router v6_.
+This is due to the trend of creating smaller, more efficient versions of libraries and frameworks, such as _zustand_, _day.js_, _headless-ui_, and _react-router v6_.
 <br>
-It can also be observed in the decreasing sizes of frameworks in correlation with their release dates: Angular (74.1kb), React (44.5kb), Vue (34kb), Solid (7.6kb) and Svelte (1.7kb).
+We can also observe a reduction in the size of frameworks over time: Angular (74.1kb), React (44.5kb), Vue (34kb), Solid (7.6kb), and Svelte (1.7kb).
 <br>
-These packages consist the most of a web page’s scripts weight.
+These libraries contribute significantly to the overall weight of a web page’s scripts.
 <br>
-And so, when properly utilizing code-splitting, the initial loading time of a single page might even **decrease** over time.
+With proper code-splitting, the initial loading time of a page could **decrease** over time.
 
-This project implements a basic CSR app with some tweaks such as code-splitting and preloading, with the ambition that as the app scales, the loading time of a single page would mostly remain unaffected.
-The objective is to simulate the number of packages used in a production grade app and try to decrease its loading time as much as possible, mostly by parallelizing requests.
+This project implements a basic CSR app with optimizations like code-splitting and preloading. The goal is for the loading time of individual pages to remain stable as the app scales.
+<br>
+The objective is to simulate a production-grade app's package structure and minimize loading times through parallelized requests.
 
-It is important to note that improving performance should not come at the expense of the developer experience, so the way this project is architected should vary only slightly compared to "normal" react projects, and it won't be as extremely opinionated as Next.js (or as limiting as SSR is in general).
+It’s important to note that improving performance should not come at the cost of developer experience. Therefore, the architecture of this project will be only slightly modified from a typical React setup, avoiding the rigid, opinionated structure of frameworks like Next.js, or the limitations of SSR in general.
 
-This case study will cover two major aspects: performance and SEO. We will see how we can achieve top scores in both of them.
+This case study will focus on two main aspects: performance and SEO. We will explore how to achieve top scores in both areas.
 
-_Note that while this project is implemented with React, the vast majority of its tweaks are not tied to any framework and are purely based on the bundler and the web browser._
+_Note that although this project is implemented using React, most of the optimizations are framework-agnostic and are purely based on the bundler and the web browser._
 
 # Performance
 
 We will assume a standard Webpack (Rspack) setup and add the required customizations as we progress.
-<br>
-Most of the code changes that we'll go throught will be in the _[rspack.config.js](rspack.config.js)_ configuration file and the _[index.js](public/index.js)_ HTML template.
 
 ### Bundle Size
 
-The first rule of thumb is to use as fewer dependencies as possible, and among those, to select the ones with smaller filesize.
+The first rule of thumb is to minimize dependencies and, among those, choose the ones with the smallest file sizes.
 
 For example:
 <br>
-We can use _[day.js](https://www.npmjs.com/package/dayjs)_ instead of _[moment](https://www.npmjs.com/package/moment)_, _[zustand](https://www.npmjs.com/package/zustand)_ instead of _[redux toolkit](https://www.npmjs.com/package/@reduxjs/toolkit)_ etc.
+We can use _[day.js](https://www.npmjs.com/package/dayjs)_ instead of _[moment](https://www.npmjs.com/package/moment)_, _[zustand](https://www.npmjs.com/package/zustand)_ instead of _[redux toolkit](https://www.npmjs.com/package/@reduxjs/toolkit)_ , etc.
 
-This is crucial not only for CSR apps, but also for SSR (and SSG) apps, since the bigger our bundle is - the longer it will take the page to be visible or interactive.
+This is important not only for CSR apps but also for SSR (and SSG) apps, as larger bundles result in longer load times, delaying when the page becomes visible or interactive.
 
 ### Caching
 
@@ -144,17 +131,23 @@ Now, what part of our bundle comprises most of its weight? The answer is the **d
 
 So if we could split the vendors to their own hashed chunk, that would allow a separation between our code and the vendors code, leading to less cache invalidations.
 
-Let's add the following part to our _[rspack.config.js](rspack.config.js)_ file:
+Let's add the following _optimization_ to our config file:
+
+_[rspack.config.js](rspack.config.js)_
 
 ```js
-optimization: {
-  runtimeChunk: 'single',
-  splitChunks: {
-    chunks: 'initial',
-    cacheGroups: {
-      vendors: {
-        test: /[\\/]node_modules[\\/]/,
-        name: 'vendors'
+export default () => {
+  return {
+    optimization: {
+      runtimeChunk: 'single',
+      splitChunks: {
+        chunks: 'initial',
+        cacheGroups: {
+          vendors: {
+            test: /[\\/]node_modules[\\/]/,
+            name: 'vendors'
+          }
+        }
       }
     }
   }
@@ -190,8 +183,6 @@ More info about the default configurations (such as the split threshold size) ca
 <br>
 https://webpack.js.org/plugins/split-chunks-plugin/#defaults
 
-This approach will also ensure a much better _[code caching](https://v8.dev/blog/code-caching-for-devs)_ persistence.
-
 ### Code Splitting
 
 A lot of the features we write end up being used only in a few of our pages, so we would like them to be loaded only when the user visits the page they are being used in.
@@ -220,67 +211,64 @@ Code splitting has one major flaw - the runtime doesn't know which async chunks 
 
 ![Network Code Splitting](images/network-code-splitting.png)
 
-The way we can solve this issue is by implementing a script in the document that will be responsible for preloading relevant assets:
+The way we can solve this issue is by writing a custom plugin that will embed a script in the document which will be responsible of preloading relevant assets:
 
 _[rspack.config.js](rspack.config.js)_
 
 ```js
-import pagesManifest from './src/pages.js'
-import htmlTemplate from './public/index.js'
-.
-.
-.
-plugins: [
-  new HtmlPlugin({
-    scriptLoading: 'module',
-    templateContent: ({ compilation }) => {
-      const assets = compilation.getAssets().map(({ name }) => name)
-      const pages = pagesManifest.map(({ chunk, path, title }) => {
-        const script = assets.find(name => name.includes(`/${chunk}.`) && name.endsWith('.js'))
+import InjectAssetsPlugin from './scripts/inject-assets-plugin.js'
 
-        return { path, title, script }
-      })
-
-      return htmlTemplate(pages)
-    }
-  })
-]
+export default () => {
+  return {
+    plugins: [new InjectAssetsPlugin()]
+  }
+}
 ```
 
-_[public/index.js](public/index.js)_
+_[scripts/inject-assets-plugin.js](scripts/inject-assets-plugin.js)_
 
 ```js
 import { join } from 'node:path'
 import { readFileSync } from 'node:fs'
+import HtmlPlugin from 'html-webpack-plugin'
+
+import pagesManifest from '../src/pages.js'
 
 const __dirname = import.meta.dirname
 
-export default pages => `
-  <!DOCTYPE html>
-  <html lang="en">
-    <head>
-      <meta charset="utf-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1">
-      <meta name="theme-color" content="#1e90ff">
-      <meta name="google-site-verification" content="VizFjhwWDUBYMsq1bJtp6N2NPjz8sLdGH1513MlrytU" />
+const getPages = rawAssets => {
+  const pages = Object.entries(pagesManifest).map(([chunk, { path, title }]) => {
+    const script = rawAssets.find(name => name.includes(`/${chunk}.`) && name.endsWith('.js'))
 
-      <link rel="shortcut icon" href="/icons/favicon.ico">
-      <link rel="manifest" href="/manifest.json">
-      <link rel="preload" href="/fonts/montserrat.woff2" as="font" type="font/woff2" crossorigin>
+    return { path, script, title }
+  })
 
-      <title>Client-side Rendering</title>
+  return pages
+}
 
-      <script>
-        const pages = ${JSON.stringify(pages)}
+class InjectAssetsPlugin {
+  apply(compiler) {
+    compiler.hooks.compilation.tap('InjectAssetsPlugin', compilation => {
+      HtmlPlugin.getCompilationHooks(compilation).beforeEmit.tapAsync('InjectAssetsPlugin', (data, callback) => {
+        const preloadAssets = readFileSync(join(__dirname, '..', 'scripts', 'preload-assets.js'), 'utf-8')
 
-        ${readFileSync(join(__dirname, '..', 'scripts', 'preload-assets.js'))}
-      </script>
-    </head>
-    <body>
-      <div id="root"></div>
-    </body>
-  </html>
-`
+        const rawAssets = compilation.getAssets()
+        const pages = getPages(rawAssets)
+
+        let { html } = data
+
+        html = html.replace(
+          '</title>',
+          () => `</title><script id="preload-data">const pages=${stringifiedPages}\n${preloadAssets}</script>`
+        )
+
+        callback(null, { ...data, html })
+      })
+    })
+  }
+}
+
+export default InjectAssetsPlugin
 ```
 
 _[scripts/preload-assets.js](scripts/preload-assets.js)_
@@ -323,9 +311,7 @@ preloadAssets()
 
 The imported `pages.js` file can be found [here](src/pages.js).
 
-_Please note that other types of assets can be preloaded the same way (like stylesheets)._
-
-This way, the browser is able to fetch the page-related script chunk **in parallel** with render-critical assets:
+This way, the browser is able to fetch the page-specific script chunk **in parallel** with render-critical assets:
 
 ![Network Async Chunks Preload](images/network-async-chunks-preload.png)
 
@@ -387,27 +373,23 @@ optimization: {
       }
     }
   }
-},
-.
-.
-.
-plugins: [
-  new HtmlPlugin({
-    scriptLoading: 'module',
-    templateContent: ({ compilation }) => {
-      const assets = compilation.getAssets().map(({ name }) => name)
-      const pages = pagesManifest.map(({ chunk, path, title }) => {
--       const script = assets.find(name => name.includes(`/${chunk}.`) && name.endsWith('.js'))
-+       const scripts = assets.filter(name => new RegExp(`[/.]${chunk}\\.(.+)\\.js$`).test(name))
+}
+```
 
--       return { path, title, script }
-+       return { path, title, scripts }
-      })
+_[scripts/inject-assets-plugin.js](scripts/inject-assets-plugin.js)_
 
-      return htmlTemplate(pages)
-    }
+```diff
+const getPages = rawAssets => {
+  const pages = Object.entries(pagesManifest).map(([chunk, { path, title }]) => {
+-   const script = rawAssets.find(name => name.includes(`/${chunk}.`) && name.endsWith('.js'))
++   const scripts = rawAssets.filter(name => new RegExp(`[/.]${chunk}\\.(.+)\\.js$`).test(name))
+
+-   return { path, title, script }
++   return { path, title, scripts }
   })
-]
+
+  return pages
+}
 ```
 
 _[scripts/preload-assets.js](scripts/preload-assets.js)_
@@ -433,86 +415,76 @@ One of the presumed disadvantages of CSR over SSR is that the page's data (fetch
 
 ![Network Data](images/network-data.png)
 
-To overcome this, we will use preloading once again, this time for the data itself:
+To overcome this, we will use preloading once again, this time for the data itself, by patching the `fetch` API:
 
-_[rspack.config.js](rspack.config.js)_
+_[scripts/inject-assets-plugin.js](scripts/inject-assets-plugin.js)_
 
 ```diff
-plugins: [
-  new HtmlPlugin({
-    scriptLoading: 'module',
-    templateContent: ({ compilation }) => {
-      const assets = compilation.getAssets().map(({ name }) => name)
--     const pages = pagesManifest.map(({ chunk, path  title,}) => {
-+     const pages = pagesManifest.map(({ chunk, path, title, data }) => {
-        const script = assets.find(name => name.includes(`/${chunk}.`) && name.endsWith('.js'))
+const getPages = rawAssets => {
+-  const pages = Object.entries(pagesManifest).map(([chunk, { path, title }]) => {
++  const pages = Object.entries(pagesManifest).map(([chunk, { path, title, data, preconnect }]) => {
+  const scripts = rawAssets.filter(name => new RegExp(`[/.]${chunk}\\.(.+)\\.js$`).test(name))
 
--       return { path, title, script }
-+       return { path, title, script, data }
-      })
-
-      return htmlTemplate(pages)
-    }
+-   return { path, title, script }
++   return { path, title, scripts, data, preconnect }
   })
-]
-```
 
-_[public/index.js](public/index.js)_
+  return pages
+}
 
-```diff
-<script>
-- const pages = ${JSON.stringify(pages)}
-+ const pages = ${JSON.stringify(pages, (_, value) => {
+HtmlPlugin.getCompilationHooks(compilation).beforeEmit.tapAsync('InjectAssetsPlugin', (data, callback) => {
+  const preloadAssets = readFileSync(join(__dirname, '..', 'scripts', 'preload-assets.js'), 'utf-8')
+
+  const rawAssets = compilation.getAssets()
+  const pages = getPages(rawAssets)
++ const stringifiedPages = JSON.stringify(pages, (_, value) => {
 +   return typeof value === 'function' ? `func:${value.toString()}` : value
-+ })}
++ })
 
-  ${readFileSync(join(__dirname, '..', 'scripts', 'preload-assets.js'))}
-</script>
+  let { html } = data
+
+  html = html.replace(
+    '</title>',
+-   () => `</title><script id="preload-data">const pages=${JSON.stringify(pages)}\n${preloadAssets}</script>`
++   () => `</title><script id="preload-data">const pages=${stringifiedPages}\n${preloadAssets}</script>`
+  )
+
+  callback(null, { ...data, html })
+})
 ```
 
 _[scripts/preload-assets.js](scripts/preload-assets.js)_
 
 ```diff
-.
-.
-.
-+ const getDynamicProperties = (pathname, path) => {
-+   const pathParts = path.split('/')
-+   const pathnameParts = pathname.split('/')
-+   const dynamicProperties = {}
-+
-+   for (let i = 0; i < pathParts.length; i++) {
-+     if (pathParts[i].startsWith(':')) dynamicProperties[pathParts[i].slice(1)] = pathnameParts[i]
-+   }
-+
-+   return dynamicProperties
-+ }
+ const getDynamicProperties = (pathname, path) => {
+  const pathParts = path.split('/')
+  const pathnameParts = pathname.split('/')
+  const dynamicProperties = {}
+
+  for (let i = 0; i < pathParts.length; i++) {
+    if (pathParts[i].startsWith(':')) dynamicProperties[pathParts[i].slice(1)] = pathnameParts[i]
+  }
+
+  return dynamicProperties
+ }
 
 const preloadAssets = () => {
 -   const { path, title, scripts } = matchingPages.find(({ exact }) => exact) || matchingPages[0]
-+   const { path, title, scripts, data } = matchingPages.find(({ exact }) => exact) || matchingPages[0]
++   const { path, title, scripts, data, preconnect } = matchingPages.find(({ exact }) => exact) || matchingPages[0]
     .
     .
     .
-+   data?.forEach(({ url, crossorigin, preconnectURL }) => {
-+     if (url.startsWith('func:')) url = eval(url.replace('func:', ''))
-+     const fullURL = typeof url === 'string' ? url : url(getDynamicProperties(pathname, path))
-+
-+     document.head.appendChild(
-+       Object.assign(document.createElement('link'), {
-+         rel: 'preload',
-+         href: fullURL,
-+         as: 'fetch',
-+         crossOrigin: crossorigin
-+       })
-+     )
-+
-+     if (preconnectURL) {
-+       document.head.appendChild(
-+         Object.assign(document.createElement('link'), { rel: 'preconnect', href: preconnectURL })
-+       )
-+     }
-+   })
+  data?.forEach(({ url, ...request }) => {
+    if (url.startsWith('func:')) url = eval(url.replace('func:', ''))
+
+    const constructedURL = typeof url === 'string' ? url : url(getDynamicProperties(pathname, path))
+
+    fetch(constructedURL, { ...request, preload: true })
+  })
+
+  preconnect?.forEach(url => {
+    document.head.appendChild(Object.assign(document.createElement('link'), { rel: 'preconnect', href: url }))
+  })
 }
 ```
 
@@ -524,52 +496,7 @@ Now we can see that the data is being fetched right away:
 
 With the above script, we can even preload dynamic routes data (such as _[pokemon/:name](https://client-side-rendering.pages.dev/pokemon/pikachu)_).
 
-The only limitation is that we can only preload GET resources. However, we can easily implement an endpoint that transforms GET requests with query params to POST requests with body.
-<br>
-Here's an example of such transform proxy as a Cloudflare Worker:
-
-```js
-export default {
-  async fetch(request, env) {
-    const { pathname, searchParams } = new URL(request.url)
-    const headers = new Headers(request.headers)
-    const body = Object.fromEntries(
-      [...searchParams.entries()].map(([key, value]) => {
-        try {
-          value = JSON.parse(value)
-        } catch (err) {}
-
-        return [key, value]
-      })
-    )
-
-    headers.set('Content-Type', 'application/json')
-
-    return await fetch(new Request(pathname.slice(1), { method: 'post', headers, body: JSON.stringify(body) }))
-  }
-}
-```
-
-The worker above will transform the following request:
-
-```
-[GET] https://my-transform-proxy.com/https://my-server-url.com/posts?title=Test&description=A test request
-```
-
-to:
-
-```
-[POST] https://my-server-url.com/posts
-
-{
-  "title": "Test",
-  "description": "A test request"
-}
-```
-
-_Note that in order for the preload to work, the server has to send a `Cache-Control` header with a `max-age` of at least a few seconds._
-
-### Precaching Async Pages
+### Precaching
 
 Users should have a smooth navigation experience in our app.
 <br>
@@ -582,16 +509,23 @@ We can do this by writing a simple service worker:
 _[rspack.config.js](rspack.config.js)_
 
 ```js
-plugins: [
-  ...(production
-    ? [
-        new InjectManifest({
-          include: [/fonts\//, /scripts\/.+\.js$/],
-          swSrc: path.join(__dirname, 'public', 'precache-service-worker.js')
-        })
-      ]
-    : [])
-]
+import { InjectManifestPlugin } from 'inject-manifest-plugin'
+
+import InjectAssetsPlugin from './scripts/inject-assets-plugin.js'
+
+export default () => {
+  return {
+    plugins: [
+      new InjectManifest({
+        include: [/fonts\//, /scripts\/.+\.js$/],
+        swSrc: join(__dirname, 'public', 'service-worker.js'),
+        compileSrc: false,
+        maximumFileSizeToCacheInBytes: 10000000
+      }),
+      new InjectAssetsPlugin()
+    ]
+  }
+}
 ```
 
 _[service-worker-registration.ts](src/utils/service-worker-registration.ts)_
@@ -600,7 +534,7 @@ _[service-worker-registration.ts](src/utils/service-worker-registration.ts)_
 const register = () => {
   window.addEventListener('load', async () => {
     try {
-      await navigator.serviceWorker.register('/precache-service-worker.js')
+      await navigator.serviceWorker.register('/service-worker.js')
 
       console.log('Service worker registered!')
     } catch (err) {
@@ -627,7 +561,7 @@ if ('serviceWorker' in navigator) {
 }
 ```
 
-_[public/precache-service-worker.js](public/precache-service-worker.js)_
+_[public/service-worker.js](public/service-worker.js)_
 
 ```js
 const CACHE_NAME = 'my-csr-app'
@@ -680,11 +614,9 @@ self.addEventListener('fetch', async event => {
 })
 ```
 
-Now all pages will be prefetched and cached before the user even tries to navigate to them.
+Now all pages will be prefetched and cached even before the user tries to navigate to them.
 
-Before going on to the next major change, here is the backup branch containing everything we did so far:
-<br>
-https://github.com/theninthsky/client-side-rendering/tree/before-dynamic-source-inlining
+This approach will also generate a full _[code cache](https://v8.dev/blog/code-caching-for-devs#use-service-worker-caches)_.
 
 ## Adaptive Source Inlining
 
@@ -736,79 +668,75 @@ The entire flow should be described as follows:
 
 \* Both initial and page-specific assets.
 
-This ensures that the browser receives exactly the assets it needs (no more, no less) to display the page **in a single roundtrip**!
+This ensures that the browser receives exactly the assets it needs (no more, no less) to display the current page **in a single roundtrip**!
 
-_[rspack.config.js](rspack.config.js)_
-
-```js
-plugins: [
-  new HtmlPlugin({
-    scriptLoading: 'module',
-    templateContent: ({ compilation }) => {
-      const assets = compilation.getAssets()
-      const pages = pagesManifest.map(({ chunk, path, data }) => {
-        const scripts = assets
-          .map(({ name }) => name)
-          .filter(name => new RegExp(`[/.]${chunk}\\.(.+)\\.js$`).test(name))
-
-        return { path, scripts, data }
-      })
-
-      if (production) {
-        const assetsWithSource = assets
-          .filter(({ name }) => /^scripts\/.+\.js$/.test(name))
-          .map(({ name, source }) => ({
-            url: `/${name}`,
-            source: source.source(),
-            parentPaths: pages.filter(({ scripts }) => scripts.includes(name)).map(({ path }) => path)
-          }))
-
-        writeFileSync(join(__dirname, 'public', 'assets.js'), JSON.stringify(assetsWithSource))
-      }
-
-      return htmlTemplate(pages)
-    }
-  })
-]
-```
-
-_[scripts/inject-worker-html.js](scripts/inject-worker-html.js)_
+_[scripts/inject-assets-plugin.js](scripts/inject-assets-plugin.js)_
 
 ```js
-import { join } from 'node:path'
-import { readFileSync, writeFileSync, rmSync } from 'node:fs'
+class InjectAssetsPlugin {
+  apply(compiler) {
+    const production = compiler.options.mode === 'production'
 
-const __dirname = import.meta.dirname
+    compiler.hooks.compilation.tap('InjectAssetsPlugin', compilation => {
+      .
+      .
+      .
+    })
 
-const assets = JSON.parse(readFileSync(join(__dirname, '..', 'public', 'assets.js'), 'utf-8'))
-let html = readFileSync(join(__dirname, '..', 'build', 'index.html'), 'utf-8')
-let worker = readFileSync(join(__dirname, '..', 'build', '_worker.js'), 'utf-8')
+    if (!production) return
 
-const initialScriptsString = html.match(/<script\s+type="module"[^>]*>([\s\S]*?)(?=<\/head>)/)[0]
-const initialScripts = assets.filter(({ url }) => initialScriptsString.includes(url))
-const asyncScripts = assets.filter(asset => !initialScripts.includes(asset))
+    compiler.hooks.afterEmit.tapAsync('InjectAssetsPlugin', (compilation, callback) => {
+      let html = readFileSync(join(__dirname, '..', 'build', 'index.html'), 'utf-8')
+      let worker = readFileSync(join(__dirname, '..', 'build', '_worker.js'), 'utf-8')
 
-html = html
-  .replace(/,"scripts":\s*\[(.*?)\]/g, () => '')
-  .replace(/scripts\.forEach[\s\S]*?data\?\.\s*forEach/, () => 'data?.forEach')
-  .replace(/preloadAssets/g, () => 'preloadData')
+      const rawAssets = compilation.getAssets()
+      const pages = getPages(rawAssets)
+      const assets = rawAssets
+        .filter(({ name }) => /^scripts\/.+\.js$/.test(name))
+        .map(({ name, source }) => ({
+          url: `/${name}`,
+          source: source.source(),
+          parentPaths: pages.filter(({ scripts }) => scripts.includes(name)).map(({ path }) => path)
+        }))
 
-worker = worker
-  .replace('INJECT_INITIAL_SCRIPTS_STRING_HERE', () => JSON.stringify(initialScriptsString))
-  .replace('INJECT_INITIAL_SCRIPTS_HERE', () => JSON.stringify(initialScripts))
-  .replace('INJECT_ASYNC_SCRIPTS_HERE', () => JSON.stringify(asyncScripts))
-  .replace('INJECT_HTML_HERE', () => JSON.stringify(html))
-  .replace('</body>', () => '<!-- INJECT_SCRIPTS_HERE --></body>')
+      const initialModuleScriptsString = html.match(/<script\s+type="module"[^>]*>([\s\S]*?)(?=<\/head>)/)[0]
+      const initialModuleScripts = initialModuleScriptsString.split('</script>')
+      const initialScripts = assets
+        .filter(({ url }) => initialModuleScriptsString.includes(url))
+        .map(asset => ({ ...asset, order: initialModuleScripts.findIndex(script => script.includes(asset.url)) }))
+        .sort((a, b) => a.order - b.order)
+      const asyncScripts = assets.filter(asset => !initialScripts.includes(asset))
 
-rmSync(join(__dirname, '..', 'public', 'assets.js'))
-writeFileSync(join(__dirname, '..', 'build', '_worker.js'), worker)
+      html = html
+        .replace(/,"scripts":\s*\[(.*?)\]/g, () => '')
+        .replace(/scripts\.forEach[\s\S]*?data\?\.\s*forEach/, () => 'data?.forEach')
+        .replace(/preloadAssets/g, () => 'preloadData')
+
+      worker = worker
+        .replace('INJECT_INITIAL_MODULE_SCRIPTS_STRING_HERE', () => JSON.stringify(initialModuleScriptsString))
+        .replace('INJECT_INITIAL_SCRIPTS_HERE', () => JSON.stringify(initialScripts))
+        .replace('INJECT_ASYNC_SCRIPTS_HERE', () => JSON.stringify(asyncScripts))
+        .replace('INJECT_HTML_HERE', () => JSON.stringify(html))
+
+      writeFileSync(join(__dirname, '..', 'build', '_worker.js'), worker)
+
+      callback()
+    })
+  }
+}
+
+export default InjectAssetsPlugin
 ```
 
 _[public/\_worker.js](public/_worker.js)_
 
 ```js
-const allAssets = INJECT_ASSETS_HERE
+const initialModuleScriptsString = INJECT_INITIAL_MODULE_SCRIPTS_STRING_HERE
+const initialScripts = INJECT_INITIAL_SCRIPTS_HERE
+const asyncScripts = INJECT_ASYNC_SCRIPTS_HERE
 const html = INJECT_HTML_HERE
+
+const documentHeaders = { 'Cache-Control': 'public, max-age=0', 'Content-Type': 'text/html; charset=utf-8' }
 
 const isMatch = (pathname, path) => {
   if (pathname === path) return { exact: true, match: true }
@@ -827,17 +755,19 @@ const isMatch = (pathname, path) => {
 export default {
   fetch(request, env) {
     const pathname = new URL(request.url).pathname.toLowerCase()
-    const nonDocument = pathname.includes('.')
+    const userAgent = (request.headers.get('User-Agent') || '').toLowerCase()
+    const bypassWorker = request.headers.get('X-Bypass') || userAgent.includes('googlebot') || pathname.includes('.')
 
-    if (nonDocument) return env.ASSETS.fetch(request)
+    if (bypassWorker) return env.ASSETS.fetch(request)
 
-    const headers = { 'Content-Type': 'text/html; charset=utf-8' }
     const cachedScripts = request.headers.get('X-Cached')?.split(', ').filter(Boolean) || []
     const uncachedScripts = [...initialScripts, ...asyncScripts].filter(({ url }) => !cachedScripts.includes(url))
 
-    if (!uncachedScripts.length) return new Response(html, { headers })
+    if (!uncachedScripts.length) {
+      return new Response(html, { headers: documentHeaders })
+    }
 
-    let body = html.replace(initialScriptsString, () => '')
+    let body = html.replace(initialModuleScriptsString, () => '')
 
     const injectedInitialScriptsString = initialScripts
       .map(({ url, source }) =>
@@ -845,10 +775,7 @@ export default {
       )
       .join('\n')
 
-    body = body.replace(
-      '<!-- INJECT_SCRIPTS_HERE -->',
-      () => `<!-- INJECT_SCRIPTS_HERE -->\n${injectedInitialScriptsString}`
-    )
+    body = body.replace('</body>', () => `<!-- INJECT_ASYNC_SCRIPTS_HERE -->${injectedInitialScriptsString}\n</body>`)
 
     const matchingPageScripts = asyncScripts
       .map(asset => {
@@ -862,15 +789,14 @@ export default {
     const exactMatchingPageScripts = matchingPageScripts.filter(({ exact }) => exact)
     const pageScripts = exactMatchingPageScripts.length ? exactMatchingPageScripts : matchingPageScripts
     const uncachedPageScripts = pageScripts.filter(({ url }) => !cachedScripts.includes(url))
-
     const injectedAsyncScriptsString = uncachedPageScripts.reduce(
       (str, { url, source }) => `${str}\n<script id="${url}">${source}</script>`,
       ''
     )
 
-    body = body.replace('<!-- INJECT_SCRIPTS_HERE -->', () => injectedAsyncScriptsString)
+    body = body.replace('<!-- INJECT_ASYNC_SCRIPTS_HERE -->', () => injectedAsyncScriptsString)
 
-    return new Response(body, { headers })
+    return new Response(body, { headers: documentHeaders })
   }
 }
 ```
@@ -893,27 +819,17 @@ export default extractInlineScripts
 _[src/utils/service-worker-registration.ts](src/utils/service-worker-registration.ts)_
 
 ```js
+import extractInlineScripts from './extract-inline-scripts'
+
 const register = () => {
   window.addEventListener('load', async () => {
     try {
-      const registration = await navigator.serviceWorker.register('/precache-service-worker.js')
+      const registration = await navigator.serviceWorker.register('/service-worker.js')
 
       console.log('Service worker registered!')
 
-      const inlineAssets = extractInlineScripts()
-
-      if (inlineAssets.length) {
-        navigator.serviceWorker.ready.then(registration => {
-          registration.active?.postMessage({ type: 'cache-assets', inlineAssets })
-        })
-      }
-
       registration.addEventListener('updatefound', () => {
-        registration.installing!.onstatechange = (event: Event) => {
-          const serviceWorker = event.target as ServiceWorker
-
-          if (serviceWorker.state === 'activated') serviceWorker.postMessage({ type: 'precache-assets', inlineAssets })
-        }
+        registration.installing?.postMessage({ type: 'cache-assets', inlineAssets: extractInlineScripts() })
       })
 
       setInterval(() => registration.update(), ACTIVE_REVALIDATION_INTERVAL * 1000)
@@ -924,12 +840,15 @@ const register = () => {
 }
 ```
 
-_[public/precache-service-worker.js](public/precache-service-worker.js)_
+_[public/service-worker.js](public/service-worker.js)_
 
 ```js
 const CACHE_NAME = 'my-csr-app'
 
 const allAssets = self.__WB_MANIFEST.map(({ url }) => url)
+
+let cacheAssetsPromiseResolve
+const cacheAssetsPromise = new Promise(resolve => (cacheAssetsPromiseResolve = resolve))
 
 const getCache = () => caches.open(CACHE_NAME)
 
@@ -962,6 +881,8 @@ const precacheAssets = async ({ ignoreAssets }) => {
   const assetsToPrecache = allAssets.filter(asset => !cachedAssets.includes(asset) && !ignoreAssets.includes(asset))
 
   await cache.addAll(assetsToPrecache)
+  await removeUnusedAssets()
+  await fetchDocument('/')
 }
 
 const removeUnusedAssets = async () => {
@@ -973,30 +894,46 @@ const removeUnusedAssets = async () => {
   })
 }
 
+const fetchDocument = async url => {
+  const cache = await getCache()
+  const cachedAssets = await getCachedAssets(cache)
+  const cachedDocument = await cache.match('/')
+
+  try {
+    const response = await fetch(url, {
+      headers: { 'X-Cached': cachedAssets.join(', ') }
+    })
+
+    return response
+  } catch (err) {
+    return cachedDocument
+  }
+}
+
 const handleFetch = async request => {
   const cache = await getCache()
 
-  if (request.destination === 'document') {
-    const cachedAssets = await getCachedAssets(cache)
-
-    return fetch(request, { headers: { 'X-Cached': cachedAssets.join(', ') } })
-  }
+  if (request.destination === 'document') return fetchDocument(request.url)
 
   const cachedResponse = await cache.match(request)
 
   return cachedResponse || fetch(request)
 }
 
-self.addEventListener('install', () => self.skipWaiting())
+self.addEventListener('install', event => {
+  event.waitUntil(cacheAssetsPromise)
+  self.skipWaiting()
+})
 
-self.addEventListener('message', event => {
+self.addEventListener('message', async event => {
   const { type, inlineAssets } = event.data
 
-  if (type === 'cache-assets') return cacheInlineAssets(inlineAssets)
-  if (type === 'precache-assets') {
-    precacheAssets({ ignoreAssets: inlineAssets.map(({ url }) => url) })
-    removeUnusedAssets()
-  }
+  if (type !== 'cache-assets') return
+
+  await cacheInlineAssets(inlineAssets)
+  await precacheAssets({ ignoreAssets: inlineAssets.map(({ url }) => url) })
+
+  cacheAssetsPromiseResolve()
 })
 
 self.addEventListener('fetch', async event => {
@@ -1018,8 +955,8 @@ On the next load, the Cloudflare worker responds with a minimal (1.8kb) HTML doc
 
 This optimization leads us to another one - splitting chunks to even smaller pieces.
 
-As a rule of thumb, splitting the bundle into too many chunks can hurt performance. That's because the page will not be rendered until every last bit of its bundle is downloaded, and the more chunks we have - the bigger the chance for one of them to be fetched with a slight delay (as hardware and network speed are non-linear).
-
+As a rule of thumb, splitting the bundle into too many chunks can hurt performance. This is because the page won't be rendered until all of its files are downloaded, and the more chunks there are, the greater the likelihood that one of them will be delayed (as hardware and network speed are non-linear).
+<br>
 But in our case its irrelevant, since we inline all the relevant chunks and so they are fetched all at once.
 
 _[rspack.config.js](rspack.config.js)_
@@ -1038,6 +975,118 @@ optimization: {
 ```
 
 This extreme splitting will lead to a better cache persistence, and in turn, to faster load times with partial cache.
+
+### Leveraging the 304 Status Code
+
+When a static asset is fetched from a CDN, it includes an `ETag` header, which is a content hash of the resource. On subsequent requests, the browser checks if it has a stored ETag. If it does, it sends the ETag in an `If-None-Match` header. The CDN then compares the received ETag with the current one: if they match, it returns a `304 Not Modified` status, indicating the browser can use the cached asset; if not, it returns the new asset with a `200` status.
+
+In a traditional CSR app, reloading a page results in the HTML getting a `304 Not Modified`, with other assets served from the cache. Each route has a unique ETag, so `/lorem-ipsum` and `/pokemon` have different cache entries, even if their ETags are identical.
+
+In a CSR SPA, since there's only one HTML file, the same ETag is used for every page request. However, because the ETag is stored per route, the browser won't send an `If-None-Match` header for unvisited pages, leading to a `200` status and a redownload of the HTML, even though it's the same file.
+
+However, we can easily create our own (improved) implementation of this behavior through collaboration between the workers:
+
+_[scripts/inject-assets-plugin.js](scripts/inject-assets-plugin.js)_
+
+```diff
++import { createHash } from 'node:crypto'
+
+class InjectAssetsPlugin {
+  apply(compiler) {
+    .
+    .
+    .
+    compiler.hooks.afterEmit.tapAsync('InjectAssetsPlugin', (compilation, callback) => {
+      let html = readFileSync(join(__dirname, '..', 'build', 'index.html'), 'utf-8')
+      let worker = readFileSync(join(__dirname, '..', 'build', '_worker.js'), 'utf-8')
+      .
+      .
+      .
++     const htmlChecksum = createHash('sha256').update(html).digest('hex')
+      .
+      .
+      .
+      worker = worker
+        .replace('INJECT_INITIAL_MODULE_SCRIPTS_STRING_HERE', () => JSON.stringify(initialModuleScriptsString))
+        .replace('INJECT_INITIAL_SCRIPTS_HERE', () => JSON.stringify(initialScripts))
+        .replace('INJECT_ASYNC_SCRIPTS_HERE', () => JSON.stringify(asyncScripts))
+        .replace('INJECT_HTML_HERE', () => JSON.stringify(html))
++       .replace('INJECT_HTML_CHECKSUM_HERE', () => JSON.stringify(htmlChecksum))
+
+      writeFileSync(join(__dirname, '..', 'build', '_worker.js'), worker)
+
+      callback()
+    })
+  }
+}
+```
+
+_[public/\_worker.js](public/_worker.js)_
+
+```diff
++const htmlChecksum = INJECT_HTML_CHECKSUM_HERE
+.
+.
+.
+export default {
+  fetch(request, env) {
++   const contentHash = request.headers.get('X-Content-Hash')
+
++   if (contentHash === htmlChecksum) return new Response(null, { status: 304, headers: documentHeaders })
+    .
+    .
+    .
+  }
+}
+```
+
+_[public/service-worker.js](public/service-worker.js)_
+
+```diff
+.
+.
+.
+const precacheAssets = async ({ ignoreAssets }) => {
+  .
+  .
+  .
++ await fetchDocument('/')
+}
+
+const fetchDocument = async url => {
+  const cache = await getCache()
+  const cachedAssets = await getCachedAssets(cache)
+  const cachedDocument = await cache.match('/')
+  const contentHash = cachedDocument?.headers.get('X-Content-Hash')
+
+  try {
+    const response = await fetch(url, {
+      headers: { 'X-Cached': cachedAssets.join(', '), 'X-Content-Hash': contentHash }
+    })
+
+    if (response.status === 304) return cachedDocument
+
+    cache.put('/', response.clone())
+
+    return response
+  } catch (err) {
+    return cachedDocument
+  }
+}
+
+const handleFetch = async request => {
+  const cache = await getCache()
+
++ if (request.destination === 'document') return fetchDocument(request.url)
+
+  const cachedResponse = await cache.match(request)
+
+  return cachedResponse || fetch(request)
+}
+
+```
+
+Now our serverless worker will always respond with a `304 Not Modified` status code whenever there are no changes, even for unvisited pages.
 
 ## Tweaking Further
 
@@ -1116,21 +1165,10 @@ Now async pages will feel like they were never split from the main app.
 
 We can preload other pages data when hovering over links (desktop) or when links enter the viewport (mobile):
 
-_[NavigationLink.tsx](src/components/NavigationLink.tsx)_
+_[NavigationLink.tsx](src/components/common/NavigationLink.tsx)_
 
 ```js
-const preload = ({ url, as = 'fetch', crossorigin }) => {
-  const preloadElement = document.head.appendChild(
-    Object.assign(document.createElement('link'), {
-      rel: 'preload',
-      href: url,
-      as,
-      crossOrigin: crossorigin
-    })
-  )
-
-  preloadElement.addEventListener('load', () => document.head.removeChild(preloadElement))
-}
+<NavLink onMouseEnter={() => fetch(url, { ...request, preload: true })}>{children}</NavLink>
 ```
 
 _Note that this may unnecessarily load the API server._
@@ -1147,10 +1185,13 @@ _[service-worker-registration.ts](src/utils/service-worker-registration.ts)_
 const register = () => {
   window.addEventListener('load', async () => {
     try {
--     await navigator.serviceWorker.register('/prefetch-service-worker.js')
-+     const registration = await navigator.serviceWorker.register('/prefetch-service-worker.js')
+      const registration = await navigator.serviceWorker.register('/service-worker.js')
 
       console.log('Service worker registered!')
+
+      registration.addEventListener('updatefound', () => {
+        registration.installing?.postMessage({ type: 'cache-assets', inlineAssets: extractInlineScripts() })
+      })
 
 +     setInterval(() => registration.update(), ACTIVE_REVALIDATION_INTERVAL * 1000)
     } catch (err) {
@@ -1165,63 +1206,6 @@ The code above revalidates the app every 10 minutes.
 The revalidation process is extremely cheap, since it only involves refetching the service worker (which will return a _304 Not Modified_ status code if not changed).
 <br>
 When the service worker **does** change, it means that new assets are available, and so they will be selectively downloaded and cached.
-
-### Generating Static Data
-
-If we take a closer look, here is what SSG essentially does: it creates a cacheable HTML file and injects static data into it.
-<br>
-This can be useful for data that is not highly dynamic, such as content from CMS.
-
-So how can we also create static data?
-
-The preferred method would be to have our API server create JSON files from static data and to serve those when requested.
-<br>
-However, if we wanted to do something similar ourselves, we could execute the following script during build time:
-
-_[fetch-static.js](scripts/fetch-static.js)_
-
-```js
-import { mkdir, writeFile } from 'fs/promises'
-import axios from 'axios'
-
-const path = 'public/json'
-const axiosOptions = { transformResponse: res => res }
-
-mkdir(path, { recursive: true })
-
-const fetchLoremIpsum = async () => {
-  const { data } = await axios.get('https://loripsum.net/api/100/long/plaintext', axiosOptions)
-
-  writeFile(`${path}/lorem-ipsum.json`, JSON.stringify(data))
-}
-
-fetchLoremIpsum()
-```
-
-_[package.json](package.json)_
-
-```json
-"scripts": {
-  "postinstall": "npm run fetch-static",
-  "prebuild": "npm run fetch-static",
-  "fetch-static": "node scripts/fetch-static"
-}
-```
-
-The above script would create a `json/lorem-ipsum.json` file that will be stored in our CDN.
-
-Then we simply fetch the static data in our app:
-
-```js
-fetch('json/lorem-ipsum.json')
-```
-
-There are some advantages to this approach:
-
-- We generate static data ourselves so we don't bother our server or CMS for every user request.
-- The data will be fetched faster from a nearby CDN edge than from a remote server.
-
-Whenever we need to update the static data we simply rebuild the app or, if we have control over our build files in production, just rerun the script.
 
 ## Summary
 
@@ -1277,7 +1261,7 @@ These are the results:
 
 As it turns out, performance is **not** a default in Next.js.
 
-_Note that this benchmark only tests the first load of the page, without even considering how the app performs when it is fully cached (where our SWR implementation really shines)._
+_Note that this benchmark only tests the first load of the page, without even considering how the app performs when it is fully cached (where CSR really shines)._
 
 ## Areas for Improvement
 
@@ -1468,50 +1452,47 @@ As mentioned above, an in-depth comparison of all rendering methods can be found
 
 ## Why Not SSG?
 
-We have seen the advantages of static files: they are cacheable and they can be served from a nearby CDN without requiring a server.
-
-This may lead us to believe that SSG combines both CSR and SSR advantages: it makes our app visually appear very fast (_[FCP](https://web.dev/fcp)_) and independently from our API server's response times.
-
+We have seen the advantages of static files: they are cacheable and can be served from a nearby CDN without requiring a server.
+<br>
+This might lead us to believe that SSG combines the benefits of both CSR and SSR: it makes our app visually load very fast (_[FCP](https://web.dev/fcp)_) and independently of our API server's response times.
+<br>  
 However, in reality, SSG has a major limitation:
 <br>
-Since JS isn't active during the first moments, everything that relies on JS to be presented simply won't be visible, or it will be visible in its incorrect state (like components which rely on the `window.matchMedia` function to be displayed).
+Since JS isn't active during the initial moments, everything that relies on JS to be presented simply won't be visible or will be displayed incorrectly (like components that depend on the `window.matchMedia` function to render).
 
-A classic example of this problems is demonstrated by the following website:
-<br>
+A classic example of this issue can be seen on the following website:  
 https://death-to-ie11.com
 
-Notice how the timer isn't available right away? that's because its generated by JS, which takes time to download and execute.
+Notice how the timer isn’t visible immediately? That’s because it’s generated by JS, which takes time to download and execute.
 
-We can also see that while refreshing Vercel's 'Guides' page when some filters are applied:
+We also see a similar issue when refreshing Vercel's 'Guides' page with some filters applied:
 <br>
 https://vercel.com/guides?topics=analytics
 
-This is caused by the fact that there are `65536 (2^16)` possible filter combinations, and storing every combination as a full HTML file takes a lot of storage on the server.
+This happens because there are `65536 (2^16)` possible filter combinations, and storing each combination as a separate HTML file would require a lot of server storage.
 <br>
-So they only generate a single `guides.html` file which contains all of the data of all pages, but this static file doesn't know which filters are applied until JS is loaded, so we see this layout shift.
+So, they generate a single `guides.html` file that contains all the data, but this static file doesn’t know which filters are applied until JS is loaded, causing a layout shift.
 
-It is important to note that even when using _[Incremental Static Regeneration](https://nextjs.org/docs/pages/building-your-application/data-fetching/incremental-static-regeneration)_, users will have to wait for server response when visiting pages that are yet to be cached on the server (just like in SSR).
+It’s important to note that even with _[Incremental Static Regeneration](https://nextjs.org/docs/pages/building-your-application/data-fetching/incremental-static-regeneration)_, users will still have to wait for a server response when visiting pages that have not yet been cached (just like in SSR).
 
-Another example for this is JS animations - they would first appear static and start animating only when JS is loaded.
+Another example of this issue is JS animations—they might appear static initially and only start animating once JS is loaded.
 
-There are various examples of how this delayed functionality negatively impacts the user experience, like the way some websites only show the navigation bar after JS has been loaded (since they cannot access the Local Storage to check if it has a user info entry).
+There are many instances where this delayed functionality harms the user experience, such as when websites only show the navigation bar after JS is loaded (since they rely on Local Storage to check if a user info entry exists).
 
-Another issue, which can be especially critical for E-commere websites, is that SSG pages might reflect outdated data (a product's price or availability for example).
-<br>
-That is the reason why no popular E-commerce website uses SSG.
+Another critical issue, especially for E-commerce websites, is that SSG pages may display outdated data (like a product's price or availability).
+
+This is precisely why no major E-commerce website uses SSG.
 
 ## The Cost of Hydration
 
-It is a fact that under fast internet connection, both CSR and SSR perform great (as long as they are both optimized), and the higher the connection speed - the closer they get in terms of loading times.
-
+It is a fact that under fast internet connection, both CSR and SSR perform great (as long as they are both optimized), and the higher the connection speed - the closer they get in terms of loading times.  
 However, when dealing with slow connections (such as mobile networks), it seems that SSR has an edge over CSR regarding loading times.
-<br>
-Since SSR apps are rendered on the server, the browser receives the fully-constructed HTML file, and so it can show the page to the user without waiting for JS to download. When JS is eventually download and parsed, the framework is able to "hydrate" the DOM with functionality (without having to reconstruct it).
 
-Although it seems like a big advantage, this behaviour introduces an undesired side-effect, especially on slower connections:
-<br>
-Until JS is loaded, users can click wherever they desire but the app won't react to any of their JS-based events.
-<br>
+Since SSR apps are rendered on the server, the browser receives the fully-constructed HTML file, and so it can show the page to the user without waiting for JS to download. When JS is eventually downloaded and parsed, the framework is able to "hydrate" the DOM with functionality (without having to reconstruct it).
+
+Although it seems like a big advantage, this behaviour introduces an undesired side-effect, especially on slower connections:  
+Until JS is loaded, users can click wherever they desire, but the app won't react to any of their JS-based events.
+
 It is a bad user experience when buttons don't respond to user interactions, but it becomes a much larger problem when default events are not being prevented.
 
 This is a comparison between Next.js's website and our Client-side Rendering app on a fast 3G connection:
@@ -1520,10 +1501,10 @@ This is a comparison between Next.js's website and our Client-side Rendering app
 ![CSR Load 3G](images/csr-load-3g.gif)
 
 What happened here?
+
+Since JS hasn't been loaded yet, Next.js's website could not prevent the default behaviour of anchor tag elements (`<a>`) to navigate to another page, resulting in every click on them triggering a full page reload.  
 <br>
-Since JS hasn't been loaded yet, Next.js's website could not prevent the default behaviour of anchor tag elements (`<a>`) to navigate to another page, resulting in every click on them triggering a full page reload.
-<br>
-And the slower the connection is - the more severe this issue becomes.
+And the slower the connection is - the more severe this issue becomes.  
 <br>
 In other words, where SSR should have had a performance edge over CSR, we see a very "dangerous" behavior that might significantly degrade the user experience.
 
@@ -1533,18 +1514,17 @@ It is impossible for this issue to occur in CSR apps, since the moment they rend
 
 We saw that client-side rendering performance is on par and sometimes even better than SSR in terms of initial loading times (and far surpasses it in navigation times).
 <br>
-We've also seen that Googlebot can perfectly index client-side rendered apps, and that we can easily set up a prerender server to serve all other bots and crawlers.
+We’ve also seen that Googlebot can perfectly index client-side rendered apps, and that we can easily set up a prerender server to serve all other bots and crawlers.
 <br>
-And above all - we have achieved all this mainly by modifiying 2 files (the Webpack/Rspack config and HTML template) and using a prerender service, so every existing CSR app should be able to quickly and easily implement these modifications and benefit from them.
+And most importantly, we have achieved all this just by adding a few files and using a prerender service, so every existing CSR app should be able to quickly and easily implement these changes and benefit from them.
 
-These facts lead to the conclusion that there is no particular reason to use SSR, it would only add a lot of complexity and limitations to our app and degrade the developer and user experience.
+These facts lead to the conclusion that there is no compelling reason to use SSR. Doing so would only add unnecessary complexity and limitations to our app, degrading both the developer and user experience, while also incurring higher server costs.
 
 ## What Might Change in the Future
 
-As time passes, [connection speed is getting faster](https://www.speedtest.net/global-index) and end-user devices get stronger. So the performance differences between all possible website rendering methods are guarenteed to be mitigated even further (except for SSR which depends on the API server response times).
+As time passes, [connection speeds are getting faster](https://www.speedtest.net/global-index) and end-user devices are becoming more powerful. As a result, the performance differences between various website rendering methods are guaranteed to diminish further (except for SSR, which still depends on API server response times).
 
-There is a new SSR method called _Streaming SSR_ (in React it is through "Server Components") and new frameworks (such as Qwik) which are able to stream responses to the browser without having to wait for the API server's response.
-<br>
-However, there are also newer and better CSR frameworks such as Svelte and Solid.js, which have a very small bundle size and are much faster than React (thus greatly improving the FCP on slow networks).
+A new SSR method called _Streaming SSR_ (in React, this is through "Server Components") and newer frameworks like Qwik are capable of streaming responses to the browser without waiting for the API server’s response.
+However, there are also newer and more efficient CSR frameworks like Svelte and Solid.js, which have much smaller bundle sizes and are significantly faster than React (greatly improving FCP on slow networks).
 
-Nevertheless, it's important to note that nothing will ever outperform neither the instant page transitions that client-side rendering is able to provide, nor the simple and flexible development flow it offers.
+Nevertheless, it's important to note that nothing will ever outperform the instant page transitions that client-side rendering provides, nor the simple and flexible development flow it offers.

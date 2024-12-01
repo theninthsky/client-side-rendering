@@ -90,16 +90,8 @@ export default (_, { mode }) => {
       }
     },
     plugins: [
-      ...(production
-        ? ['precache', 'swr'].map(
-            swType =>
-              new InjectManifest({
-                include: [/fonts\//, /scripts\/.+\.js$/],
-                swSrc: join(__dirname, 'public', `${swType}-service-worker.js`),
-                compileSrc: false
-              })
-          )
-        : [new ReactRefreshPlugin(), new ESLintPlugin({ extensions: ['js', 'ts', ' jsx', 'tsx'] })]),
+      new ReactRefreshPlugin(),
+      new ESLintPlugin({ extensions: ['js', 'ts', ' jsx', 'tsx'] }),
       new HtmlPlugin({ template: 'public/index.html', scriptLoading: 'module' }),
       new rspack.CopyRspackPlugin({
         patterns: [
@@ -109,6 +101,12 @@ export default (_, { mode }) => {
             info: { minimized: true }
           }
         ]
+      }),
+      new InjectManifest({
+        include: [/fonts\//, /scripts\/.+\.js$/],
+        swSrc: join(__dirname, 'public', 'service-worker.js'),
+        compileSrc: false,
+        maximumFileSizeToCacheInBytes: 10000000
       }),
       new InjectAssetsPlugin()
     ]

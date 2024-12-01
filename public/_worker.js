@@ -76,11 +76,9 @@ export default {
 
     const pathname = new URL(request.url).pathname.toLowerCase()
     const userAgent = (request.headers.get('User-Agent') || '').toLowerCase()
-    const nonDocument = pathname.includes('.')
-    const appInstalled = request.headers.get('X-Installed')
-    const googlebot = userAgent.includes('googlebot')
+    const bypassWorker = request.headers.get('X-Bypass') || userAgent.includes('googlebot') || pathname.includes('.')
 
-    if (nonDocument || appInstalled || googlebot) return env.ASSETS.fetch(request)
+    if (bypassWorker) return env.ASSETS.fetch(request)
     if (BOT_AGENTS.some(agent => userAgent.includes(agent))) return fetchPrerendered(request)
 
     const cachedScripts = request.headers.get('X-Cached')?.split(', ').filter(Boolean) || []

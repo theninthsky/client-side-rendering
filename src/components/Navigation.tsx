@@ -39,7 +39,7 @@ const Navigation = () => {
 
   const links = useMemo(
     () =>
-      pages
+      Object.values(pages)
         .filter(({ menuItem = true }) => menuItem)
         .map(({ path, title, data }) => (
           <NavigationLink

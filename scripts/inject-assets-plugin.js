@@ -1,28 +1,55 @@
 import { join } from 'node:path'
 import { readFileSync, writeFileSync } from 'node:fs'
 import { createHash } from 'node:crypto'
+import HtmlPlugin from 'html-webpack-plugin'
 
 import pagesManifest from '../src/pages.js'
 
 const __dirname = import.meta.dirname
 
+const getPages = rawAssets => {
+  const pages = Object.entries(pagesManifest).map(([chunk, { path, title, data, preconnect }]) => {
+    const scripts = rawAssets.map(({ name }) => name).filter(name => new RegExp(`[/.]${chunk}\\.(.+)\\.js$`).test(name))
+
+    return { path, scripts, title, data, preconnect }
+  })
+
+  return pages
+}
+
 class InjectAssetsPlugin {
   apply(compiler) {
+    const production = compiler.options.mode === 'production'
+
+    compiler.hooks.compilation.tap('InjectAssetsPlugin', compilation => {
+      HtmlPlugin.getCompilationHooks(compilation).beforeEmit.tapAsync('InjectAssetsPlugin', (data, callback) => {
+        const preloadAssets = readFileSync(join(__dirname, '..', 'scripts', 'preload-assets.js'), 'utf-8')
+
+        const rawAssets = compilation.getAssets()
+        const pages = getPages(rawAssets)
+        const stringifiedPages = JSON.stringify(pages, (_, value) => {
+          return typeof value === 'function' ? `func:${value.toString()}` : value
+        })
+
+        let { html } = data
+
+        html = html.replace(
+          '</title>',
+          () => `</title><script id="preload-data">const pages=${stringifiedPages}\n${preloadAssets}</script>`
+        )
+
+        callback(null, { ...data, html })
+      })
+    })
+
+    if (!production) return
+
     compiler.hooks.afterEmit.tapAsync('InjectAssetsPlugin', (compilation, callback) => {
-      const preloadAssets = readFileSync(join(__dirname, '..', 'scripts', 'preload-assets.js'), 'utf-8')
       let html = readFileSync(join(__dirname, '..', 'build', 'index.html'), 'utf-8')
       let worker = readFileSync(join(__dirname, '..', 'build', '_worker.js'), 'utf-8')
 
       const rawAssets = compilation.getAssets()
-
-      const pages = pagesManifest.map(({ chunk, path, title, data }) => {
-        const scripts = rawAssets
-          .map(({ name }) => name)
-          .filter(name => new RegExp(`[/.]${chunk}\\.(.+)\\.js$`).test(name))
-
-        return { path, scripts, title, data }
-      })
-
+      const pages = getPages(rawAssets)
       const assets = rawAssets
         .filter(({ name }) => /^scripts\/.+\.js$/.test(name))
         .map(({ name, source }) => ({
@@ -30,10 +57,6 @@ class InjectAssetsPlugin {
           source: source.source(),
           parentPaths: pages.filter(({ scripts }) => scripts.includes(name)).map(({ path }) => path)
         }))
-
-      const stringifiedPages = JSON.stringify(pages, (_, value) => {
-        return typeof value === 'function' ? `func:${value.toString()}` : value
-      })
 
       const initialModuleScriptsString = html.match(/<script\s+type="module"[^>]*>([\s\S]*?)(?=<\/head>)/)[0]
       const initialModuleScripts = initialModuleScriptsString.split('</script>')
@@ -43,13 +66,6 @@ class InjectAssetsPlugin {
         .sort((a, b) => a.order - b.order)
       const asyncScripts = assets.filter(asset => !initialScripts.includes(asset))
       const htmlChecksum = createHash('sha256').update(html).digest('hex')
-
-      html = html.replace(
-        '</title>',
-        () => `</title><script id="preload-data">const pages=${stringifiedPages}\n${preloadAssets}</script>`
-      )
-
-      writeFileSync(join(__dirname, '..', 'build', 'index.html'), html)
 
       html = html
         .replace(/,"scripts":\s*\[(.*?)\]/g, () => '')

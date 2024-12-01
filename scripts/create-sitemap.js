@@ -12,7 +12,9 @@ const dynamicMaps = {
   '/pokemon/:': pokemon
 }
 
-const staticPaths = pages.filter(({ path }) => !path.includes(':')).map(({ path }) => path)
+const staticPaths = Object.values(pages)
+  .filter(({ path }) => !path.includes(':'))
+  .map(({ path }) => path)
 const dynamicPaths = Object.keys(dynamicMaps).reduce(
   (acc, path) => [...acc, ...dynamicMaps[path].map(value => path.replace(':', value))],
   []

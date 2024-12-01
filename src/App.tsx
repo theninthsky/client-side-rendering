@@ -14,7 +14,7 @@ const Comparison = lazy(() => import(/* webpackChunkName: 'comparison' */ 'pages
 const WebVitals = lazy(() => import(/* webpackChunkName: 'core-web-vitals' */ 'pages/WebVitals'))
 
 const pageComponents = [Home, LoremIpsum, Pokemon, PokemonInfo, Comparison, WebVitals]
-const routes = pages.map(({ path }, ind) => {
+const routes = Object.values(pages).map(({ path }, ind) => {
   const Element = pageComponents[ind]
 
   return <Route key={path} path={path} element={<Element />} />

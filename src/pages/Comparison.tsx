@@ -16,7 +16,7 @@ import $ from 'jquery'
 import moment from 'moment'
 $(`#${_.isDate(moment().toDate())}`)
 
-const { title, description } = pages.find(({ chunk }) => chunk === 'comparison')!
+const { title, description } = pages.comparison
 
 const listData = {
   csr: {
@@ -51,18 +51,6 @@ const listData = {
               Pokémon
             </a>{' '}
             page, where a chosen Pokémon immediately shows up with its name and index once selected.
-          </p>
-        )
-      },
-      {
-        value: 'Unmatched performance with SWR',
-        description: (
-          <p>
-            When using{' '}
-            <a href="https://github.com/theninthsky/client-side-rendering#the-swr-approach" target="_blank">
-              SWR
-            </a>{' '}
-            for the app shell, the app always loads instantly
           </p>
         )
       },

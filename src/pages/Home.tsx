@@ -7,7 +7,7 @@ import pages from 'pages'
 import Title from 'components/common/Title'
 import Info from 'components/common/Info'
 
-const { title, description } = pages.find(({ chunk }) => chunk === 'home')!
+const { title, description } = pages.home
 
 const autocompleteOptions = [{ label: 'Option 1' }, { label: 'Option 2' }, { label: 'Option 3' }]
 
