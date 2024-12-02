@@ -456,7 +456,30 @@ HtmlPlugin.getCompilationHooks(compilation).beforeEmit.tapAsync('InjectAssetsPlu
 _[scripts/preload-assets.js](scripts/preload-assets.js)_
 
 ```diff
- const getDynamicProperties = (pathname, path) => {
+const preloadResponses = {}
+
+const originalFetch = window.fetch
+
+window.fetch = async (input, options) => {
+  const requestID = `${input.toString()}${options?.body?.toString() || ''}`
+  const preloadResponse = preloadResponses[requestID]
+
+  if (preloadResponse) {
+    if (!options?.preload) delete preloadResponses[requestID]
+
+    return preloadResponse
+  }
+
+  const response = originalFetch(input, options)
+
+  if (options?.preload) preloadResponses[requestID] = response
+
+  return response
+}
+.
+.
+.
+const getDynamicProperties = (pathname, path) => {
   const pathParts = path.split('/')
   const pathnameParts = pathname.split('/')
   const dynamicProperties = {}
@@ -466,7 +489,7 @@ _[scripts/preload-assets.js](scripts/preload-assets.js)_
   }
 
   return dynamicProperties
- }
+}
 
 const preloadAssets = () => {
 -   const { path, title, scripts } = matchingPages.find(({ exact }) => exact) || matchingPages[0]
@@ -486,6 +509,8 @@ const preloadAssets = () => {
     document.head.appendChild(Object.assign(document.createElement('link'), { rel: 'preconnect', href: url }))
   })
 }
+
+preloadAssets()
 ```
 
 Reminder: the `pages.js` file can be found [here](src/pages.js).
