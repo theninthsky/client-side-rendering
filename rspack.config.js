@@ -90,8 +90,8 @@ export default (_, { mode }) => {
       }
     },
     plugins: [
-      new ReactRefreshPlugin(),
-      new ESLintPlugin({ extensions: ['js', 'ts', ' jsx', 'tsx'] }),
+      ...(!production ? [new ReactRefreshPlugin()] : []),
+      new ESLintPlugin(),
       new HtmlPlugin({ template: 'public/index.html', scriptLoading: 'module' }),
       new rspack.CopyRspackPlugin({
         patterns: [
