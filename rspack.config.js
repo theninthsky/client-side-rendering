@@ -91,7 +91,7 @@ export default (_, { mode }) => {
     },
     plugins: [
       ...(!production ? [new ReactRefreshPlugin()] : []),
-      new ESLintPlugin(),
+      new ESLintPlugin({ extensions: ['js', 'ts', ' jsx', 'tsx'] }),
       new HtmlPlugin({ template: 'public/index.html', scriptLoading: 'module' }),
       new rspack.CopyRspackPlugin({
         patterns: [
