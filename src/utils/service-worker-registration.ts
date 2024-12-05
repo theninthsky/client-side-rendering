@@ -22,11 +22,13 @@ const register = () => {
   })
 
   navigator.serviceWorker?.addEventListener('message', event => {
-    const { status } = event.data
+    const { action } = event.data
 
-    if (status === 200) window.location.reload()
-    if (status === 304) document.body.removeAttribute('style')
+    if (action === 'reload') return window.location.reload()
+    if (action === 'make-visible') document.body.removeAttribute('style')
   })
+
+  if (!navigator.onLine) document.body.removeAttribute('style')
 }
 
 const unregister = async () => {

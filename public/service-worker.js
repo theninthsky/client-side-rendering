@@ -66,37 +66,32 @@ const fetchDocument = async url => {
   const etag = cachedDocument?.headers.get('ETag')
   const headers = { 'X-Cached': cachedAssets.join(', '), 'X-Content-Hash': contentHash, 'If-None-Match': etag }
 
-  const freshDocument = fetch(url, { headers }).then(async response => {
+  const latestDocument = fetch(url, { headers }).then(async response => {
     const { status } = response
 
     if (status === 200) await cache.put('/', response.clone())
 
-    const [client] = (await self.clients.matchAll()) || []
+    const [client] = await self.clients.matchAll()
 
-    client?.postMessage({ status })
+    client?.postMessage({ action: status === 200 ? 'reload' : 'make-visible' })
 
     return response
   })
 
-  if (cachedDocument) {
-    let body = await cachedDocument.text()
+  if (!cachedDocument) return latestDocument
 
-    body = body.replace('<body>', '<body style="visibility: hidden; overflow: hidden">')
+  let body = await cachedDocument.text()
 
-    return new Response(body, {
-      status: 200,
-      statusText: 'OK',
-      headers: cachedDocument.headers
-    })
-  }
+  body = body.replace('<body>', '<body style="visibility: hidden; overflow: hidden">')
 
-  return freshDocument
+  return new Response(body, {
+    status: 200,
+    statusText: 'OK',
+    headers: cachedDocument.headers
+  })
 }
 
-self.addEventListener('install', event => {
-  event.waitUntil(cacheAssetsPromise)
-  self.skipWaiting()
-})
+self.addEventListener('install', event => event.waitUntil(cacheAssetsPromise))
 
 self.addEventListener('activate', event => event.waitUntil(clients.claim()))
 
