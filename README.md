@@ -456,7 +456,30 @@ HtmlPlugin.getCompilationHooks(compilation).beforeEmit.tapAsync('InjectAssetsPlu
 _[scripts/preload-assets.js](scripts/preload-assets.js)_
 
 ```diff
- const getDynamicProperties = (pathname, path) => {
+const preloadResponses = {}
+
+const originalFetch = window.fetch
+
+window.fetch = async (input, options) => {
+  const requestID = `${input.toString()}${options?.body?.toString() || ''}`
+  const preloadResponse = preloadResponses[requestID]
+
+  if (preloadResponse) {
+    if (!options?.preload) delete preloadResponses[requestID]
+
+    return preloadResponse
+  }
+
+  const response = originalFetch(input, options)
+
+  if (options?.preload) preloadResponses[requestID] = response
+
+  return response
+}
+.
+.
+.
+const getDynamicProperties = (pathname, path) => {
   const pathParts = path.split('/')
   const pathnameParts = pathname.split('/')
   const dynamicProperties = {}
@@ -466,7 +489,7 @@ _[scripts/preload-assets.js](scripts/preload-assets.js)_
   }
 
   return dynamicProperties
- }
+}
 
 const preloadAssets = () => {
 -   const { path, title, scripts } = matchingPages.find(({ exact }) => exact) || matchingPages[0]
@@ -486,6 +509,8 @@ const preloadAssets = () => {
     document.head.appendChild(Object.assign(document.createElement('link'), { rel: 'preconnect', href: url }))
   })
 }
+
+preloadAssets()
 ```
 
 Reminder: the `pages.js` file can be found [here](src/pages.js).
@@ -1319,10 +1344,10 @@ Prerendering is the act of crawling web apps in production (using headless Chrom
 
 We have two options when it comes to prerendering:
 
-1. We can deploy our own prerender server using _[Prerender](https://github.com/prerender/prerender)_ (or my own _[Renderprime](https://github.com/theninthsky/renderprime)_ serverless function).
+1. We can deploy our own prerender server using _[Prerender](https://github.com/prerender/prerender)_ (or my own _[Renderless](https://github.com/frontend-infra/renderless.git)_).
 2. We can use a dedicated service such as _[Prerender.io](https://prerender.io)_ which is very expensive but offers 1000 free prerenders a month.
 
-**Serverless prerendering is the recommended approach**, since it can be very cheap (and sometimes even free on _[GCP](https://cloud.google.com)_).
+**Serverless prerendering is the recommended approach** since it can be very cheap, especially on _[GCP](https://cloud.google.com)_.
 
 Then we redirect web crawlers (identified by their `User-Agent` header string) to our prerenderer, using a Cloudflare Worker (for example):
 

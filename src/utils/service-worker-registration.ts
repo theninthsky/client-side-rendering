@@ -20,6 +20,13 @@ const register = () => {
       console.error(err)
     }
   })
+
+  navigator.serviceWorker?.addEventListener('message', event => {
+    const { status } = event.data
+
+    if (status === 200) window.location.reload()
+    if (status === 304) document.body.removeAttribute('style')
+  })
 }
 
 const unregister = async () => {
