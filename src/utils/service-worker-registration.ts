@@ -20,6 +20,15 @@ const register = () => {
       console.error(err)
     }
   })
+
+  navigator.serviceWorker?.addEventListener('message', event => {
+    const { status } = event.data
+
+    console.log(status === 304 ? 'Showing body' : 'Reloading...')
+
+    if (status === 200) window.location.reload()
+    if (status === 304) document.getElementById('root')!.removeAttribute('style')
+  })
 }
 
 const unregister = async () => {

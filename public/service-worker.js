@@ -49,41 +49,56 @@ const removeUnusedAssets = async () => {
   })
 }
 
+const handleFetch = async request => {
+  if (request.destination === 'document') return fetchDocument(request.url)
+
+  const cache = await getCache()
+  const cachedResponse = await cache.match(request)
+
+  return cachedResponse || fetch(request)
+}
+
 const fetchDocument = async url => {
   const cache = await getCache()
   const cachedAssets = await getCachedAssets(cache)
   const cachedDocument = await cache.match('/')
   const contentHash = cachedDocument?.headers.get('X-Content-Hash')
+  const etag = cachedDocument?.headers.get('ETag')
+  const headers = { 'X-Cached': cachedAssets.join(', '), 'X-Content-Hash': contentHash, 'If-None-Match': etag }
 
-  try {
-    const response = await fetch(url, {
-      headers: { 'X-Cached': cachedAssets.join(', '), 'X-Content-Hash': contentHash }
-    })
+  const freshDocument = fetch(url, { headers }).then(async response => {
+    const { status } = response
 
-    if (response.status === 304) return cachedDocument
+    if (status === 200) await cache.put('/', response.clone())
 
-    cache.put('/', response.clone())
+    const [client] = (await self.clients.matchAll()) || []
+
+    client?.postMessage({ status })
 
     return response
-  } catch (err) {
-    return cachedDocument
+  })
+
+  if (cachedDocument) {
+    let body = await cachedDocument.text()
+
+    body = body.replace('<div id="root"></div>', '<div id="root" style="visibility: hidden; overflow: hidden"></div>')
+
+    return new Response(body, {
+      status: 200,
+      statusText: 'OK',
+      headers: cachedDocument.headers
+    })
   }
-}
 
-const handleFetch = async request => {
-  const cache = await getCache()
-
-  if (request.destination === 'document') return fetchDocument(request.url)
-
-  const cachedResponse = await cache.match(request)
-
-  return cachedResponse || fetch(request)
+  return freshDocument
 }
 
 self.addEventListener('install', event => {
   event.waitUntil(cacheAssetsPromise)
   self.skipWaiting()
 })
+
+self.addEventListener('activate', event => event.waitUntil(clients.claim()))
 
 self.addEventListener('message', async event => {
   const { type, inlineAssets } = event.data
