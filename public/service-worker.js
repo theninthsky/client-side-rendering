@@ -81,7 +81,7 @@ const fetchDocument = async url => {
   if (cachedDocument) {
     let body = await cachedDocument.text()
 
-    body = body.replace('<div id="root"></div>', '<div id="root" style="visibility: hidden; overflow: hidden"></div>')
+    body = body.replace('<body style="visibility: hidden; overflow: hidden">')
 
     return new Response(body, {
       status: 200,

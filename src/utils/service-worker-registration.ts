@@ -24,10 +24,8 @@ const register = () => {
   navigator.serviceWorker?.addEventListener('message', event => {
     const { status } = event.data
 
-    console.log(status === 304 ? 'Showing body' : 'Reloading...')
-
     if (status === 200) window.location.reload()
-    if (status === 304) document.getElementById('root')!.removeAttribute('style')
+    if (status === 304) document.body.removeAttribute('style')
   })
 }
 
