@@ -48,7 +48,7 @@ const WebVitals: FC<{}> = () => {
     <div>
       <Meta title={`${title} | Client-side Rendering`} description={description} />
 
-      <Title>{title}</Title>
+      <Title>{title} Test</Title>
 
       <Info className={style.info}>{description}</Info>
 
