@@ -12,7 +12,7 @@ const register = () => {
       console.log('Service worker registered!')
 
       registration.addEventListener('updatefound', () => {
-        registration.installing?.postMessage({ type: 'cache-assets', inlineAssets: extractInlineScripts() })
+        registration.installing?.postMessage({ inlineAssets: extractInlineScripts() })
       })
 
       setInterval(() => registration.update(), ACTIVE_REVALIDATION_INTERVAL * 1000)
