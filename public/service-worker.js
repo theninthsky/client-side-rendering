@@ -62,23 +62,32 @@ const fetchDocument = async url => {
   const cache = await getCache()
   const cachedAssets = await getCachedAssets(cache)
   const cachedDocument = await cache.match('/')
+  const updatedDocument = await cache.match('/updated')
   const contentHash = cachedDocument?.headers.get('X-Content-Hash')
   const etag = cachedDocument?.headers.get('ETag')
   const headers = { 'X-Cached': cachedAssets.join(', '), 'X-Content-Hash': contentHash, 'If-None-Match': etag }
 
-  const latestDocument = fetch(url, { headers }).then(async response => {
+  if (updatedDocument) {
+    const clonedUpdatedDocument = updatedDocument.clone()
+
+    await cache.delete('/updated')
+
+    return clonedUpdatedDocument
+  }
+
+  const currentDocument = fetch(url, { headers }).then(async response => {
     const { status } = response
 
-    if (status === 200) await cache.put('/', response.clone())
+    if (status === 200) await cache.put(cachedDocument ? '/updated' : '/', response.clone())
 
     const [client] = await self.clients.matchAll()
 
-    client?.postMessage({ action: status === 200 ? 'reload' : 'make-visible' })
+    client?.postMessage({ action: status === 200 && cachedDocument ? 'reload' : 'make-visible' })
 
     return response
   })
 
-  if (!cachedDocument) return latestDocument
+  if (!cachedDocument) return currentDocument
 
   let body = await cachedDocument.text()
 
@@ -96,9 +105,7 @@ self.addEventListener('install', event => event.waitUntil(cacheAssetsPromise))
 self.addEventListener('activate', event => event.waitUntil(clients.claim()))
 
 self.addEventListener('message', async event => {
-  const { type, inlineAssets } = event.data
-
-  if (type !== 'cache-assets') return
+  const { inlineAssets } = event.data
 
   await cacheInlineAssets(inlineAssets)
   await precacheAssets({ ignoreAssets: inlineAssets.map(({ url }) => url) })
