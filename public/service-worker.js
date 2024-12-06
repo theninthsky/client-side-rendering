@@ -2,8 +2,10 @@ const CACHE_NAME = 'my-csr-app'
 
 const allAssets = self.__WB_MANIFEST.map(({ url }) => url)
 
-let cacheAssetsPromiseResolve
-const cacheAssetsPromise = new Promise(resolve => (cacheAssetsPromiseResolve = resolve))
+let assetsCacheResolve
+let releaseDataResolve
+const assetsCachePromise = new Promise(resolve => (assetsCacheResolve = resolve))
+const releaseDataPromise = new Promise(resolve => (releaseDataResolve = resolve))
 
 const getCache = () => caches.open(CACHE_NAME)
 
@@ -77,12 +79,26 @@ const fetchDocument = async url => {
 
   const currentDocument = fetch(url, { headers }).then(async response => {
     const { status } = response
-
-    if (status === 200) await cache.put(cachedDocument ? '/updated' : '/', response.clone())
-
     const [client] = await self.clients.matchAll()
 
-    client?.postMessage({ action: status === 200 && cachedDocument ? 'reload' : 'make-visible' })
+    if (!client) {
+      console.error(
+        'The active service worker has no controlled client, possibly due to the document returning too soon.'
+      )
+    }
+
+    if (status === 200) {
+      if (cachedDocument) {
+        await cache.put('/updated', response.clone())
+
+        client?.postMessage({ action: 'reload' })
+      }
+
+      await cache.put('/', response.clone())
+    } else if (status === 304) {
+      client?.postMessage({ action: 'make-visible' })
+      releaseDataResolve()
+    }
 
     return response
   })
@@ -91,7 +107,7 @@ const fetchDocument = async url => {
 
   let body = await cachedDocument.text()
 
-  body = body.replace('<body>', '<body style="visibility: hidden; overflow: hidden">')
+  body = body.replace('<body>', '<body style="visibility: hidden; overflow: hidden;">')
 
   return new Response(body, {
     status: 200,
@@ -100,9 +116,18 @@ const fetchDocument = async url => {
   })
 }
 
-self.addEventListener('install', event => event.waitUntil(cacheAssetsPromise))
+const holdData = async request => {
+  await releaseDataPromise
 
-self.addEventListener('activate', event => event.waitUntil(clients.claim()))
+  return fetch(request)
+}
+
+self.addEventListener('install', event => event.waitUntil(assetsCachePromise))
+
+self.addEventListener('activate', event => {
+  event.waitUntil(clients.claim())
+  self.skipWaiting()
+})
 
 self.addEventListener('message', async event => {
   const { inlineAssets } = event.data
@@ -110,11 +135,13 @@ self.addEventListener('message', async event => {
   await cacheInlineAssets(inlineAssets)
   await precacheAssets({ ignoreAssets: inlineAssets.map(({ url }) => url) })
 
-  cacheAssetsPromiseResolve()
+  assetsCacheResolve()
 })
 
 self.addEventListener('fetch', async event => {
   if (['document', 'font', 'script'].includes(event.request.destination)) {
     event.respondWith(handleFetch(event.request))
+  } else if (event.request.destination === '') {
+    event.respondWith(holdData(event.request))
   }
 })
