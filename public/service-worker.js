@@ -74,6 +74,8 @@ const fetchDocument = async url => {
 
     await cache.delete('/updated')
 
+    releaseDataResolve()
+
     return clonedUpdatedDocument
   }
 
