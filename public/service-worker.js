@@ -81,7 +81,7 @@ const fetchDocument = async url => {
     const { status } = response
     const [client] = await self.clients.matchAll()
 
-    if (!client) {
+    if (cachedDocument && !client) {
       console.error(
         'The active service worker has no controlled client, possibly due to the document returning too soon.'
       )
