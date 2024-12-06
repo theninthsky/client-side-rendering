@@ -872,8 +872,8 @@ const CACHE_NAME = 'my-csr-app'
 
 const allAssets = self.__WB_MANIFEST.map(({ url }) => url)
 
-let cacheAssetsPromiseResolve
-const cacheAssetsPromise = new Promise(resolve => (cacheAssetsPromiseResolve = resolve))
+let assetsCacheResolve
+const assetsCachePromise = new Promise(resolve => (assetsCacheResolve = resolve))
 
 const getCache = () => caches.open(CACHE_NAME)
 
@@ -946,7 +946,7 @@ const handleFetch = async request => {
 }
 
 self.addEventListener('install', event => {
-  event.waitUntil(cacheAssetsPromise)
+  event.waitUntil(assetsCachePromise)
   self.skipWaiting()
 })
 
@@ -958,7 +958,7 @@ self.addEventListener('message', async event => {
   await cacheInlineAssets(inlineAssets)
   await precacheAssets({ ignoreAssets: inlineAssets.map(({ url }) => url) })
 
-  cacheAssetsPromiseResolve()
+  assetsCacheResolve()
 })
 
 self.addEventListener('fetch', async event => {
