@@ -47,7 +47,7 @@ const PokemonInfo: FC<{}> = () => {
         description={flavorText}
       />
 
-      <Title back>Pokémon Info</Title>
+      <Title back>Pokémon Info Test</Title>
 
       <Info className={style.info}>{description}</Info>
 
