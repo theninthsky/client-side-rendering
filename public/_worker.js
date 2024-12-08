@@ -76,7 +76,8 @@ export default {
 
     const pathname = new URL(request.url).pathname.toLowerCase()
     const userAgent = (request.headers.get('User-Agent') || '').toLowerCase()
-    const bypassWorker = request.headers.get('X-Bypass') || userAgent.includes('googlebot') || pathname.includes('.')
+    const bypassWorker =
+      !!request.headers.get('X-Prerender') || userAgent.includes('googlebot') || pathname.includes('.')
 
     if (bypassWorker) return env.ASSETS.fetch(request)
     if (BOT_AGENTS.some(agent => userAgent.includes(agent))) return fetchPrerendered(request)

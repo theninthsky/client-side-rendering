@@ -44,6 +44,8 @@ const unregister = async () => {
 }
 
 if ('serviceWorker' in navigator) {
-  if (process.env.NODE_ENV !== 'development') register()
+  const shouldRegister = process.env.NODE_ENV !== 'development' && navigator.userAgent !== 'Prerender'
+
+  if (shouldRegister) register()
   else unregister()
 }
