@@ -70,11 +70,11 @@ const fetchDocument = async url => {
   const headers = { 'X-Cached': cachedAssets.join(', '), 'X-Content-Hash': contentHash, 'If-None-Match': etag }
 
   if (updatedDocument) {
+    releaseDataResolve()
+
     const clonedUpdatedDocument = updatedDocument.clone()
 
-    await cache.delete('/updated')
-
-    releaseDataResolve()
+    cache.delete('/updated')
 
     return clonedUpdatedDocument
   }
@@ -98,8 +98,8 @@ const fetchDocument = async url => {
 
       await cache.put('/', response.clone())
     } else if (status === 304) {
-      client?.postMessage({ action: 'make-visible' })
       releaseDataResolve()
+      client?.postMessage({ action: 'make-visible' })
     }
 
     return response
@@ -141,9 +141,6 @@ self.addEventListener('message', async event => {
 })
 
 self.addEventListener('fetch', async event => {
-  if (['document', 'font', 'script'].includes(event.request.destination)) {
-    event.respondWith(handleFetch(event.request))
-  } else if (event.request.destination === '') {
-    event.respondWith(holdData(event.request))
-  }
+  if (['document', 'font', 'script'].includes(event.request.destination)) event.respondWith(handleFetch(event.request))
+  else if (event.request.destination === '') event.respondWith(holdData(event.request))
 })
