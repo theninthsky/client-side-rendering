@@ -12,7 +12,7 @@ const register = () => {
       console.log('Service worker registered!')
 
       registration.addEventListener('updatefound', () => {
-        registration.installing?.postMessage({ type: 'cache-assets', inlineAssets: extractInlineScripts() })
+        registration.installing?.postMessage({ inlineAssets: extractInlineScripts() })
       })
 
       setInterval(() => registration.update(), ACTIVE_REVALIDATION_INTERVAL * 1000)
@@ -20,6 +20,15 @@ const register = () => {
       console.error(err)
     }
   })
+
+  navigator.serviceWorker?.addEventListener('message', event => {
+    const { action } = event.data
+
+    if (action === 'reload') return window.location.reload()
+    if (action === 'make-visible') document.body.removeAttribute('style')
+  })
+
+  if (!navigator.onLine) document.body.removeAttribute('style')
 }
 
 const unregister = async () => {
@@ -35,6 +44,8 @@ const unregister = async () => {
 }
 
 if ('serviceWorker' in navigator) {
-  if (process.env.NODE_ENV !== 'development') register()
+  const shouldRegister = process.env.NODE_ENV !== 'development' && navigator.userAgent !== 'Prerender'
+
+  if (shouldRegister) register()
   else unregister()
 }

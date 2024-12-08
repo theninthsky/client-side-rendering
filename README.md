@@ -18,6 +18,7 @@ An in-depth comparison of all rendering methods can be found on this project's _
   - [Precaching](#precaching)
   - [Adaptive Source Inlining](#adaptive-source-inlining)
   - [Leveraging the 304 Status Code](#leveraging-the-304-status-code)
+  - [Instant Rendering](#instant-rendering)
   - [Tweaking Further](#tweaking-further)
     - [Transitioning Async Pages](#transitioning-async-pages)
     - [Preloading Other Pages Data](#preloading-other-pages-data)
@@ -581,8 +582,10 @@ const unregister = async () => {
 }
 
 if ('serviceWorker' in navigator) {
-  if (process.env.NODE_ENV === 'development') unregister()
-  else register()
+  const shouldRegister = process.env.NODE_ENV !== 'development'
+
+  if (shouldRegister) register()
+  else unregister()
 }
 ```
 
@@ -781,7 +784,8 @@ export default {
   fetch(request, env) {
     const pathname = new URL(request.url).pathname.toLowerCase()
     const userAgent = (request.headers.get('User-Agent') || '').toLowerCase()
-    const bypassWorker = request.headers.get('X-Bypass') || userAgent.includes('googlebot') || pathname.includes('.')
+    const bypassWorker =
+      !!request.headers.get('X-Prerender') || userAgent.includes('googlebot') || pathname.includes('.')
 
     if (bypassWorker) return env.ASSETS.fetch(request)
 
@@ -872,8 +876,8 @@ const CACHE_NAME = 'my-csr-app'
 
 const allAssets = self.__WB_MANIFEST.map(({ url }) => url)
 
-let cacheAssetsPromiseResolve
-const cacheAssetsPromise = new Promise(resolve => (cacheAssetsPromiseResolve = resolve))
+let assetsCacheResolve
+const assetsCachePromise = new Promise(resolve => (assetsCacheResolve = resolve))
 
 const getCache = () => caches.open(CACHE_NAME)
 
@@ -946,7 +950,7 @@ const handleFetch = async request => {
 }
 
 self.addEventListener('install', event => {
-  event.waitUntil(cacheAssetsPromise)
+  event.waitUntil(assetsCachePromise)
   self.skipWaiting()
 })
 
@@ -958,13 +962,11 @@ self.addEventListener('message', async event => {
   await cacheInlineAssets(inlineAssets)
   await precacheAssets({ ignoreAssets: inlineAssets.map(({ url }) => url) })
 
-  cacheAssetsPromiseResolve()
+  assetsCacheResolve()
 })
 
 self.addEventListener('fetch', async event => {
-  if (['document', 'font', 'script'].includes(event.request.destination)) {
-    event.respondWith(handleFetch(event.request))
-  }
+  if (['document', 'font', 'script'].includes(event.request.destination)) event.respondWith(handleFetch(event.request))
 })
 ```
 
@@ -1083,11 +1085,10 @@ const fetchDocument = async url => {
   const cachedAssets = await getCachedAssets(cache)
   const cachedDocument = await cache.match('/')
   const contentHash = cachedDocument?.headers.get('X-Content-Hash')
+  const headers = { 'X-Cached': cachedAssets.join(', '), 'X-Content-Hash': contentHash }
 
   try {
-    const response = await fetch(url, {
-      headers: { 'X-Cached': cachedAssets.join(', '), 'X-Content-Hash': contentHash }
-    })
+    const response = await fetch(url, { headers })
 
     if (response.status === 304) return cachedDocument
 
@@ -1112,6 +1113,127 @@ const handleFetch = async request => {
 ```
 
 Now our serverless worker will always respond with a `304 Not Modified` status code whenever there are no changes, even for unvisited pages.
+
+## Instant Rendering
+
+A significant amount of time is wasted when the browser initially requests the HTML document, as the browser essentially does nothing during this waiting period:
+
+![Document Wait Duration](images/document-wait-duration.png)
+
+While there's little we can do to speed up the wait time until the HTML document is returned for cache-miss page loads, we can drastically reduce the wait time for subsequent fully cached loads.
+
+The solution involves caching the HTML document in the service worker and **immediately serving it upon reload**, with the body set to `visibility: hidden`.
+<br>
+At the same time, we **simultaneously send a request to the CDN** to verify if the document currently rendered by the browser is the most up-to-date version.
+
+If the document is current, the CDN will respond with a `304 Not Modified` status, allowing us to remove `visibility: hidden` and display the content.
+<br>
+However, if the CDN responds with a `200 OK`, we cache the new version of the document under a different path (like `/updated`) and trigger a page reload.
+
+Upon reload, if the is a cache entry under `/updated`, we serve it immediately and delete it, ensuring a fast and smooth process.
+
+Additionally, we delay any fetch requests until the CDN has returned the `304 Not Modified` response.
+
+_[service-worker-registration.ts](src/utils/service-worker-registration.ts)_
+
+```js
+const register = () => {
+  .
+  .
+  .
+  navigator.serviceWorker?.addEventListener('message', event => {
+    const { action } = event.data
+
+    if (action === 'reload') return window.location.reload()
+    if (action === 'make-visible') document.body.removeAttribute('style')
+  })
+
+  if (!navigator.onLine) document.body.removeAttribute('style')
+}
+
+```
+
+_[public/service-worker.js](public/service-worker.js)_
+
+```js
+let releaseDataResolve
+const releaseDataPromise = new Promise(resolve => (releaseDataResolve = resolve))
+.
+.
+.
+const fetchDocument = async url => {
+  const cache = await getCache()
+  const cachedAssets = await getCachedAssets(cache)
+  const cachedDocument = await cache.match('/')
+  const updatedDocument = await cache.match('/updated')
+  const contentHash = cachedDocument?.headers.get('X-Content-Hash')
+  const etag = cachedDocument?.headers.get('ETag')
+  const headers = { 'X-Cached': cachedAssets.join(', '), 'X-Content-Hash': contentHash, 'If-None-Match': etag }
+
+  if (updatedDocument) {
+    releaseDataResolve()
+
+    const clonedUpdatedDocument = updatedDocument.clone()
+
+    cache.delete('/updated')
+
+    return clonedUpdatedDocument
+  }
+
+  const currentDocument = fetch(url, { headers }).then(async response => {
+    const { status } = response
+    const [client] = await self.clients.matchAll()
+
+    if (cachedDocument && !client) {
+      console.error(
+        'The active service worker has no controlled client, possibly due to the document returning too soon.'
+      )
+    }
+
+    if (status === 200) {
+      if (cachedDocument) {
+        await cache.put('/updated', response.clone())
+
+        client?.postMessage({ action: 'reload' })
+      }
+
+      await cache.put('/', response.clone())
+    } else if (status === 304) {
+      releaseDataResolve()
+      client?.postMessage({ action: 'make-visible' })
+    }
+
+    return response
+  })
+
+  if (!cachedDocument) return currentDocument
+
+  let body = await cachedDocument.text()
+
+  body = body.replace('<body>', '<body style="visibility: hidden; overflow: hidden;">')
+
+  return new Response(body, {
+    status: 200,
+    statusText: 'OK',
+    headers: cachedDocument.headers
+  })
+}
+
+const holdData = async request => {
+  await releaseDataPromise
+
+  return fetch(request)
+}
+.
+.
+.
+self.addEventListener('fetch', async event => {
+  if (['document', 'font', 'script'].includes(event.request.destination)) event.respondWith(handleFetch(event.request))
+  else if (event.request.destination === '') event.respondWith(holdData(event.request))
+})
+```
+
+Now, the app will render instantly when there are no updates.
 
 ## Tweaking Further
 
