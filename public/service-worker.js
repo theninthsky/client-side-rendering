@@ -2,10 +2,15 @@ const CACHE_NAME = 'my-csr-app'
 
 const allAssets = self.__WB_MANIFEST.map(({ url }) => url)
 
-let precacheAssetsResolve
-let releaseDataResolve
-const precacheAssetsPromise = new Promise(resolve => (precacheAssetsResolve = resolve))
-const releaseDataPromise = new Promise(resolve => (releaseDataResolve = resolve))
+const createPromiseResolve = () => {
+  let resolve
+  const promise = new Promise(res => (resolve = res))
+
+  return [promise, resolve]
+}
+
+const [precacheAssetsPromise, precacheAssetsResolve] = createPromiseResolve()
+const [releaseRequestsPromise, releaseRequestsResolve] = createPromiseResolve()
 
 const getCache = () => caches.open(CACHE_NAME)
 
@@ -51,16 +56,7 @@ const removeUnusedAssets = async () => {
   })
 }
 
-const handleFetch = async request => {
-  if (request.destination === 'document') return fetchDocument(request.url)
-
-  const cache = await getCache()
-  const cachedResponse = await cache.match(request)
-
-  return cachedResponse || fetch(request)
-}
-
-const fetchDocument = async (url, { skipActions } = {}) => {
+const fetchDocument = async (url, { skipActions = false } = {}) => {
   const cache = await getCache()
   const cachedAssets = await getCachedAssets(cache)
   const cachedDocument = await cache.match('/')
@@ -70,7 +66,7 @@ const fetchDocument = async (url, { skipActions } = {}) => {
   const headers = { 'X-Cached': cachedAssets.join(', '), 'X-Content-Hash': contentHash, 'If-None-Match': etag }
 
   if (updatedDocument) {
-    releaseDataResolve()
+    releaseRequestsResolve()
 
     const clonedUpdatedDocument = updatedDocument.clone()
 
@@ -88,13 +84,15 @@ const fetchDocument = async (url, { skipActions } = {}) => {
         await cache.put('/updated', response.clone())
 
         client?.postMessage({ action: 'reload' })
+
+        return response
       }
 
       await cache.put('/', response.clone())
-    } else if (status === 304) {
-      releaseDataResolve()
-      client?.postMessage({ action: 'make-visible' })
     }
+
+    releaseRequestsResolve()
+    client?.postMessage({ action: 'make-visible' })
 
     return response
   })
@@ -112,8 +110,15 @@ const fetchDocument = async (url, { skipActions } = {}) => {
   })
 }
 
-const holdData = async request => {
-  await releaseDataPromise
+const fetchAsset = async request => {
+  const cache = await getCache()
+  const cachedResponse = await cache.match(request)
+
+  return cachedResponse || fetch(request)
+}
+
+const holdRequest = async request => {
+  await releaseRequestsPromise
 
   return fetch(request)
 }
@@ -136,7 +141,7 @@ const getControlledClient = async () => {
 }
 
 self.addEventListener('install', event => {
-  releaseDataResolve()
+  releaseRequestsResolve()
   event.waitUntil(precacheAssetsPromise)
   self.skipWaiting()
 })
@@ -153,6 +158,9 @@ self.addEventListener('message', async event => {
 })
 
 self.addEventListener('fetch', async event => {
-  if (['document', 'font', 'script'].includes(event.request.destination)) event.respondWith(handleFetch(event.request))
-  else if (event.request.destination === '') event.respondWith(holdData(event.request))
+  const { request } = event
+
+  if (request.destination === 'document') return event.respondWith(fetchDocument(request.url))
+  if (request.destination === '') return event.respondWith(holdRequest(request))
+  if (['font', 'script'].includes(request.destination)) event.respondWith(fetchAsset(request))
 })

@@ -875,8 +875,14 @@ const CACHE_NAME = 'my-csr-app'
 
 const allAssets = self.__WB_MANIFEST.map(({ url }) => url)
 
-let precacheAssetsResolve
-const precacheAssetsPromise = new Promise(resolve => (precacheAssetsResolve = resolve))
+const createPromiseResolve = () => {
+  let resolve
+  const promise = new Promise(res => (resolve = res))
+
+  return [promise, resolve]
+}
+
+const [precacheAssetsPromise, precacheAssetsResolve] = createPromiseResolve()
 
 const getCache = () => caches.open(CACHE_NAME)
 
@@ -938,11 +944,8 @@ const fetchDocument = async url => {
   }
 }
 
-const handleFetch = async request => {
+const fetchAsset = async request => {
   const cache = await getCache()
-
-  if (request.destination === 'document') return fetchDocument(request.url)
-
   const cachedResponse = await cache.match(request)
 
   return cachedResponse || fetch(request)
@@ -965,7 +968,10 @@ self.addEventListener('message', async event => {
 })
 
 self.addEventListener('fetch', async event => {
-  if (['document', 'font', 'script'].includes(event.request.destination)) event.respondWith(handleFetch(event.request))
+  const { request } = event
+
+  if (request.destination === 'document') return event.respondWith(fetchDocument(request.url))
+  if (['font', 'script'].includes(request.destination)) event.respondWith(fetchAsset(request))
 })
 ```
 
@@ -1155,8 +1161,7 @@ const register = () => {
 _[public/service-worker.js](public/service-worker.js)_
 
 ```js
-let precacheAssetsResolve
-let releaseDataResolve
+const [releaseRequestsPromise, releaseRequestsResolve] = createPromiseResolve()
 .
 .
 .
@@ -1170,7 +1175,7 @@ const fetchDocument = async url => {
   const headers = { 'X-Cached': cachedAssets.join(', '), 'X-Content-Hash': contentHash, 'If-None-Match': etag }
 
   if (updatedDocument) {
-    releaseDataResolve()
+    releaseRequestsResolve()
 
     const clonedUpdatedDocument = updatedDocument.clone()
 
@@ -1183,24 +1188,20 @@ const fetchDocument = async url => {
     const { status } = response
     const [client] = await self.clients.matchAll()
 
-    if (cachedDocument && !client) {
-      console.error(
-        'The active service worker has no controlled client, possibly due to the document returning too soon.'
-      )
-    }
-
     if (status === 200) {
       if (cachedDocument) {
         await cache.put('/updated', response.clone())
 
         client?.postMessage({ action: 'reload' })
+
+        return response
       }
 
       await cache.put('/', response.clone())
-    } else if (status === 304) {
-      releaseDataResolve()
-      client?.postMessage({ action: 'make-visible' })
     }
+
+    releaseRequestsResolve()
+    client?.postMessage({ action: 'make-visible' })
 
     return response
   })
@@ -1218,14 +1219,14 @@ const fetchDocument = async url => {
   })
 }
 
-const holdData = async request => {
-  await releaseDataPromise
+const holdRequest = async request => {
+  await releaseRequestsPromise
 
   return fetch(request)
 }
 
 self.addEventListener('install', event => {
-  releaseDataResolve()
+  releaseRequestsResolve()
   event.waitUntil(precacheAssetsPromise)
   self.skipWaiting()
 })
@@ -1235,8 +1236,11 @@ self.addEventListener('activate', event => event.waitUntil(clients.claim()))
 .
 .
 self.addEventListener('fetch', async event => {
-  if (['document', 'font', 'script'].includes(event.request.destination)) event.respondWith(handleFetch(event.request))
-  else if (event.request.destination === '') event.respondWith(holdData(event.request))
+  const { request } = event
+
+  if (request.destination === 'document') return event.respondWith(fetchDocument(request.url))
+  if (request.destination === '') return event.respondWith(holdRequest(request))
+  if (['font', 'script'].includes(request.destination)) event.respondWith(fetchAsset(request))
 })
 ```
 
