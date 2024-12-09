@@ -2,9 +2,9 @@ const CACHE_NAME = 'my-csr-app'
 
 const allAssets = self.__WB_MANIFEST.map(({ url }) => url)
 
-let assetsCacheResolve
+let precacheAssetsResolve
 let releaseDataResolve
-const assetsCachePromise = new Promise(resolve => (assetsCacheResolve = resolve))
+const precacheAssetsPromise = new Promise(resolve => (precacheAssetsResolve = resolve))
 const releaseDataPromise = new Promise(resolve => (releaseDataResolve = resolve))
 
 const getCache = () => caches.open(CACHE_NAME)
@@ -39,7 +39,7 @@ const precacheAssets = async ({ ignoreAssets }) => {
 
   await cache.addAll(assetsToPrecache)
   await removeUnusedAssets()
-  await fetchDocument('/')
+  await fetchDocument('/', { skipActions: true })
 }
 
 const removeUnusedAssets = async () => {
@@ -60,7 +60,7 @@ const handleFetch = async request => {
   return cachedResponse || fetch(request)
 }
 
-const fetchDocument = async url => {
+const fetchDocument = async (url, { skipActions } = {}) => {
   const cache = await getCache()
   const cachedAssets = await getCachedAssets(cache)
   const cachedDocument = await cache.match('/')
@@ -81,13 +81,7 @@ const fetchDocument = async url => {
 
   const currentDocument = fetch(url, { headers }).then(async response => {
     const { status } = response
-    const [client] = await self.clients.matchAll()
-
-    if (cachedDocument && !client) {
-      console.error(
-        'The active service worker has no controlled client, possibly due to the document returning too soon.'
-      )
-    }
+    const client = skipActions ? undefined : await getControlledClient()
 
     if (status === 200) {
       if (cachedDocument) {
@@ -124,12 +118,30 @@ const holdData = async request => {
   return fetch(request)
 }
 
-self.addEventListener('install', event => event.waitUntil(assetsCachePromise))
+const getControlledClient = async () => {
+  const [client] = await self.clients.matchAll()
 
-self.addEventListener('activate', event => {
-  event.waitUntil(clients.claim())
+  if (client) return client
+
+  return await new Promise(resolve => {
+    const intervalID = setInterval(async () => {
+      const [client] = await self.clients.matchAll()
+
+      if (!client) return
+
+      clearInterval(intervalID)
+      resolve(client)
+    }, 50)
+  })
+}
+
+self.addEventListener('install', event => {
+  releaseDataResolve()
+  event.waitUntil(precacheAssetsPromise)
   self.skipWaiting()
 })
+
+self.addEventListener('activate', event => event.waitUntil(clients.claim()))
 
 self.addEventListener('message', async event => {
   const { inlineAssets } = event.data
@@ -137,7 +149,7 @@ self.addEventListener('message', async event => {
   await cacheInlineAssets(inlineAssets)
   await precacheAssets({ ignoreAssets: inlineAssets.map(({ url }) => url) })
 
-  assetsCacheResolve()
+  precacheAssetsResolve()
 })
 
 self.addEventListener('fetch', async event => {
