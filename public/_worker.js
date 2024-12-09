@@ -43,7 +43,7 @@ const BOT_AGENTS = [
 const fetchPrerendered = async request => {
   const { url, headers } = request
   const headersToSend = new Headers(headers)
-  const prerenderUrl = new URL(`https://renderprime.theninthsky.workers.dev?url=${url}`)
+  const prerenderUrl = new URL(`https://renderless.theninthsky.workers.dev?url=${url}`)
   const prerenderRequest = new Request(prerenderUrl, {
     headers: headersToSend,
     redirect: 'manual'
@@ -76,8 +76,7 @@ export default {
 
     const pathname = new URL(request.url).pathname.toLowerCase()
     const userAgent = (request.headers.get('User-Agent') || '').toLowerCase()
-    const bypassWorker =
-      !!request.headers.get('X-Prerender') || userAgent.includes('googlebot') || pathname.includes('.')
+    const bypassWorker = ['prerender', 'googlebot'].includes(userAgent) || pathname.includes('.')
 
     if (bypassWorker) return env.ASSETS.fetch(request)
     if (BOT_AGENTS.some(agent => userAgent.includes(agent))) return fetchPrerendered(request)
