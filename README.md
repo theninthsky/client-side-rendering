@@ -1240,7 +1240,9 @@ self.addEventListener('fetch', async event => {
 })
 ```
 
-Now, the app will render instantly when there are no updates.
+Now the app renders instantly:
+
+![Instant Rendering](images/instant-rendering.png)
 
 ## Tweaking Further
 
