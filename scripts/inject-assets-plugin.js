@@ -65,7 +65,7 @@ class InjectAssetsPlugin {
         .map(asset => ({ ...asset, order: initialModuleScripts.findIndex(script => script.includes(asset.url)) }))
         .sort((a, b) => a.order - b.order)
       const asyncScripts = assets.filter(asset => !initialScripts.includes(asset))
-      const htmlChecksum = createHash('sha256').update(html).digest('hex')
+      const documentEtag = createHash('sha256').update(html).digest('hex').slice(0, 16)
 
       html = html
         .replace(/,"scripts":\s*\[(.*?)\]/g, () => '')
@@ -77,7 +77,7 @@ class InjectAssetsPlugin {
         .replace('INJECT_INITIAL_SCRIPTS_HERE', () => JSON.stringify(initialScripts))
         .replace('INJECT_ASYNC_SCRIPTS_HERE', () => JSON.stringify(asyncScripts))
         .replace('INJECT_HTML_HERE', () => JSON.stringify(html))
-        .replace('INJECT_HTML_CHECKSUM_HERE', () => JSON.stringify(htmlChecksum))
+        .replace('INJECT_DOCUMENT_ETAG_HERE', () => JSON.stringify(documentEtag))
 
       writeFileSync(join(__dirname, '..', 'build', '_worker.js'), worker)
 

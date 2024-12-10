@@ -1,5 +1,6 @@
 const CACHE_NAME = 'my-csr-app'
 
+const localhost = location.hostname === 'localhost'
 const allAssets = self.__WB_MANIFEST.map(({ url }) => url)
 
 const createPromiseResolve = () => {
@@ -20,6 +21,17 @@ const getCachedAssets = async cache => {
   return keys.map(({ url }) => `/${url.replace(self.registration.scope, '')}`)
 }
 
+const getRequestHeaders = responseHeaders => {
+  const requestHeaders = { 'X-Cached': JSON.stringify(allAssets) }
+
+  if (responseHeaders) {
+    etag = responseHeaders.get('ETag') || responseHeaders.get('X-ETag')
+
+    requestHeaders = { 'If-None-Match': etag, ...requestHeaders }
+  }
+
+  return requestHeaders
+}
 const cacheInlineAssets = async assets => {
   const cache = await getCache()
 
@@ -44,7 +56,7 @@ const precacheAssets = async ({ ignoreAssets }) => {
 
   await cache.addAll(assetsToPrecache)
   await removeUnusedAssets()
-  await fetchDocument('/', { skipActions: true })
+  await fetchDocument({ url: '/', skipActions: true })
 }
 
 const removeUnusedAssets = async () => {
@@ -56,14 +68,9 @@ const removeUnusedAssets = async () => {
   })
 }
 
-const fetchDocument = async (url, { skipActions = false } = {}) => {
+const fetchDocument = async ({ url, preloadResponse, skipActions = false }) => {
   const cache = await getCache()
-  const cachedAssets = await getCachedAssets(cache)
-  const cachedDocument = await cache.match('/')
   const updatedDocument = await cache.match('/updated')
-  const contentHash = cachedDocument?.headers.get('X-Content-Hash')
-  const etag = cachedDocument?.headers.get('ETag')
-  const headers = { 'X-Cached': cachedAssets.join(', '), 'X-Content-Hash': contentHash, 'If-None-Match': etag }
 
   if (updatedDocument) {
     releaseRequestsResolve()
@@ -75,9 +82,13 @@ const fetchDocument = async (url, { skipActions = false } = {}) => {
     return clonedUpdatedDocument
   }
 
-  const currentDocument = fetch(url, { headers }).then(async response => {
+  const cachedDocument = await cache.match('/')
+  const requestHeaders = getRequestHeaders(cachedDocument?.headers)
+  const currentDocument = preloadResponse || fetch(url, { headers: requestHeaders })
+
+  currentDocument.then(async response => {
     const { status } = response
-    const client = skipActions ? undefined : await getControlledClient()
+    const client = await getControlledClient()
 
     if (status === 200) {
       if (cachedDocument) {
@@ -89,6 +100,11 @@ const fetchDocument = async (url, { skipActions = false } = {}) => {
       }
 
       await cache.put('/', response.clone())
+
+      client?.postMessage({
+        action: 'set-navigation-preload-header',
+        value: JSON.stringify(getRequestHeaders(response.headers))
+      })
     }
 
     releaseRequestsResolve()
@@ -146,7 +162,14 @@ self.addEventListener('install', event => {
   self.skipWaiting()
 })
 
-self.addEventListener('activate', event => event.waitUntil(clients.claim()))
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    (async () => {
+      if (!localhost) await self.registration.navigationPreload?.enable()
+      await clients.claim()
+    })()
+  )
+})
 
 self.addEventListener('message', async event => {
   const { inlineAssets } = event.data
@@ -158,9 +181,12 @@ self.addEventListener('message', async event => {
 })
 
 self.addEventListener('fetch', async event => {
-  const { request } = event
+  const { request, preloadResponse } = event
 
-  if (request.destination === 'document') return event.respondWith(fetchDocument(request.url))
+  if (request.destination === 'document')
+    return event.respondWith(
+      fetchDocument({ url: request.url, preloadResponse: localhost ? undefined : preloadResponse })
+    )
   if (request.destination === '') return event.respondWith(holdRequest(request))
   if (['font', 'script'].includes(request.destination)) event.respondWith(fetchAsset(request))
 })
