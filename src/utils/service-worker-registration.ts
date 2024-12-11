@@ -20,15 +20,6 @@ const register = () => {
       console.error(err)
     }
   })
-
-  navigator.serviceWorker?.addEventListener('message', event => {
-    const { action } = event.data
-
-    if (action === 'reload') return window.location.reload()
-    if (action === 'make-visible') document.body.removeAttribute('style')
-  })
-
-  if (!navigator.onLine) document.body.removeAttribute('style')
 }
 
 const unregister = async () => {
