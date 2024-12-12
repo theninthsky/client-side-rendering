@@ -553,7 +553,7 @@ export default () => {
 }
 ```
 
-_[service-worker-registration.ts](src/utils/service-worker-registration.ts)_
+_[src/utils/service-worker-registration.ts](src/utils/service-worker-registration.ts)_
 
 ```js
 const register = () => {
@@ -603,12 +603,13 @@ const getCachedAssets = async cache => {
   return keys.map(({ url }) => `/${url.replace(self.registration.scope, '')}`)
 }
 
-const precacheAssets = async ({ ignoreAssets }) => {
+const precacheAssets = async () => {
   const cache = await getCache()
   const cachedAssets = await getCachedAssets(cache)
   const assetsToPrecache = allAssets.filter(asset => !cachedAssets.includes(asset) && !ignoreAssets.includes(asset))
 
   await cache.addAll(assetsToPrecache)
+  await removeUnusedAssets()
 }
 
 const removeUnusedAssets = async () => {
@@ -620,24 +621,22 @@ const removeUnusedAssets = async () => {
   })
 }
 
-const handleFetch = async request => {
+const fetchAsset = async request => {
   const cache = await getCache()
   const cachedResponse = await cache.match(request)
 
   return cachedResponse || fetch(request)
 }
 
-self.addEventListener('install', () => {
+self.addEventListener('install', event => {
+  event.waitUntil(precacheAssets())
   self.skipWaiting()
-
-  precacheAssets()
-  removeUnusedAssets()
 })
 
-self.addEventListener('fetch', async event => {
-  if (['font', 'script'].includes(event.request.destination)) {
-    event.respondWith(handleFetch(event.request))
-  }
+self.addEventListener('fetch', event => {
+  const { request } = event
+
+  if (['font', 'script'].includes(request.destination)) event.respondWith(fetchAsset(request))
 })
 ```
 
@@ -856,7 +855,7 @@ const register = () => {
       console.log('Service worker registered!')
 
       registration.addEventListener('updatefound', () => {
-        registration.installing?.postMessage({ type: 'cache-assets', inlineAssets: extractInlineScripts() })
+        registration.installing?.postMessage({ inlineAssets: extractInlineScripts() })
       })
 
       setInterval(() => registration.update(), ACTIVE_REVALIDATION_INTERVAL * 1000)
@@ -956,9 +955,7 @@ self.addEventListener('install', event => {
 })
 
 self.addEventListener('message', async event => {
-  const { type, inlineAssets } = event.data
-
-  if (type !== 'cache-assets') return
+  const { inlineAssets } = event.data
 
   await cacheInlineAssets(inlineAssets)
   await precacheAssets({ ignoreAssets: inlineAssets.map(({ url }) => url) })
@@ -966,7 +963,7 @@ self.addEventListener('message', async event => {
   precacheAssetsResolve()
 })
 
-self.addEventListener('fetch', async event => {
+self.addEventListener('fetch', event => {
   const { request } = event
 
   if (request.destination === 'document') return event.respondWith(fetchDocument(request.url))
@@ -1033,7 +1030,7 @@ class InjectAssetsPlugin {
       .
       .
       .
-+     const htmlChecksum = createHash('sha256').update(html).digest('hex')
++     const documentEtag = createHash('sha256').update(html).digest('hex').slice(0, 16)
       .
       .
       .
@@ -1042,7 +1039,7 @@ class InjectAssetsPlugin {
         .replace('INJECT_INITIAL_SCRIPTS_HERE', () => JSON.stringify(initialScripts))
         .replace('INJECT_ASYNC_SCRIPTS_HERE', () => JSON.stringify(asyncScripts))
         .replace('INJECT_HTML_HERE', () => JSON.stringify(html))
-+       .replace('INJECT_HTML_CHECKSUM_HERE', () => JSON.stringify(htmlChecksum))
++       .replace('INJECT_DOCUMENT_ETAG_HERE', () => JSON.stringify(documentEtag))
 
       writeFileSync(join(__dirname, '..', 'build', '_worker.js'), worker)
 
@@ -1055,15 +1052,15 @@ class InjectAssetsPlugin {
 _[public/\_worker.js](public/_worker.js)_
 
 ```diff
-+const htmlChecksum = INJECT_HTML_CHECKSUM_HERE
++const documentEtag = INJECT_DOCUMENT_ETAG_HERE
 .
 .
 .
 export default {
   fetch(request, env) {
-+   const contentHash = request.headers.get('X-Content-Hash')
-
-+   if (contentHash === htmlChecksum) return new Response(null, { status: 304, headers: documentHeaders })
++   if (request.headers.get('If-None-Match') === documentEtag) {
++     return new Response(null, { status: 304, headers: documentHeaders })
++   }
     .
     .
     .
@@ -1077,6 +1074,20 @@ _[public/service-worker.js](public/service-worker.js)_
 .
 .
 .
+const getRequestHeaders = responseHeaders => {
+  const requestHeaders = { 'X-Cached': JSON.stringify(allAssets) }
+
+  if (responseHeaders) {
+    etag = responseHeaders.get('ETag') || responseHeaders.get('X-ETag')
+
+    requestHeaders = { 'If-None-Match': etag, ...requestHeaders }
+  }
+
+  return requestHeaders
+}
+.
+.
+.
 const precacheAssets = async ({ ignoreAssets }) => {
   .
   .
@@ -1086,13 +1097,11 @@ const precacheAssets = async ({ ignoreAssets }) => {
 
 const fetchDocument = async url => {
   const cache = await getCache()
-  const cachedAssets = await getCachedAssets(cache)
   const cachedDocument = await cache.match('/')
-  const contentHash = cachedDocument?.headers.get('X-Content-Hash')
-  const headers = { 'X-Cached': cachedAssets.join(', '), 'X-Content-Hash': contentHash }
+  const requestHeaders = getRequestHeaders(cachedDocument?.headers)
 
   try {
-    const response = await fetch(url, { headers })
+    const response = await fetch(url, { headers: requestHeaders })
 
     if (response.status === 304) return cachedDocument
 
@@ -1103,18 +1112,9 @@ const fetchDocument = async url => {
     return cachedDocument
   }
 }
-
-const handleFetch = async request => {
-  const cache = await getCache()
-
-+ if (request.destination === 'document') return fetchDocument(request.url)
-
-  const cachedResponse = await cache.match(request)
-
-  return cachedResponse || fetch(request)
-}
-
 ```
+
+_Note that `X-ETag` is included for situations where the CDN does not automatically send the `ETag`._
 
 Now our serverless worker will always respond with a `304 Not Modified` status code whenever there are no changes, even for unvisited pages.
 
@@ -1220,7 +1220,7 @@ const register = () => {
       console.log('Service worker registered!')
 
       registration.addEventListener('updatefound', () => {
-        registration.installing?.postMessage({ type: 'cache-assets', inlineAssets: extractInlineScripts() })
+        registration.installing?.postMessage({ inlineAssets: extractInlineScripts() })
       })
 
 +     setInterval(() => registration.update(), ACTIVE_REVALIDATION_INTERVAL * 1000)
