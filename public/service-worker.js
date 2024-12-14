@@ -79,7 +79,7 @@ const fetchDocument = async ({ url, preloadResponse }) => {
 
     cache.put('/', response.clone())
 
-    const [client] = await self.clients.matchAll()
+    const [client] = await self.clients.matchAll({ includeUncontrolled: true })
 
     client?.postMessage({ navigationPreloadHeader: JSON.stringify(getRequestHeaders(response.headers)) })
 
