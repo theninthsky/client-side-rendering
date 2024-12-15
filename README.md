@@ -18,6 +18,7 @@ An in-depth comparison of all rendering methods can be found on this project's _
   - [Precaching](#precaching)
   - [Adaptive Source Inlining](#adaptive-source-inlining)
   - [Leveraging the 304 Status Code](#leveraging-the-304-status-code)
+  - [Navigation Preload](#navigation-preload)
   - [Tweaking Further](#tweaking-further)
     - [Transitioning Async Pages](#transitioning-async-pages)
     - [Preloading Other Pages Data](#preloading-other-pages-data)
@@ -107,7 +108,7 @@ _Note that although this project is implemented using React, most of the optimiz
 
 We will assume a standard Webpack (Rspack) setup and add the required customizations as we progress.
 
-### Bundle Size
+## Bundle Size
 
 The first rule of thumb is to minimize dependencies and, among those, choose the ones with the smallest file sizes.
 
@@ -117,7 +118,7 @@ We can use _[day.js](https://www.npmjs.com/package/dayjs)_ instead of _[moment](
 
 This is important not only for CSR apps but also for SSR (and SSG) apps, as larger bundles result in longer load times, delaying when the page becomes visible or interactive.
 
-### Caching
+## Caching
 
 Ideally, every hashed file should be cached, and `index.html` should **never** be cached.
 <br>
@@ -183,7 +184,7 @@ More info about the default configurations (such as the split threshold size) ca
 <br>
 https://webpack.js.org/plugins/split-chunks-plugin/#defaults
 
-### Code Splitting
+## Code Splitting
 
 A lot of the features we write end up being used only in a few of our pages, so we would like them to be loaded only when the user visits the page they are being used in.
 
@@ -205,7 +206,7 @@ _Note: it is encouraged to download the entire app so that users will experience
 <br>
 These assets should be downloaded asynchronously and only after the user-requested page has finished rendering and is entirely visible._
 
-### Preloading Async Pages
+## Preloading Async Pages
 
 Code splitting has one major flaw - the runtime doesn't know which async chunks are needed until the main script executes, leading to them being fetched in a significant delay (since they make another round-trip to the CDN):
 
@@ -315,7 +316,7 @@ This way, the browser is able to fetch the page-specific script chunk **in paral
 
 ![Network Async Chunks Preload](images/network-async-chunks-preload.png)
 
-### Splitting Async Vendors
+## Splitting Async Vendors
 
 Code splitting introduces another problem: async vendor duplication.
 
@@ -409,7 +410,7 @@ Now all async vendor chunks will be fetched in parallel with their parent async 
 
 ![Network Split Async Vendors Preload](images/network-split-async-vendors-preload.png)
 
-### Preloading Data
+## Preloading Data
 
 One of the presumed disadvantages of CSR over SSR is that the page's data (fetch requests) will be fired only after JS has been downloaded, parsed and executed in the browser:
 
@@ -521,7 +522,7 @@ Now we can see that the data is being fetched right away:
 
 With the above script, we can even preload dynamic routes data (such as _[pokemon/:name](https://client-side-rendering.pages.dev/pokemon/pikachu)_).
 
-### Precaching
+## Precaching
 
 Users should have a smooth navigation experience in our app.
 <br>
@@ -1004,7 +1005,7 @@ optimization: {
 
 This extreme splitting will lead to a better cache persistence, and in turn, to faster load times with partial cache.
 
-### Leveraging the 304 Status Code
+## Leveraging the 304 Status Code
 
 When a static asset is fetched from a CDN, it includes an `ETag` header, which is a content hash of the resource. On subsequent requests, the browser checks if it has a stored ETag. If it does, it sends the ETag in an `If-None-Match` header. The CDN then compares the received ETag with the current one: if they match, it returns a `304 Not Modified` status, indicating the browser can use the cached asset; if not, it returns the new asset with a `200` status.
 
@@ -1114,9 +1115,76 @@ const fetchDocument = async url => {
 }
 ```
 
-_Note that `X-ETag` is included for situations where the CDN does not automatically send the `ETag`._
+_Note that a custom `X-ETag` is included for situations where the CDN does not automatically send an `ETag`._
 
 Now our serverless worker will always respond with a `304 Not Modified` status code whenever there are no changes, even for unvisited pages.
+
+## Navigation Preload
+
+When a service worker is used, the browser delays sending the initial HTML document request until the service worker is loaded, which can cause a slight to moderate page delay depending on the hardware.
+
+The native solution to this problem is called _[Navigation Preload](https://web.dev/blog/navigation-preload)_. We will implement this to ensure the document request is sent immediately, without waiting for the service worker to load:
+
+_[src/utils/service-worker-registration.ts](src/utils/service-worker-registration.ts)_
+
+```js
+const register = () => {
+  .
+  .
+  .
+  navigator.serviceWorker?.addEventListener('message', async event => {
+    const { navigationPreloadHeader } = event.data
+
+    const registration = await navigator.serviceWorker.ready
+
+    registration.navigationPreload.setHeaderValue(navigationPreloadHeader)
+  })
+}
+```
+
+_[public/service-worker.js](public/service-worker.js)_
+
+```js
+.
+.
+.
+const fetchDocument = async ({ url, preloadResponse }) => {
+  const cache = await getCache()
+  const cachedDocument = await cache.match('/')
+  const requestHeaders = getRequestHeaders(cachedDocument?.headers)
+
+  try {
+    const response = await (preloadResponse || fetch(url, { headers: requestHeaders }))
+
+    if (response.status === 304) return cachedDocument
+
+    cache.put('/', response.clone())
+
+    const [client] = await self.clients.matchAll({ includeUncontrolled: true })
+
+    client?.postMessage({ navigationPreloadHeader: JSON.stringify(getRequestHeaders(response.headers)) })
+
+    return response
+  } catch (err) {
+    return cachedDocument
+  }
+}
+.
+.
+.
+self.addEventListener('activate', event => event.waitUntil(self.registration.navigationPreload?.enable()))
+.
+.
+.
+self.addEventListener('fetch', event => {
+  const { request, preloadResponse } = event
+
+  if (request.destination === 'document') return event.respondWith(fetchDocument({ url: request.url, preloadResponse }))
+  if (['font', 'script'].includes(request.destination)) event.respondWith(fetchAsset(request))
+})
+```
+
+With this implementation, the document request will be sent immediately, independent of the service worker.
 
 ## Tweaking Further
 

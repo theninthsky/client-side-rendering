@@ -101,14 +101,7 @@ self.addEventListener('install', event => {
   self.skipWaiting()
 })
 
-self.addEventListener('activate', event => {
-  event.waitUntil(
-    (async () => {
-      await self.registration.navigationPreload?.enable()
-      await clients.claim()
-    })()
-  )
-})
+self.addEventListener('activate', event => event.waitUntil(self.registration.navigationPreload?.enable()))
 
 self.addEventListener('message', async event => {
   const { inlineAssets } = event.data
