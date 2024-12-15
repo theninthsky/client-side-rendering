@@ -2,7 +2,7 @@ const initialModuleScriptsString = INJECT_INITIAL_MODULE_SCRIPTS_STRING_HERE
 const initialScripts = INJECT_INITIAL_SCRIPTS_HERE
 const asyncScripts = INJECT_ASYNC_SCRIPTS_HERE
 const html = INJECT_HTML_HERE
-const htmlChecksum = INJECT_HTML_CHECKSUM_HERE
+const documentEtag = INJECT_DOCUMENT_ETAG_HERE
 
 const documentHeaders = { 'Cache-Control': 'public, max-age=0', 'Content-Type': 'text/html; charset=utf-8' }
 
@@ -70,9 +70,9 @@ const isMatch = (pathname, path) => {
 
 export default {
   fetch(request, env) {
-    const contentHash = request.headers.get('X-Content-Hash')
+    const etag = request.headers.get('If-None-Match')
 
-    if (contentHash === htmlChecksum) return new Response(null, { status: 304, headers: documentHeaders })
+    if (etag === documentEtag) return new Response(null, { status: 304, headers: documentHeaders })
 
     const pathname = new URL(request.url).pathname.toLowerCase()
     const userAgent = (request.headers.get('User-Agent') || '').toLowerCase()
@@ -85,7 +85,7 @@ export default {
     const uncachedScripts = [...initialScripts, ...asyncScripts].filter(({ url }) => !cachedScripts.includes(url))
 
     if (!uncachedScripts.length) {
-      return new Response(html, { headers: { ...documentHeaders, 'X-Content-Hash': htmlChecksum } })
+      return new Response(html, { headers: { ...documentHeaders, ETag: documentEtag, 'X-ETag': documentEtag } })
     }
 
     let body = html.replace(initialModuleScriptsString, () => '')

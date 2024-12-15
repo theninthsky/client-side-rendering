@@ -20,6 +20,18 @@ const getCachedAssets = async cache => {
   return keys.map(({ url }) => `/${url.replace(self.registration.scope, '')}`)
 }
 
+const getRequestHeaders = responseHeaders => {
+  const requestHeaders = { 'X-Cached': JSON.stringify(allAssets) }
+
+  if (responseHeaders) {
+    etag = responseHeaders.get('ETag') || responseHeaders.get('X-ETag')
+
+    requestHeaders = { 'If-None-Match': etag, ...requestHeaders }
+  }
+
+  return requestHeaders
+}
+
 const cacheInlineAssets = async assets => {
   const cache = await getCache()
 
@@ -44,7 +56,7 @@ const precacheAssets = async ({ ignoreAssets }) => {
 
   await cache.addAll(assetsToPrecache)
   await removeUnusedAssets()
-  await fetchDocument('/', { skipActions: true })
+  await fetchDocument('/')
 }
 
 const removeUnusedAssets = async () => {
@@ -56,14 +68,9 @@ const removeUnusedAssets = async () => {
   })
 }
 
-const fetchDocument = async (url, { skipActions = false } = {}) => {
+const fetchDocument = async url => {
   const cache = await getCache()
-  const cachedAssets = await getCachedAssets(cache)
-  const cachedDocument = await cache.match('/')
   const updatedDocument = await cache.match('/updated')
-  const contentHash = cachedDocument?.headers.get('X-Content-Hash')
-  const etag = cachedDocument?.headers.get('ETag')
-  const headers = { 'X-Cached': cachedAssets.join(', '), 'X-Content-Hash': contentHash, 'If-None-Match': etag }
 
   if (updatedDocument) {
     releaseRequestsResolve()
@@ -75,9 +82,12 @@ const fetchDocument = async (url, { skipActions = false } = {}) => {
     return clonedUpdatedDocument
   }
 
-  const currentDocument = fetch(url, { headers }).then(async response => {
+  const cachedDocument = await cache.match('/')
+  const requestHeaders = getRequestHeaders(cachedDocument?.headers)
+
+  const currentDocument = fetch(url, { headers: requestHeaders }).then(async response => {
     const { status } = response
-    const client = skipActions ? undefined : await getControlledClient()
+    const [client] = await self.clients.matchAll({ includeUncontrolled: true })
 
     if (status === 200) {
       if (cachedDocument) {
@@ -123,30 +133,11 @@ const holdRequest = async request => {
   return fetch(request)
 }
 
-const getControlledClient = async () => {
-  const [client] = await self.clients.matchAll()
-
-  if (client) return client
-
-  return await new Promise(resolve => {
-    const intervalID = setInterval(async () => {
-      const [client] = await self.clients.matchAll()
-
-      if (!client) return
-
-      clearInterval(intervalID)
-      resolve(client)
-    }, 50)
-  })
-}
-
 self.addEventListener('install', event => {
   releaseRequestsResolve()
   event.waitUntil(precacheAssetsPromise)
   self.skipWaiting()
 })
-
-self.addEventListener('activate', event => event.waitUntil(clients.claim()))
 
 self.addEventListener('message', async event => {
   const { inlineAssets } = event.data
