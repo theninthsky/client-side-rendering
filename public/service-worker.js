@@ -55,7 +55,7 @@ const precacheAssets = async ({ ignoreAssets }) => {
 
   await cache.addAll(assetsToPrecache)
   await removeUnusedAssets()
-  await fetchDocument('/')
+  await fetchDocument({ url: '/' })
 }
 
 const removeUnusedAssets = async () => {
@@ -67,17 +67,21 @@ const removeUnusedAssets = async () => {
   })
 }
 
-const fetchDocument = async url => {
+const fetchDocument = async ({ url, preloadResponse }) => {
   const cache = await getCache()
   const cachedDocument = await cache.match('/')
   const requestHeaders = getRequestHeaders(cachedDocument?.headers)
 
   try {
-    const response = await fetch(url, { headers: requestHeaders })
+    const response = await (preloadResponse || fetch(url, { headers: requestHeaders }))
 
     if (response.status === 304) return cachedDocument
 
     cache.put('/', response.clone())
+
+    const [client] = await self.clients.matchAll({ includeUncontrolled: true })
+
+    client?.postMessage({ navigationPreloadHeader: JSON.stringify(getRequestHeaders(response.headers)) })
 
     return response
   } catch (err) {
@@ -97,6 +101,8 @@ self.addEventListener('install', event => {
   self.skipWaiting()
 })
 
+self.addEventListener('activate', event => event.waitUntil(self.registration.navigationPreload?.enable()))
+
 self.addEventListener('message', async event => {
   const { inlineAssets } = event.data
 
@@ -107,8 +113,8 @@ self.addEventListener('message', async event => {
 })
 
 self.addEventListener('fetch', event => {
-  const { request } = event
+  const { request, preloadResponse } = event
 
-  if (request.destination === 'document') return event.respondWith(fetchDocument(request.url))
+  if (request.destination === 'document') return event.respondWith(fetchDocument({ url: request.url, preloadResponse }))
   if (['font', 'script'].includes(request.destination)) event.respondWith(fetchAsset(request))
 })

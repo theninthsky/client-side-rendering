@@ -70,9 +70,13 @@ const isMatch = (pathname, path) => {
 
 export default {
   fetch(request, env) {
-    if (request.headers.get('If-None-Match') === documentEtag) {
-      return new Response(null, { status: 304, headers: documentHeaders })
-    }
+    let { 'If-None-Match': etag, 'X-Cached': xCached } = JSON.parse(
+      request.headers.get('service-worker-navigation-preload') || '{}'
+    )
+
+    etag ||= request.headers.get('If-None-Match')
+
+    if (etag === documentEtag) return new Response(null, { status: 304, headers: documentHeaders })
 
     const pathname = new URL(request.url).pathname.toLowerCase()
     const userAgent = (request.headers.get('User-Agent') || '').toLowerCase()
@@ -81,7 +85,9 @@ export default {
     if (bypassWorker) return env.ASSETS.fetch(request)
     if (BOT_AGENTS.some(agent => userAgent.includes(agent))) return fetchPrerendered(request)
 
-    const cachedScripts = JSON.parse(request.headers.get('X-Cached') || '[]')
+    xCached ||= request.headers.get('X-Cached')
+
+    const cachedScripts = JSON.parse(xCached || '[]')
     const uncachedScripts = [...initialScripts, ...asyncScripts].filter(({ url }) => !cachedScripts.includes(url))
 
     if (!uncachedScripts.length) {

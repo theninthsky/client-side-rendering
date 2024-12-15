@@ -20,6 +20,14 @@ const register = () => {
       console.error(err)
     }
   })
+
+  navigator.serviceWorker?.addEventListener('message', async event => {
+    const { navigationPreloadHeader } = event.data
+
+    const registration = await navigator.serviceWorker.ready
+
+    registration.navigationPreload.setHeaderValue(navigationPreloadHeader)
+  })
 }
 
 const unregister = async () => {
