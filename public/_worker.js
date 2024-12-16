@@ -81,7 +81,7 @@ export default {
     if (bypassWorker) return env.ASSETS.fetch(request)
     if (BOT_AGENTS.some(agent => userAgent.includes(agent))) return fetchPrerendered(request)
 
-    const cachedScripts = JSON.parse(request.headers.get('X-Cached') || '[]')
+    const cachedScripts = request.headers.get('X-Cached')?.split(', ') || []
     const uncachedScripts = [...initialScripts, ...asyncScripts].filter(({ url }) => !cachedScripts.includes(url))
 
     if (!uncachedScripts.length) {

@@ -787,7 +787,7 @@ export default {
 
     if (bypassWorker) return env.ASSETS.fetch(request)
 
-    const cachedScripts = request.headers.get('X-Cached')?.split(', ').filter(Boolean) || []
+    const cachedScripts = request.headers.get('X-Cached')?.split(', ') || []
     const uncachedScripts = [...initialScripts, ...asyncScripts].filter(({ url }) => !cachedScripts.includes(url))
 
     if (!uncachedScripts.length) {
@@ -1076,7 +1076,7 @@ _[public/service-worker.js](public/service-worker.js)_
 .
 .
 const getRequestHeaders = responseHeaders => {
-  const requestHeaders = { 'X-Cached': JSON.stringify(allAssets) }
+  const requestHeaders = { 'X-Cached': allAssets.join(', ') }
 
   if (responseHeaders) {
     etag = responseHeaders.get('ETag') || responseHeaders.get('X-ETag')

@@ -21,7 +21,7 @@ const getCachedAssets = async cache => {
 }
 
 const getRequestHeaders = responseHeaders => {
-  const requestHeaders = { 'X-Cached': JSON.stringify(allAssets) }
+  const requestHeaders = { 'X-Cached': allAssets.join(', ') }
 
   if (responseHeaders) {
     etag = responseHeaders.get('ETag') || responseHeaders.get('X-ETag')
