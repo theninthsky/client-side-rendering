@@ -148,7 +148,7 @@ self.addEventListener('message', async event => {
   precacheAssetsResolve()
 })
 
-self.addEventListener('fetch', async event => {
+self.addEventListener('fetch', event => {
   const { request } = event
 
   if (request.destination === 'document') return event.respondWith(fetchDocument(request.url))

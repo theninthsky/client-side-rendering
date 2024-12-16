@@ -108,7 +108,7 @@ _Note that although this project is implemented using React, most of the optimiz
 
 We will assume a standard Webpack (Rspack) setup and add the required customizations as we progress.
 
-### Bundle Size
+## Bundle Size
 
 The first rule of thumb is to minimize dependencies and, among those, choose the ones with the smallest file sizes.
 
@@ -118,7 +118,7 @@ We can use _[day.js](https://www.npmjs.com/package/dayjs)_ instead of _[moment](
 
 This is important not only for CSR apps but also for SSR (and SSG) apps, as larger bundles result in longer load times, delaying when the page becomes visible or interactive.
 
-### Caching
+## Caching
 
 Ideally, every hashed file should be cached, and `index.html` should **never** be cached.
 <br>
@@ -184,7 +184,7 @@ More info about the default configurations (such as the split threshold size) ca
 <br>
 https://webpack.js.org/plugins/split-chunks-plugin/#defaults
 
-### Code Splitting
+## Code Splitting
 
 A lot of the features we write end up being used only in a few of our pages, so we would like them to be loaded only when the user visits the page they are being used in.
 
@@ -206,7 +206,7 @@ _Note: it is encouraged to download the entire app so that users will experience
 <br>
 These assets should be downloaded asynchronously and only after the user-requested page has finished rendering and is entirely visible._
 
-### Preloading Async Pages
+## Preloading Async Pages
 
 Code splitting has one major flaw - the runtime doesn't know which async chunks are needed until the main script executes, leading to them being fetched in a significant delay (since they make another round-trip to the CDN):
 
@@ -316,7 +316,7 @@ This way, the browser is able to fetch the page-specific script chunk **in paral
 
 ![Network Async Chunks Preload](images/network-async-chunks-preload.png)
 
-### Splitting Async Vendors
+## Splitting Async Vendors
 
 Code splitting introduces another problem: async vendor duplication.
 
@@ -410,7 +410,7 @@ Now all async vendor chunks will be fetched in parallel with their parent async 
 
 ![Network Split Async Vendors Preload](images/network-split-async-vendors-preload.png)
 
-### Preloading Data
+## Preloading Data
 
 One of the presumed disadvantages of CSR over SSR is that the page's data (fetch requests) will be fired only after JS has been downloaded, parsed and executed in the browser:
 
@@ -522,7 +522,7 @@ Now we can see that the data is being fetched right away:
 
 With the above script, we can even preload dynamic routes data (such as _[pokemon/:name](https://client-side-rendering.pages.dev/pokemon/pikachu)_).
 
-### Precaching
+## Precaching
 
 Users should have a smooth navigation experience in our app.
 <br>
@@ -554,7 +554,7 @@ export default () => {
 }
 ```
 
-_[service-worker-registration.ts](src/utils/service-worker-registration.ts)_
+_[src/utils/service-worker-registration.ts](src/utils/service-worker-registration.ts)_
 
 ```js
 const register = () => {
@@ -604,12 +604,13 @@ const getCachedAssets = async cache => {
   return keys.map(({ url }) => `/${url.replace(self.registration.scope, '')}`)
 }
 
-const precacheAssets = async ({ ignoreAssets }) => {
+const precacheAssets = async () => {
   const cache = await getCache()
   const cachedAssets = await getCachedAssets(cache)
   const assetsToPrecache = allAssets.filter(asset => !cachedAssets.includes(asset) && !ignoreAssets.includes(asset))
 
   await cache.addAll(assetsToPrecache)
+  await removeUnusedAssets()
 }
 
 const removeUnusedAssets = async () => {
@@ -621,24 +622,22 @@ const removeUnusedAssets = async () => {
   })
 }
 
-const handleFetch = async request => {
+const fetchAsset = async request => {
   const cache = await getCache()
   const cachedResponse = await cache.match(request)
 
   return cachedResponse || fetch(request)
 }
 
-self.addEventListener('install', () => {
+self.addEventListener('install', event => {
+  event.waitUntil(precacheAssets())
   self.skipWaiting()
-
-  precacheAssets()
-  removeUnusedAssets()
 })
 
-self.addEventListener('fetch', async event => {
-  if (['font', 'script'].includes(event.request.destination)) {
-    event.respondWith(handleFetch(event.request))
-  }
+self.addEventListener('fetch', event => {
+  const { request } = event
+
+  if (['font', 'script'].includes(request.destination)) event.respondWith(fetchAsset(request))
 })
 ```
 
@@ -857,7 +856,7 @@ const register = () => {
       console.log('Service worker registered!')
 
       registration.addEventListener('updatefound', () => {
-        registration.installing?.postMessage({ type: 'cache-assets', inlineAssets: extractInlineScripts() })
+        registration.installing?.postMessage({ inlineAssets: extractInlineScripts() })
       })
 
       setInterval(() => registration.update(), ACTIVE_REVALIDATION_INTERVAL * 1000)
@@ -957,9 +956,7 @@ self.addEventListener('install', event => {
 })
 
 self.addEventListener('message', async event => {
-  const { type, inlineAssets } = event.data
-
-  if (type !== 'cache-assets') return
+  const { inlineAssets } = event.data
 
   await cacheInlineAssets(inlineAssets)
   await precacheAssets({ ignoreAssets: inlineAssets.map(({ url }) => url) })
@@ -967,7 +964,7 @@ self.addEventListener('message', async event => {
   precacheAssetsResolve()
 })
 
-self.addEventListener('fetch', async event => {
+self.addEventListener('fetch', event => {
   const { request } = event
 
   if (request.destination === 'document') return event.respondWith(fetchDocument(request.url))
@@ -1008,7 +1005,7 @@ optimization: {
 
 This extreme splitting will lead to a better cache persistence, and in turn, to faster load times with partial cache.
 
-### Leveraging the 304 Status Code
+## Leveraging the 304 Status Code
 
 When a static asset is fetched from a CDN, it includes an `ETag` header, which is a content hash of the resource. On subsequent requests, the browser checks if it has a stored ETag. If it does, it sends the ETag in an `If-None-Match` header. The CDN then compares the received ETag with the current one: if they match, it returns a `304 Not Modified` status, indicating the browser can use the cached asset; if not, it returns the new asset with a `200` status.
 
@@ -1034,7 +1031,7 @@ class InjectAssetsPlugin {
       .
       .
       .
-+     const htmlChecksum = createHash('sha256').update(html).digest('hex')
++     const documentEtag = createHash('sha256').update(html).digest('hex').slice(0, 16)
       .
       .
       .
@@ -1043,7 +1040,7 @@ class InjectAssetsPlugin {
         .replace('INJECT_INITIAL_SCRIPTS_HERE', () => JSON.stringify(initialScripts))
         .replace('INJECT_ASYNC_SCRIPTS_HERE', () => JSON.stringify(asyncScripts))
         .replace('INJECT_HTML_HERE', () => JSON.stringify(html))
-+       .replace('INJECT_HTML_CHECKSUM_HERE', () => JSON.stringify(htmlChecksum))
++       .replace('INJECT_DOCUMENT_ETAG_HERE', () => JSON.stringify(documentEtag))
 
       writeFileSync(join(__dirname, '..', 'build', '_worker.js'), worker)
 
@@ -1056,15 +1053,15 @@ class InjectAssetsPlugin {
 _[public/\_worker.js](public/_worker.js)_
 
 ```diff
-+const htmlChecksum = INJECT_HTML_CHECKSUM_HERE
++const documentEtag = INJECT_DOCUMENT_ETAG_HERE
 .
 .
 .
 export default {
   fetch(request, env) {
-+   const contentHash = request.headers.get('X-Content-Hash')
-
-+   if (contentHash === htmlChecksum) return new Response(null, { status: 304, headers: documentHeaders })
++   if (request.headers.get('If-None-Match') === documentEtag) {
++     return new Response(null, { status: 304, headers: documentHeaders })
++   }
     .
     .
     .
@@ -1078,6 +1075,20 @@ _[public/service-worker.js](public/service-worker.js)_
 .
 .
 .
+const getRequestHeaders = responseHeaders => {
+  const requestHeaders = { 'X-Cached': JSON.stringify(allAssets) }
+
+  if (responseHeaders) {
+    etag = responseHeaders.get('ETag') || responseHeaders.get('X-ETag')
+
+    requestHeaders = { 'If-None-Match': etag, ...requestHeaders }
+  }
+
+  return requestHeaders
+}
+.
+.
+.
 const precacheAssets = async ({ ignoreAssets }) => {
   .
   .
@@ -1087,13 +1098,11 @@ const precacheAssets = async ({ ignoreAssets }) => {
 
 const fetchDocument = async url => {
   const cache = await getCache()
-  const cachedAssets = await getCachedAssets(cache)
   const cachedDocument = await cache.match('/')
-  const contentHash = cachedDocument?.headers.get('X-Content-Hash')
-  const headers = { 'X-Cached': cachedAssets.join(', '), 'X-Content-Hash': contentHash }
+  const requestHeaders = getRequestHeaders(cachedDocument?.headers)
 
   try {
-    const response = await fetch(url, { headers })
+    const response = await fetch(url, { headers: requestHeaders })
 
     if (response.status === 304) return cachedDocument
 
@@ -1104,18 +1113,9 @@ const fetchDocument = async url => {
     return cachedDocument
   }
 }
-
-const handleFetch = async request => {
-  const cache = await getCache()
-
-+ if (request.destination === 'document') return fetchDocument(request.url)
-
-  const cachedResponse = await cache.match(request)
-
-  return cachedResponse || fetch(request)
-}
-
 ```
+
+_Note that a custom `X-ETag` is included for situations where the CDN does not automatically send an `ETag`._
 
 Now our serverless worker will always respond with a `304 Not Modified` status code whenever there are no changes, even for unvisited pages.
 
@@ -1167,12 +1167,7 @@ const [releaseRequestsPromise, releaseRequestsResolve] = createPromiseResolve()
 .
 const fetchDocument = async url => {
   const cache = await getCache()
-  const cachedAssets = await getCachedAssets(cache)
-  const cachedDocument = await cache.match('/')
   const updatedDocument = await cache.match('/updated')
-  const contentHash = cachedDocument?.headers.get('X-Content-Hash')
-  const etag = cachedDocument?.headers.get('ETag')
-  const headers = { 'X-Cached': cachedAssets.join(', '), 'X-Content-Hash': contentHash, 'If-None-Match': etag }
 
   if (updatedDocument) {
     releaseRequestsResolve()
@@ -1184,9 +1179,12 @@ const fetchDocument = async url => {
     return clonedUpdatedDocument
   }
 
-  const currentDocument = fetch(url, { headers }).then(async response => {
+  const cachedDocument = await cache.match('/')
+  const requestHeaders = getRequestHeaders(cachedDocument?.headers)
+
+  const currentDocument = fetch(url, { headers: requestHeaders }).then(async response => {
     const { status } = response
-    const [client] = await self.clients.matchAll()
+    const [client] = await self.clients.matchAll({ includeUncontrolled: true })
 
     if (status === 200) {
       if (cachedDocument) {
@@ -1235,7 +1233,7 @@ self.addEventListener('activate', event => event.waitUntil(clients.claim()))
 .
 .
 .
-self.addEventListener('fetch', async event => {
+self.addEventListener('fetch', event => {
   const { request } = event
 
   if (request.destination === 'document') return event.respondWith(fetchDocument(request.url))
@@ -1350,7 +1348,7 @@ const register = () => {
       console.log('Service worker registered!')
 
       registration.addEventListener('updatefound', () => {
-        registration.installing?.postMessage({ type: 'cache-assets', inlineAssets: extractInlineScripts() })
+        registration.installing?.postMessage({ inlineAssets: extractInlineScripts() })
       })
 
 +     setInterval(() => registration.update(), ACTIVE_REVALIDATION_INTERVAL * 1000)
