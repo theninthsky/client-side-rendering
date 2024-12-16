@@ -86,14 +86,13 @@ const fetchDocument = async url => {
   const requestHeaders = getRequestHeaders(cachedDocument?.headers)
 
   const currentDocument = fetch(url, { headers: requestHeaders }).then(async response => {
-    const { status } = response
     const [client] = await self.clients.matchAll({ includeUncontrolled: true })
 
-    if (status === 200) {
+    if (response.status === 200) {
       if (cachedDocument) {
         await cache.put('/updated', response.clone())
 
-        client?.postMessage({ action: 'reload' })
+        client.postMessage({ action: 'reload' })
 
         return response
       }
@@ -102,7 +101,7 @@ const fetchDocument = async url => {
     }
 
     releaseRequestsResolve()
-    client?.postMessage({ action: 'make-visible' })
+    client.postMessage({ action: 'make-visible' })
 
     return response
   })
