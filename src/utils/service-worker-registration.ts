@@ -2,7 +2,7 @@
 
 import extractInlineScripts from './extract-inline-scripts'
 
-const ACTIVE_REVALIDATION_INTERVAL = 10 * 60
+const ACTIVE_REVALIDATION_INTERVAL = 30 * 60
 
 const register = () => {
   window.addEventListener('load', async () => {

@@ -4,7 +4,7 @@ import { SitemapStream, streamToPromise } from 'sitemap'
 
 import pages from '../src/pages.js'
 
-const pokemonResponse = await fetch('https://pokeapi.co/api/v2/pokemon?limit=10000')
+const pokemonResponse = await fetch('https://pokeapi.co/api/v2/pokemon?limit=1025')
 const rawPokemon = await pokemonResponse.json()
 const pokemon = rawPokemon.results.map(({ name }) => name)
 

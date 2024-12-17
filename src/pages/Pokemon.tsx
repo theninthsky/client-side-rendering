@@ -1,4 +1,4 @@
-import { FC } from 'react'
+import { useMemo, FC } from 'react'
 import { Meta, LazyRender, useFetch } from 'frontend-essentials'
 import toLower from 'lodash/toLower'
 import { css } from '@emotion/css'
@@ -27,12 +27,22 @@ const disableLazyRender = /prerender|googlebot/i.test(navigator.userAgent)
 
 preconnect(imagesHost)
 
+const formatPokemons = rawPokemons =>
+  rawPokemons.map(({ id, name, extra: [{ types, sprites }] }) => ({
+    id,
+    name,
+    types: types.map(({ type }) => type.name),
+    artwork: sprites[0].officialArtwrok
+  }))
+
 const Pokemon: FC<{}> = () => {
-  const { data: { data: { pokemons } = {} } = {} } = useFetch(pokemonData.url, {
+  const { data: { data: { pokemons: rawPokemons } = {} } = {} } = useFetch(pokemonData.url, {
     uuid: 'pokemon',
     immutable: true,
     ...pokemonData
   })
+
+  const pokemons = useMemo(() => (rawPokemons ? formatPokemons(rawPokemons) : undefined), [rawPokemons])
 
   return (
     <div>
@@ -48,9 +58,9 @@ const Pokemon: FC<{}> = () => {
 
       <main className={style.main}>
         {pokemons ? (
-          <LazyRender uuid="pokemon" items={pokemons.results} batch={disableLazyRender ? Infinity : 50}>
-            {({ id, name, artwork }) => (
-              <Link key={name} className={style.pokemon} to={`/pokemon/${name}`} state={{ id, name, img: artwork }}>
+          <LazyRender uuid="pokemon" items={pokemons} batch={disableLazyRender ? Infinity : 50}>
+            {({ id, name, types, artwork }) => (
+              <Link key={name} className={style.pokemon} to={`/pokemon/${name}`} state={{ id, name, types, artwork }}>
                 <img className={style.pokemonImage} src={artwork} alt={name} loading="lazy" />
 
                 <span>{_.startCase(toLower(name))}</span>

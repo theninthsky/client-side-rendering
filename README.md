@@ -1278,7 +1278,7 @@ Some users leave the app open for extended periods of time, so another thing we 
 _[service-worker-registration.ts](src/utils/service-worker-registration.ts)_
 
 ```diff
-+ const ACTIVE_REVALIDATION_INTERVAL = 10 * 60
++ const ACTIVE_REVALIDATION_INTERVAL = 30 * 60
 
 const register = () => {
   window.addEventListener('load', async () => {
@@ -1299,7 +1299,7 @@ const register = () => {
 }
 ```
 
-The code above revalidates the app every 10 minutes.
+The code above revalidates the app every 30 minutes.
 
 The revalidation process is extremely cheap, since it only involves refetching the service worker (which will return a _304 Not Modified_ status code if not changed).
 <br>

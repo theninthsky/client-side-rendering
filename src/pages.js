@@ -11,7 +11,7 @@ export default {
       "Demonstrated here is a large amount of static data that is pre-generated and fetched in parallel with all of the page's assets.",
     data: [
       {
-        url: '/json/lorem-ipsum.json',
+        url: '/generated/lorem-ipsum.json',
         menuPreload: true
       }
     ]
@@ -23,21 +23,28 @@ export default {
       "Demonstrated here is dynamic data that is fetched in parallel with all of the page's assets and passed directly to its sub-pages.",
     data: [
       {
-        url: 'https://graphql-pokeapi.graphcdn.app',
+        url: 'https://beta.pokeapi.co/graphql/v1beta',
         method: 'post',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          query: `query pokemons($limit: Int, $offset: Int) {
-            pokemons(limit: $limit, offset: $offset) {
-              results {
-                id
-                url
+          query: `
+            query getAllPokemons {
+              pokemons: pokemon_v2_pokemonspecies(order_by: {id: asc}) {
                 name
-                artwork
+                id
+                extra: pokemon_v2_pokemons {
+                  types: pokemon_v2_pokemontypes {
+                    type: pokemon_v2_type {
+                      name
+                    }
+                  }
+                  sprites: pokemon_v2_pokemonsprites {
+                    officialArtwrok: sprites(path: "other.official-artwork.front_default")
+                  }
+                }
               }
             }
-          }`,
-          variables: { limit: 2000, offset: 0 }
+          `
         })
       }
     ],
