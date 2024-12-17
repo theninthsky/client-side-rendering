@@ -90,7 +90,16 @@ export default (_, { mode }) => {
       }
     },
     plugins: [
-      ...(!production ? [new ReactRefreshPlugin()] : []),
+      ...(production
+        ? [
+            new InjectManifest({
+              include: [/fonts\//, /scripts\/.+\.js$/],
+              swSrc: join(__dirname, 'public', 'service-worker.js'),
+              compileSrc: false,
+              maximumFileSizeToCacheInBytes: 10000000
+            })
+          ]
+        : [new ReactRefreshPlugin()]),
       new ESLintPlugin({ extensions: ['js', 'ts', ' jsx', 'tsx'] }),
       new HtmlPlugin({ template: 'public/index.html', scriptLoading: 'module' }),
       new rspack.CopyRspackPlugin({
@@ -101,12 +110,6 @@ export default (_, { mode }) => {
             info: { minimized: true }
           }
         ]
-      }),
-      new InjectManifest({
-        include: [/fonts\//, /scripts\/.+\.js$/],
-        swSrc: join(__dirname, 'public', 'service-worker.js'),
-        compileSrc: false,
-        maximumFileSizeToCacheInBytes: 10000000
       }),
       new InjectAssetsPlugin()
     ]
