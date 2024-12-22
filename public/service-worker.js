@@ -73,7 +73,7 @@ const fetchDocument = async ({ url, preloadResponse }) => {
   const requestHeaders = getRequestHeaders(cachedDocument?.headers)
 
   try {
-    const response = await (preloadResponse || fetch(url, { headers: requestHeaders }))
+    const response = await (preloadResponse && cachedDocument ? preloadResponse : fetch(url, { headers: requestHeaders }))
 
     if (response.status === 304) return cachedDocument
 
