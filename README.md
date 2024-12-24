@@ -849,21 +849,23 @@ _[src/utils/service-worker-registration.ts](src/utils/service-worker-registratio
 import extractInlineScripts from './extract-inline-scripts'
 
 const register = () => {
-  window.addEventListener('load', async () => {
-    try {
-      const registration = await navigator.serviceWorker.register('/service-worker.js')
+  window.addEventListener(
+    'load',
+    async () => {
+      try {
+        const registration = await navigator.serviceWorker.register('/service-worker.js')
 
-      console.log('Service worker registered!')
+        console.log('Service worker registered!')
 
-      registration.addEventListener('updatefound', () => {
-        registration.installing?.postMessage({ inlineAssets: extractInlineScripts() })
-      })
-
-      setInterval(() => registration.update(), ACTIVE_REVALIDATION_INTERVAL * 1000)
-    } catch (err) {
-      console.error(err)
-    }
-  })
+        registration.addEventListener('updatefound', () => {
+          registration.installing?.postMessage({ inlineAssets: extractInlineScripts() })
+        })
+      } catch (err) {
+        console.error(err)
+      }
+    },
+    { once: true }
+  )
 }
 ```
 
@@ -1075,17 +1077,10 @@ _[public/service-worker.js](public/service-worker.js)_
 .
 .
 .
-const getRequestHeaders = responseHeaders => {
-  const requestHeaders = { 'X-Cached': JSON.stringify(allAssets) }
-
-  if (responseHeaders) {
-    etag = responseHeaders.get('ETag') || responseHeaders.get('X-ETag')
-
-    requestHeaders = { 'If-None-Match': etag, ...requestHeaders }
-  }
-
-  return requestHeaders
-}
+const getRequestHeaders = responseHeaders => ({
+  'If-None-Match': responseHeaders?.get('ETag') || responseHeaders?.get('X-ETag'),
+  'X-Cached': JSON.stringify(allAssets)
+})
 .
 .
 .
@@ -1154,15 +1149,17 @@ const fetchDocument = async ({ url, preloadResponse }) => {
   const requestHeaders = getRequestHeaders(cachedDocument?.headers)
 
   try {
-    const response = await (preloadResponse || fetch(url, { headers: requestHeaders }))
+    const response = await (preloadResponse && cachedDocument
+      ? preloadResponse
+      : fetch(url, { headers: requestHeaders }))
 
     if (response.status === 304) return cachedDocument
 
     cache.put('/', response.clone())
 
-    const [client] = await self.clients.matchAll({ includeUncontrolled: true })
-
-    client?.postMessage({ navigationPreloadHeader: JSON.stringify(getRequestHeaders(response.headers)) })
+    self.clients.matchAll({ includeUncontrolled: true }).then(([client]) => {
+      client?.postMessage({ navigationPreloadHeader: JSON.stringify(getRequestHeaders(response.headers)) })
+    })
 
     return response
   } catch (err) {
@@ -1278,28 +1275,32 @@ Some users leave the app open for extended periods of time, so another thing we 
 _[service-worker-registration.ts](src/utils/service-worker-registration.ts)_
 
 ```diff
-+ const ACTIVE_REVALIDATION_INTERVAL = 30 * 60
++ const REVALIDATION_INTERVAL_HOURS = 1
 
 const register = () => {
-  window.addEventListener('load', async () => {
-    try {
-      const registration = await navigator.serviceWorker.register('/service-worker.js')
+  window.addEventListener(
+    'load',
+    async () => {
+      try {
+        const registration = await navigator.serviceWorker.register('/service-worker.js')
 
-      console.log('Service worker registered!')
+        console.log('Service worker registered!')
 
-      registration.addEventListener('updatefound', () => {
-        registration.installing?.postMessage({ inlineAssets: extractInlineScripts() })
-      })
+        registration.addEventListener('updatefound', () => {
+          registration.installing?.postMessage({ inlineAssets: extractInlineScripts() })
+        })
 
-+     setInterval(() => registration.update(), ACTIVE_REVALIDATION_INTERVAL * 1000)
-    } catch (err) {
-      console.error(err)
-    }
-  })
++       setInterval(() => registration.update(), REVALIDATION_INTERVAL_HOURS * 3600 * 1000)
+      } catch (err) {
+        console.error(err)
+      }
+    },
+    { once: true }
+  )
 }
 ```
 
-The code above revalidates the app every 30 minutes.
+The code above revalidates the app every hour.
 
 The revalidation process is extremely cheap, since it only involves refetching the service worker (which will return a _304 Not Modified_ status code if not changed).
 <br>

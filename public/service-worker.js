@@ -19,17 +19,10 @@ const getCachedAssets = async cache => {
   return keys.map(({ url }) => `/${url.replace(self.registration.scope, '')}`)
 }
 
-const getRequestHeaders = responseHeaders => {
-  const requestHeaders = { 'X-Cached': JSON.stringify(allAssets) }
-
-  if (responseHeaders) {
-    etag = responseHeaders.get('ETag') || responseHeaders.get('X-ETag')
-
-    requestHeaders = { 'If-None-Match': etag, ...requestHeaders }
-  }
-
-  return requestHeaders
-}
+const getRequestHeaders = responseHeaders => ({
+  'If-None-Match': responseHeaders?.get('ETag') || responseHeaders?.get('X-ETag'),
+  'X-Cached': JSON.stringify(allAssets)
+})
 
 const cacheInlineAssets = async assets => {
   const cache = await getCache()
@@ -73,15 +66,17 @@ const fetchDocument = async ({ url, preloadResponse }) => {
   const requestHeaders = getRequestHeaders(cachedDocument?.headers)
 
   try {
-    const response = await (preloadResponse && cachedDocument ? preloadResponse : fetch(url, { headers: requestHeaders }))
+    const response = await (preloadResponse && cachedDocument
+      ? preloadResponse
+      : fetch(url, { headers: requestHeaders }))
 
     if (response.status === 304) return cachedDocument
 
     cache.put('/', response.clone())
 
-    const [client] = await self.clients.matchAll({ includeUncontrolled: true })
-
-    client?.postMessage({ navigationPreloadHeader: JSON.stringify(getRequestHeaders(response.headers)) })
+    self.clients.matchAll({ includeUncontrolled: true }).then(([client]) => {
+      client?.postMessage({ navigationPreloadHeader: JSON.stringify(getRequestHeaders(response.headers)) })
+    })
 
     return response
   } catch (err) {

@@ -2,24 +2,28 @@
 
 import extractInlineScripts from './extract-inline-scripts'
 
-const ACTIVE_REVALIDATION_INTERVAL = 30 * 60
+const REVALIDATION_INTERVAL_HOURS = 1
 
 const register = () => {
-  window.addEventListener('load', async () => {
-    try {
-      const registration = await navigator.serviceWorker.register('/service-worker.js')
+  window.addEventListener(
+    'load',
+    async () => {
+      try {
+        const registration = await navigator.serviceWorker.register('/service-worker.js')
 
-      console.log('Service worker registered!')
+        console.log('Service worker registered!')
 
-      registration.addEventListener('updatefound', () => {
-        registration.installing?.postMessage({ inlineAssets: extractInlineScripts() })
-      })
+        registration.addEventListener('updatefound', () => {
+          registration.installing?.postMessage({ inlineAssets: extractInlineScripts() })
+        })
 
-      setInterval(() => registration.update(), ACTIVE_REVALIDATION_INTERVAL * 1000)
-    } catch (err) {
-      console.error(err)
-    }
-  })
+        setInterval(() => registration.update(), REVALIDATION_INTERVAL_HOURS * 3600 * 1000)
+      } catch (err) {
+        console.error(err)
+      }
+    },
+    { once: true }
+  )
 
   navigator.serviceWorker?.addEventListener('message', async event => {
     const { navigationPreloadHeader } = event.data
