@@ -58,9 +58,9 @@ class InjectAssetsPlugin {
           parentPaths: pages.filter(({ scripts }) => scripts.includes(name)).map(({ path }) => path)
         }))
 
-      const initialScriptsString = html
-        .match(/<script\s+type="module"[^>]*>([\s\S]*?)(?=<\/head>)/)[0]
-        .replace(/type=\"module\" /g, () => '')
+      html = html.replace(/type=\"module\"/g, () => 'defer')
+
+      const initialScriptsString = html.match(/<script\s+defer[^>]*>([\s\S]*?)(?=<\/head>)/)[0]
       const initialScriptsStrings = initialScriptsString.split('</script>')
       const initialScripts = assets
         .filter(({ url }) => initialScriptsString.includes(url))
@@ -73,7 +73,6 @@ class InjectAssetsPlugin {
         .replace(/,"scripts":\s*\[(.*?)\]/g, () => '')
         .replace(/scripts\.forEach[\s\S]*?data\?\.\s*forEach/, () => 'data?.forEach')
         .replace(/preloadAssets/g, () => 'preloadData')
-        .replace(/<script type=\"module\"/g, () => '<script')
 
       worker = worker
         .replace('INJECT_INITIAL_SCRIPTS_STRING_HERE', () => JSON.stringify(initialScriptsString))
