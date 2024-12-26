@@ -1,4 +1,4 @@
-const initialModuleScriptsString = INJECT_INITIAL_MODULE_SCRIPTS_STRING_HERE
+const initialScriptsString = INJECT_INITIAL_SCRIPTS_STRING_HERE
 const initialScripts = INJECT_INITIAL_SCRIPTS_HERE
 const asyncScripts = INJECT_ASYNC_SCRIPTS_HERE
 const html = INJECT_HTML_HERE
@@ -94,7 +94,7 @@ export default {
       return new Response(html, { headers: { ...documentHeaders, ETag: documentEtag, 'X-ETag': documentEtag } })
     }
 
-    let body = html.replace(initialModuleScriptsString, () => '')
+    let body = html.replace(initialScriptsString, () => '')
 
     const injectedInitialScriptsString = initialScripts
       .map(({ url, source }) =>

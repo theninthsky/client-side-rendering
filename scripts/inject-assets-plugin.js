@@ -58,11 +58,13 @@ class InjectAssetsPlugin {
           parentPaths: pages.filter(({ scripts }) => scripts.includes(name)).map(({ path }) => path)
         }))
 
-      const initialModuleScriptsString = html.match(/<script\s+type="module"[^>]*>([\s\S]*?)(?=<\/head>)/)[0]
-      const initialModuleScripts = initialModuleScriptsString.split('</script>')
+      html = html.replace(/type=\"module\"/g, () => 'defer')
+
+      const initialScriptsString = html.match(/<script\s+defer[^>]*>([\s\S]*?)(?=<\/head>)/)[0]
+      const initialScriptsStrings = initialScriptsString.split('</script>')
       const initialScripts = assets
-        .filter(({ url }) => initialModuleScriptsString.includes(url))
-        .map(asset => ({ ...asset, order: initialModuleScripts.findIndex(script => script.includes(asset.url)) }))
+        .filter(({ url }) => initialScriptsString.includes(url))
+        .map(asset => ({ ...asset, order: initialScriptsStrings.findIndex(script => script.includes(asset.url)) }))
         .sort((a, b) => a.order - b.order)
       const asyncScripts = assets.filter(asset => !initialScripts.includes(asset))
       const documentEtag = createHash('sha256').update(html).digest('hex').slice(0, 16)
@@ -73,7 +75,7 @@ class InjectAssetsPlugin {
         .replace(/preloadAssets/g, () => 'preloadData')
 
       worker = worker
-        .replace('INJECT_INITIAL_MODULE_SCRIPTS_STRING_HERE', () => JSON.stringify(initialModuleScriptsString))
+        .replace('INJECT_INITIAL_SCRIPTS_STRING_HERE', () => JSON.stringify(initialScriptsString))
         .replace('INJECT_INITIAL_SCRIPTS_HERE', () => JSON.stringify(initialScripts))
         .replace('INJECT_ASYNC_SCRIPTS_HERE', () => JSON.stringify(asyncScripts))
         .replace('INJECT_HTML_HERE', () => JSON.stringify(html))
