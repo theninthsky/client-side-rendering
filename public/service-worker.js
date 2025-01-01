@@ -21,7 +21,10 @@ const getCachedAssets = async cache => {
 
 const getRequestHeaders = responseHeaders => ({
   'If-None-Match': responseHeaders?.get('ETag') || responseHeaders?.get('X-ETag'),
-  'X-Cached': allAssets.map(asset => asset.match(/(?<=\.)[^.]+(?=\.js$)/)[0]).join()
+  'X-Cached': allAssets
+    .filter(asset => asset.endsWith('.js'))
+    .map(asset => asset.match(/(?<=\.)[^.]+(?=\.js$)/)?.[0])
+    .join()
 })
 
 const cacheInlineAssets = async assets => {
