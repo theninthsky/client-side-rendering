@@ -21,7 +21,10 @@ const getCachedAssets = async cache => {
 
 const getRequestHeaders = responseHeaders => ({
   'If-None-Match': responseHeaders?.get('ETag') || responseHeaders?.get('X-ETag'),
-  'X-Cached': JSON.stringify(allAssets)
+  'X-Cached': allAssets
+    .filter(asset => asset.endsWith('.js'))
+    .map(asset => asset.match(/(?<=\.)[^.]+(?=\.js$)/)?.[0])
+    .join()
 })
 
 const cacheInlineAssets = async assets => {
@@ -63,12 +66,11 @@ const removeUnusedAssets = async () => {
 const fetchDocument = async ({ url, preloadResponse }) => {
   const cache = await getCache()
   const cachedDocument = await cache.match('/')
-  const requestHeaders = getRequestHeaders(cachedDocument?.headers)
 
   try {
     const response = await (preloadResponse && cachedDocument
       ? preloadResponse
-      : fetch(url, { headers: requestHeaders }))
+      : fetch(url, { headers: getRequestHeaders(cachedDocument?.headers) }))
 
     if (response.status === 304) return cachedDocument
 

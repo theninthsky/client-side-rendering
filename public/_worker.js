@@ -4,7 +4,11 @@ const asyncScripts = INJECT_ASYNC_SCRIPTS_HERE
 const html = INJECT_HTML_HERE
 const documentEtag = INJECT_DOCUMENT_ETAG_HERE
 
-const documentHeaders = { 'Cache-Control': 'public, max-age=0', 'Content-Type': 'text/html; charset=utf-8' }
+const allScripts = [...initialScripts, ...asyncScripts]
+const documentHeaders = {
+  'Cache-Control': 'public, max-age=0, must-revalidate',
+  'Content-Type': 'text/html; charset=utf-8'
+}
 
 const BOT_AGENTS = [
   'bingbot',
@@ -87,8 +91,10 @@ export default {
 
     xCached ||= request.headers.get('X-Cached')
 
-    const cachedScripts = JSON.parse(xCached || '[]')
-    const uncachedScripts = [...initialScripts, ...asyncScripts].filter(({ url }) => !cachedScripts.includes(url))
+    const cachedScripts = xCached
+      ? allScripts.filter(({ url }) => xCached.includes(url.match(/(?<=\.)[^.]+(?=\.js$)/)[0]))
+      : []
+    const uncachedScripts = allScripts.filter(script => !cachedScripts.includes(script))
 
     if (!uncachedScripts.length) {
       return new Response(html, { headers: { ...documentHeaders, ETag: documentEtag, 'X-ETag': documentEtag } })
@@ -97,25 +103,28 @@ export default {
     let body = html.replace(initialScriptsString, () => '')
 
     const injectedInitialScriptsString = initialScripts
-      .map(({ url, source }) =>
-        cachedScripts.includes(url) ? `<script src="${url}"></script>` : `<script id="${url}">${source}</script>`
+      .map(script =>
+        cachedScripts.includes(script)
+          ? `<script src="${script.url}"></script>`
+          : `<script id="${script.url}">${script.source}</script>`
       )
       .join('\n')
 
     body = body.replace('</body>', () => `<!-- INJECT_ASYNC_SCRIPTS_HERE -->${injectedInitialScriptsString}\n</body>`)
 
-    const matchingPageScripts = asyncScripts
-      .map(asset => {
-        const parentsPaths = asset.parentPaths.map(path => ({ path, ...isMatch(pathname, path) }))
-        const parentPathsExactMatch = parentsPaths.some(({ exact }) => exact)
-        const parentPathsMatch = parentsPaths.some(({ match }) => match)
+    asyncScripts.forEach(script => {
+      const parentsPaths = script.parentPaths.map(path => ({ path, ...isMatch(pathname, path) }))
 
-        return { ...asset, exact: parentPathsExactMatch, match: parentPathsMatch }
-      })
-      .filter(({ match }) => match)
-    const exactMatchingPageScripts = matchingPageScripts.filter(({ exact }) => exact)
-    const pageScripts = exactMatchingPageScripts.length ? exactMatchingPageScripts : matchingPageScripts
-    const uncachedPageScripts = pageScripts.filter(({ url }) => !cachedScripts.includes(url))
+      script.exactMatch = parentsPaths.some(({ exact }) => exact)
+
+      if (!script.exactMatch) script.match = parentsPaths.some(({ match }) => match)
+    })
+
+    const exactMatchingPageScripts = asyncScripts.filter(({ exactMatch }) => exactMatch)
+    const pageScripts = exactMatchingPageScripts.length
+      ? exactMatchingPageScripts
+      : asyncScripts.filter(({ match }) => match)
+    const uncachedPageScripts = pageScripts.filter(script => !cachedScripts.includes(script))
     const injectedAsyncScriptsString = uncachedPageScripts.reduce(
       (str, { url, source }) => `${str}\n<script id="${url}">${source}</script>`,
       ''
