@@ -5,7 +5,10 @@ const html = INJECT_HTML_HERE
 const documentEtag = INJECT_DOCUMENT_ETAG_HERE
 
 const allScripts = [...initialScripts, ...asyncScripts]
-const documentHeaders = { 'Cache-Control': 'public, max-age=0', 'Content-Type': 'text/html; charset=utf-8' }
+const documentHeaders = {
+  'Cache-Control': 'public, max-age=0, must-revalidate',
+  'Content-Type': 'text/html; charset=utf-8'
+}
 
 const BOT_AGENTS = [
   'bingbot',
@@ -88,7 +91,9 @@ export default {
 
     xCached ||= request.headers.get('X-Cached')
 
-    const cachedScripts = allScripts.filter(({ url }) => xCached.includes(url.match(/(?<=\.)[^.]+(?=\.js$)/)[0]))
+    const cachedScripts = xCached
+      ? allScripts.filter(({ url }) => xCached.includes(url.match(/(?<=\.)[^.]+(?=\.js$)/)[0]))
+      : []
     const uncachedScripts = allScripts.filter(script => !cachedScripts.includes(script))
 
     if (!uncachedScripts.length) {
