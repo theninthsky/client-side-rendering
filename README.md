@@ -763,7 +763,11 @@ const initialScripts = INJECT_INITIAL_SCRIPTS_HERE
 const asyncScripts = INJECT_ASYNC_SCRIPTS_HERE
 const html = INJECT_HTML_HERE
 
-const documentHeaders = { 'Cache-Control': 'public, max-age=0', 'Content-Type': 'text/html; charset=utf-8' }
+const allScripts = [...initialScripts, ...asyncScripts]
+const documentHeaders = {
+  'Cache-Control': 'public, max-age=0, must-revalidate',
+  'Content-Type': 'text/html; charset=utf-8'
+}
 
 const isMatch = (pathname, path) => {
   if (pathname === path) return { exact: true, match: true }
@@ -783,12 +787,15 @@ export default {
   fetch(request, env) {
     const pathname = new URL(request.url).pathname.toLowerCase()
     const userAgent = (request.headers.get('User-Agent') || '').toLowerCase()
+    const xCached = request.headers.get('X-Cached')
     const bypassWorker = ['prerender', 'googlebot'].includes(userAgent) || pathname.includes('.')
 
     if (bypassWorker) return env.ASSETS.fetch(request)
 
-    const cachedScripts = request.headers.get('X-Cached')?.split(', ').filter(Boolean) || []
-    const uncachedScripts = [...initialScripts, ...asyncScripts].filter(({ url }) => !cachedScripts.includes(url))
+    const cachedScripts = xCached
+      ? allScripts.filter(({ url }) => xCached.includes(url.match(/(?<=\.)[^.]+(?=\.js$)/)[0]))
+      : []
+    const uncachedScripts = allScripts.filter(script => !cachedScripts.includes(script))
 
     if (!uncachedScripts.length) {
       return new Response(html, { headers: documentHeaders })
@@ -797,25 +804,28 @@ export default {
     let body = html.replace(initialModuleScriptsString, () => '')
 
     const injectedInitialScriptsString = initialScripts
-      .map(({ url, source }) =>
-        cachedScripts.includes(url) ? `<script src="${url}"></script>` : `<script id="${url}">${source}</script>`
+      .map(script =>
+        cachedScripts.includes(script)
+          ? `<script src="${script.url}"></script>`
+          : `<script id="${script.url}">${script.source}</script>`
       )
       .join('\n')
 
     body = body.replace('</body>', () => `<!-- INJECT_ASYNC_SCRIPTS_HERE -->${injectedInitialScriptsString}\n</body>`)
 
-    const matchingPageScripts = asyncScripts
-      .map(asset => {
-        const parentsPaths = asset.parentPaths.map(path => ({ path, ...isMatch(pathname, path) }))
-        const parentPathsExactMatch = parentsPaths.some(({ exact }) => exact)
-        const parentPathsMatch = parentsPaths.some(({ match }) => match)
+    asyncScripts.forEach(script => {
+      const parentsPaths = script.parentPaths.map(path => ({ path, ...isMatch(pathname, path) }))
 
-        return { ...asset, exact: parentPathsExactMatch, match: parentPathsMatch }
-      })
-      .filter(({ match }) => match)
-    const exactMatchingPageScripts = matchingPageScripts.filter(({ exact }) => exact)
-    const pageScripts = exactMatchingPageScripts.length ? exactMatchingPageScripts : matchingPageScripts
-    const uncachedPageScripts = pageScripts.filter(({ url }) => !cachedScripts.includes(url))
+      script.exactMatch = parentsPaths.some(({ exact }) => exact)
+
+      if (!script.exactMatch) script.match = parentsPaths.some(({ match }) => match)
+    })
+
+    const exactMatchingPageScripts = asyncScripts.filter(({ exactMatch }) => exactMatch)
+    const pageScripts = exactMatchingPageScripts.length
+      ? exactMatchingPageScripts
+      : asyncScripts.filter(({ match }) => match)
+    const uncachedPageScripts = pageScripts.filter(script => !cachedScripts.includes(script))
     const injectedAsyncScriptsString = uncachedPageScripts.reduce(
       (str, { url, source }) => `${str}\n<script id="${url}">${source}</script>`,
       ''
@@ -1079,7 +1089,10 @@ _[public/service-worker.js](public/service-worker.js)_
 .
 const getRequestHeaders = responseHeaders => ({
   'If-None-Match': responseHeaders?.get('ETag') || responseHeaders?.get('X-ETag'),
-  'X-Cached': JSON.stringify(allAssets)
+  'X-Cached': allAssets
+    .filter(asset => asset.endsWith('.js'))
+    .map(asset => asset.match(/(?<=\.)[^.]+(?=\.js$)/)?.[0])
+    .join()
 })
 .
 .
@@ -1094,10 +1107,9 @@ const precacheAssets = async ({ ignoreAssets }) => {
 const fetchDocument = async url => {
   const cache = await getCache()
   const cachedDocument = await cache.match('/')
-  const requestHeaders = getRequestHeaders(cachedDocument?.headers)
 
   try {
-    const response = await fetch(url, { headers: requestHeaders })
+    const response = await fetch(url, { headers: getRequestHeaders(cachedDocument?.headers) })
 
     if (response.status === 304) return cachedDocument
 
@@ -1146,12 +1158,11 @@ _[public/service-worker.js](public/service-worker.js)_
 const fetchDocument = async ({ url, preloadResponse }) => {
   const cache = await getCache()
   const cachedDocument = await cache.match('/')
-  const requestHeaders = getRequestHeaders(cachedDocument?.headers)
 
   try {
     const response = await (preloadResponse && cachedDocument
       ? preloadResponse
-      : fetch(url, { headers: requestHeaders }))
+      : fetch(url, { headers: getRequestHeaders(cachedDocument?.headers) }))
 
     if (response.status === 304) return cachedDocument
 
@@ -1179,6 +1190,27 @@ self.addEventListener('fetch', event => {
   if (request.destination === 'document') return event.respondWith(fetchDocument({ url: request.url, preloadResponse }))
   if (['font', 'script'].includes(request.destination)) event.respondWith(fetchAsset(request))
 })
+```
+
+_[public/\_worker.js](public/_worker.js)_
+
+```js
+ fetch(request, env) {
+  let { 'If-None-Match': etag, 'X-Cached': xCached } = JSON.parse(
+    request.headers.get('service-worker-navigation-preload') || '{}'
+  )
+
+  etag ||= request.headers.get('If-None-Match')
+
+  if (etag === documentEtag) return new Response(null, { status: 304, headers: documentHeaders })
+  .
+  .
+  .
+  xCached ||= request.headers.get('X-Cached')
+  .
+  .
+  .
+ }
 ```
 
 With this implementation, the document request will be sent immediately, independent of the service worker.
