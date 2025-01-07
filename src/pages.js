@@ -9,12 +9,8 @@ export default {
     title: 'Lorem Ipsum',
     description:
       "Demonstrated here is a large amount of static data that is pre-generated and fetched in parallel with all of the page's assets.",
-    data: [
-      {
-        url: '/generated/lorem-ipsum.json',
-        menuPreload: true
-      }
-    ]
+    data: [{ url: '/generated/lorem-ipsum.json' }],
+    preloadOnHover: true
   },
   pokemon: {
     path: '/pokemon',

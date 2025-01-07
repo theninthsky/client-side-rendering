@@ -275,6 +275,17 @@ export default InjectAssetsPlugin
 _[scripts/preload-assets.js](scripts/preload-assets.js)_
 
 ```js
+const getMatchingPage = pathname => {
+  if (pathname !== '/') pathname = pathname.replace(/\/$/, '')
+
+  const potentiallyMatchingPages = pages
+    .map(page => ({ ...isMatch(pathname, page.path), ...page }))
+    .filter(({ match }) => match)
+  const matchingPage = potentiallyMatchingPages.find(({ exact }) => exact) || potentiallyMatchingPages[0]
+
+  return matchingPage
+}
+
 const isMatch = (pathname, path) => {
   if (pathname === path) return { exact: true, match: true }
   if (!path.includes(':')) return { match: false }
@@ -289,25 +300,19 @@ const isMatch = (pathname, path) => {
   }
 }
 
-const preloadAssets = () => {
-  let { pathname } = window.location
-
-  if (pathname !== '/') pathname = pathname.replace(/\/$/, '')
-
-  const matchingPages = pages.map(page => ({ ...isMatch(pathname, page.path), ...page })).filter(({ match }) => match)
-
-  if (!matchingPages.length) return
-
-  const { path, title, script } = matchingPages.find(({ exact }) => exact) || matchingPages[0]
-
+const preloadScript = ({ script }) => {
   document.head.appendChild(
     Object.assign(document.createElement('link'), { rel: 'preload', href: '/' + script, as: 'script' })
   )
-
-  if (title) document.title = title
 }
 
-preloadAssets()
+const matchingPage = getMatchingPage(window.location.pathname)
+
+if (matchingPage) {
+  preloadScript(matchingPage)
+
+  if (matchingPage.title) document.title = matchingPage.title
+}
 ```
 
 The imported `pages.js` file can be found [here](src/pages.js).
@@ -396,14 +401,23 @@ const getPages = rawAssets => {
 _[scripts/preload-assets.js](scripts/preload-assets.js)_
 
 ```diff
-- const { path, title, script } = matchingPages.find(({ exact }) => exact) || matchingPages[0]
-+ const { path, title, scripts } = matchingPages.find(({ exact }) => exact) || matchingPages[0]
+- const preloadScript = ({ script }) => {
++ const preloadScripts = ({ scripts }) => {
++  scripts.forEach(script => {
+     document.head.appendChild(
+       Object.assign(document.createElement('link'), { rel: 'preload', href: '/' + script, as: 'script' })
+     )
++  })
+ }
+.
+.
+.
+ if (matchingPage) {
+-  preloadScript(matchingPage)
++  preloadScripts(matchingPage)
 
-+ scripts.forEach(script => {
-    document.head.appendChild(
-      Object.assign(document.createElement('link'), { rel: 'preload', href: '/' + script, as: 'script' })
-    )
-+ })
+   if (matchingPage.title) document.title = matchingPage.title
+ }
 ```
 
 Now all async vendor chunks will be fetched in parallel with their parent async chunk:
@@ -456,7 +470,7 @@ HtmlPlugin.getCompilationHooks(compilation).beforeEmit.tapAsync('InjectAssetsPlu
 
 _[scripts/preload-assets.js](scripts/preload-assets.js)_
 
-```diff
+```js
 const preloadResponses = {}
 
 const originalFetch = window.fetch
@@ -480,24 +494,7 @@ window.fetch = async (input, options) => {
 .
 .
 .
-const getDynamicProperties = (pathname, path) => {
-  const pathParts = path.split('/')
-  const pathnameParts = pathname.split('/')
-  const dynamicProperties = {}
-
-  for (let i = 0; i < pathParts.length; i++) {
-    if (pathParts[i].startsWith(':')) dynamicProperties[pathParts[i].slice(1)] = pathnameParts[i]
-  }
-
-  return dynamicProperties
-}
-
-const preloadAssets = () => {
--   const { path, title, scripts } = matchingPages.find(({ exact }) => exact) || matchingPages[0]
-+   const { path, title, scripts, data, preconnect } = matchingPages.find(({ exact }) => exact) || matchingPages[0]
-    .
-    .
-    .
+const preloadData = ({ path, data, preconnect }) => {
   data?.forEach(({ url, ...request }) => {
     if (url.startsWith('func:')) url = eval(url.replace('func:', ''))
 
@@ -511,7 +508,27 @@ const preloadAssets = () => {
   })
 }
 
-preloadAssets()
+const getDynamicProperties = (pathname, path) => {
+  const pathParts = path.split('/')
+  const pathnameParts = pathname.split('/')
+  const dynamicProperties = {}
+
+  for (let i = 0; i < pathParts.length; i++) {
+    if (pathParts[i].startsWith(':')) dynamicProperties[pathParts[i].slice(1)] = pathnameParts[i]
+  }
+
+  return dynamicProperties
+}
+
+const matchingPage = getMatchingPage(window.location.pathname)
+
+if (matchingPage) {
+  preloadScripts(matchingPage)
+  preloadData(matchingPage)
+
+  if (matchingPage.title) document.title = matchingPage.title
+}
+
 ```
 
 Reminder: the `pages.js` file can be found [here](src/pages.js).
@@ -726,21 +743,20 @@ class InjectAssetsPlugin {
           parentPaths: pages.filter(({ scripts }) => scripts.includes(name)).map(({ path }) => path)
         }))
 
-      const initialModuleScriptsString = html.match(/<script\s+type="module"[^>]*>([\s\S]*?)(?=<\/head>)/)[0]
-      const initialModuleScripts = initialModuleScriptsString.split('</script>')
+      html = html.replace(/type=\"module\"/g, () => 'defer')
+
+      const initialScriptsString = html.match(/<script\s+defer[^>]*>([\s\S]*?)(?=<\/head>)/)[0]
+      const initialScriptsStrings = initialScriptsString.split('</script>')
       const initialScripts = assets
-        .filter(({ url }) => initialModuleScriptsString.includes(url))
-        .map(asset => ({ ...asset, order: initialModuleScripts.findIndex(script => script.includes(asset.url)) }))
+        .filter(({ url }) => initialScriptsString.includes(url))
+        .map(asset => ({ ...asset, order: initialScriptsStrings.findIndex(script => script.includes(asset.url)) }))
         .sort((a, b) => a.order - b.order)
       const asyncScripts = assets.filter(asset => !initialScripts.includes(asset))
 
-      html = html
-        .replace(/,"scripts":\s*\[(.*?)\]/g, () => '')
-        .replace(/scripts\.forEach[\s\S]*?data\?\.\s*forEach/, () => 'data?.forEach')
-        .replace(/preloadAssets/g, () => 'preloadData')
+      html = html.replace(/,"scripts":\s*\[(.*?)\]/g, () => '').replace('preloadScripts(matchingPage)', () => '')
 
       worker = worker
-        .replace('INJECT_INITIAL_MODULE_SCRIPTS_STRING_HERE', () => JSON.stringify(initialModuleScriptsString))
+        .replace('INJECT_INITIAL_SCRIPTS_STRING_HERE', () => JSON.stringify(initialScriptsString))
         .replace('INJECT_INITIAL_SCRIPTS_HERE', () => JSON.stringify(initialScripts))
         .replace('INJECT_ASYNC_SCRIPTS_HERE', () => JSON.stringify(asyncScripts))
         .replace('INJECT_HTML_HERE', () => JSON.stringify(html))

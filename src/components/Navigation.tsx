@@ -14,6 +14,11 @@ import MoonIcon from 'images/moon.svg'
 
 const NAVIGATION_HEIGHT = 55
 
+const preloadPageData = (pathname: string, matchingPage: any) => {
+  // @ts-ignore
+  if (pathname !== window.location.pathname) preloadData(matchingPage)
+}
+
 const Navigation = () => {
   const { theme, setTheme } = useStore(useShallow(({ theme, setTheme }) => ({ theme, setTheme })))
 
@@ -41,16 +46,24 @@ const Navigation = () => {
     () =>
       Object.values(pages)
         .filter(({ menuItem = true }) => menuItem)
-        .map(({ path, title, data }) => (
-          <NavigationLink
-            key={path}
-            to={path}
-            data={data?.filter(({ menuPreload }) => menuPreload)}
-            onClick={() => setDrawerOpen(false)}
-          >
-            {title}
-          </NavigationLink>
-        )),
+        .map(({ path }) => {
+          // @ts-ignore
+          const matchingPage = getMatchingPage(path)
+          const { title, preloadOnHover } = matchingPage
+
+          return (
+            <NavigationLink
+              key={path}
+              to={path}
+              onMouseEnter={preloadOnHover ? () => preloadPageData(path, matchingPage) : undefined}
+              onMouseDown={() => preloadPageData(path, matchingPage)}
+              onTouchStart={() => preloadPageData(path, matchingPage)}
+              onClick={() => setDrawerOpen(false)}
+            >
+              {title}
+            </NavigationLink>
+          )
+        }),
     [pages]
   )
 
