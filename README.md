@@ -275,19 +275,24 @@ export default InjectAssetsPlugin
 _[scripts/preload-assets.js](scripts/preload-assets.js)_
 
 ```js
-const getMatchingPage = pathname => {
+const getPathname = () => {
+  let { pathname } = window.location
+
   if (pathname !== '/') pathname = pathname.replace(/\/$/, '')
 
+  return pathname
+}
+
+const getPage = (pathname = getPathname()) => {
   const potentiallyMatchingPages = pages
     .map(page => ({ ...isMatch(pathname, page.path), ...page }))
     .filter(({ match }) => match)
-  const matchingPage = potentiallyMatchingPages.find(({ exact }) => exact) || potentiallyMatchingPages[0]
 
-  return matchingPage
+  return potentiallyMatchingPages.find(({ exactMatch }) => exactMatch) || potentiallyMatchingPages[0]
 }
 
 const isMatch = (pathname, path) => {
-  if (pathname === path) return { exact: true, match: true }
+  if (pathname === path) return { exactMatch: true, match: true }
   if (!path.includes(':')) return { match: false }
 
   const pathnameParts = pathname.split('/')
@@ -295,23 +300,25 @@ const isMatch = (pathname, path) => {
   const match = pathnameParts.every((part, ind) => part === pathParts[ind] || pathParts[ind]?.startsWith(':'))
 
   return {
-    exact: match && pathnameParts.length === pathParts.length,
-    match
+    match,
+    exactMatch: match && pathnameParts.length === pathParts.length
   }
 }
 
-const preloadScript = ({ script }) => {
+const preloadScript = script => {
   document.head.appendChild(
     Object.assign(document.createElement('link'), { rel: 'preload', href: '/' + script, as: 'script' })
   )
 }
 
-const matchingPage = getMatchingPage(window.location.pathname)
+const currentPage = getPage()
 
-if (matchingPage) {
-  preloadScript(matchingPage)
+if (currentPage) {
+  const { path, title, script } = currentPage
 
-  if (matchingPage.title) document.title = matchingPage.title
+  preloadScript(script)
+
+  if (title) document.title = title
 }
 ```
 
@@ -401,8 +408,8 @@ const getPages = rawAssets => {
 _[scripts/preload-assets.js](scripts/preload-assets.js)_
 
 ```diff
-- const preloadScript = ({ script }) => {
-+ const preloadScripts = ({ scripts }) => {
+- const preloadScript = script => {
++ const preloadScripts = scripts => {
 +  scripts.forEach(script => {
      document.head.appendChild(
        Object.assign(document.createElement('link'), { rel: 'preload', href: '/' + script, as: 'script' })
@@ -412,11 +419,14 @@ _[scripts/preload-assets.js](scripts/preload-assets.js)_
 .
 .
 .
- if (matchingPage) {
--  preloadScript(matchingPage)
-+  preloadScripts(matchingPage)
+ if (currentPage) {
+-  const { path, title, script } = currentPage
++  const { path, title, scripts } = currentPage
 
-   if (matchingPage.title) document.title = matchingPage.title
+-  preloadScript(currentPage)
++  preloadScripts(currentPage)
+
+   if (title) document.title = title
  }
 ```
 
@@ -494,17 +504,18 @@ window.fetch = async (input, options) => {
 .
 .
 .
-const preloadData = ({ path, data, preconnect }) => {
-  data?.forEach(({ url, ...request }) => {
+const preloadData = ({ pathname = getPathname(), path, data }) => {
+  data.forEach(({ url, preconnect, ...request }) => {
     if (url.startsWith('func:')) url = eval(url.replace('func:', ''))
 
     const constructedURL = typeof url === 'string' ? url : url(getDynamicProperties(pathname, path))
 
     fetch(constructedURL, { ...request, preload: true })
-  })
 
-  preconnect?.forEach(url => {
-    document.head.appendChild(Object.assign(document.createElement('link'), { rel: 'preconnect', href: url }))
+    // https://issues.chromium.org/issues/380896837
+    preconnect?.forEach(url => {
+      document.head.appendChild(Object.assign(document.createElement('link'), { rel: 'preconnect', href: url }))
+    })
   })
 }
 
@@ -520,15 +531,16 @@ const getDynamicProperties = (pathname, path) => {
   return dynamicProperties
 }
 
-const matchingPage = getMatchingPage(window.location.pathname)
+const currentPage = getPage()
 
-if (matchingPage) {
-  preloadScripts(matchingPage)
-  preloadData(matchingPage)
+if (currentPage) {
+  const { path, title, scripts, data } = currentPage
 
-  if (matchingPage.title) document.title = matchingPage.title
+  preloadScripts(scripts)
+
+  if (data) preloadData({ path, data })
+  if (title) document.title = title
 }
-
 ```
 
 Reminder: the `pages.js` file can be found [here](src/pages.js).
@@ -537,7 +549,7 @@ Now we can see that the data is being fetched right away:
 
 ![Network Data Preload](images/network-data-preload.png)
 
-With the above script, we can even preload dynamic routes data (such as _[pokemon/:name](https://client-side-rendering.pages.dev/pokemon/pikachu)_).
+The above script will even preload dynamic routes data (such as _[pokemon/:name](https://client-side-rendering.pages.dev/pokemon/pikachu)_).
 
 ## Precaching
 
@@ -786,7 +798,7 @@ const documentHeaders = {
 }
 
 const isMatch = (pathname, path) => {
-  if (pathname === path) return { exact: true, match: true }
+  if (pathname === path) return { exactMatch: true, match: true }
   if (!path.includes(':')) return { match: false }
 
   const pathnameParts = pathname.split('/')
@@ -794,8 +806,8 @@ const isMatch = (pathname, path) => {
   const match = pathnameParts.every((part, ind) => part === pathParts[ind] || pathParts[ind]?.startsWith(':'))
 
   return {
-    exact: match && pathnameParts.length === pathParts.length,
-    match
+    match,
+    exactMatch: match && pathnameParts.length === pathParts.length
   }
 }
 
@@ -832,7 +844,7 @@ export default {
     asyncScripts.forEach(script => {
       const parentsPaths = script.parentPaths.map(path => ({ path, ...isMatch(pathname, path) }))
 
-      script.exactMatch = parentsPaths.some(({ exact }) => exact)
+      script.exactMatch = parentsPaths.some(({ exactMatch }) => exactMatch)
 
       if (!script.exactMatch) script.match = parentsPaths.some(({ match }) => match)
     })
@@ -1280,7 +1292,7 @@ const useTransitionNavigate = () => {
 export default useTransitionNavigate
 ```
 
-_[NavigationLink.tsx](src/components/common/NavigationLink.tsx)_
+_[src/components/common/NavigationLink.tsx](src/components/common/NavigationLink.tsx)_
 
 ```js
 const NavigationLink = ({ to, onClick, children }) => {
@@ -1306,21 +1318,54 @@ Now async pages will feel like they were never split from the main app.
 
 ### Preloading Other Pages Data
 
-We can preload other pages data when hovering over links (desktop) or when links enter the viewport (mobile):
+We can easily preload other pages data when hovering over links or clicking them:
 
-_[NavigationLink.tsx](src/components/common/NavigationLink.tsx)_
+_[src/utils/data-preload.ts](src/utils/data-preload.ts)_
 
-```js
-<NavLink onMouseEnter={() => fetch(url, { ...request, preload: true })}>{children}</NavLink>
+```ts
+declare function getPage(path: string): Page
+
+declare function preloadData(page: Page): void
+
+type Page = {
+  pathname: string
+  title?: string
+  data?: Request[]
+}
+
+type Request = RequestInit & {
+  url: string
+  static?: boolean
+  preconnect?: string[]
+}
+
+export const getDataPreloadHandlers = (pathname: string) => {
+  const page = getPage(pathname)
+  const { data } = page
+
+  if (!data) return
+
+  const staticData = data.filter(data => data.static)
+  const dynamicData = data.filter(data => !data.static)
+
+  return {
+    onMouseEnter: () => preloadData({ ...page, pathname, data: staticData }),
+    onTouchStart: () => preloadData({ ...page, pathname, data: staticData }),
+    onMouseDown: () => preloadData({ ...page, pathname, data: dynamicData }),
+    onClick: () => preloadData({ ...page, pathname, data: dynamicData })
+  }
+}
 ```
 
-_Note that this may unnecessarily load the API server._
+The code above preloads static data when a link is hovered over (on desktop) or touched (on mobile).
+<br>
+It also preloads dynamic, database-dependent data when a link is pressed down (on desktop) or fully clicked (on mobile).
 
 ### Revalidating Active Apps
 
 Some users leave the app open for extended periods of time, so another thing we can do is revalidate (download new assets of) the app while it is running:
 
-_[service-worker-registration.ts](src/utils/service-worker-registration.ts)_
+_[src/utils/service-worker-registration.ts](src/utils/service-worker-registration.ts)_
 
 ```diff
 + const REVALIDATION_INTERVAL_HOURS = 1

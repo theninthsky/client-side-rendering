@@ -59,7 +59,7 @@ const fetchPrerendered = async request => {
 }
 
 const isMatch = (pathname, path) => {
-  if (pathname === path) return { exact: true, match: true }
+  if (pathname === path) return { exactMatch: true, match: true }
   if (!path.includes(':')) return { match: false }
 
   const pathnameParts = pathname.split('/')
@@ -67,8 +67,8 @@ const isMatch = (pathname, path) => {
   const match = pathnameParts.every((part, ind) => part === pathParts[ind] || pathParts[ind]?.startsWith(':'))
 
   return {
-    exact: match && pathnameParts.length === pathParts.length,
-    match
+    match,
+    exactMatch: match && pathnameParts.length === pathParts.length
   }
 }
 
@@ -115,7 +115,7 @@ export default {
     asyncScripts.forEach(script => {
       const parentsPaths = script.parentPaths.map(path => ({ path, ...isMatch(pathname, path) }))
 
-      script.exactMatch = parentsPaths.some(({ exact }) => exact)
+      script.exactMatch = parentsPaths.some(({ exactMatch }) => exactMatch)
 
       if (!script.exactMatch) script.match = parentsPaths.some(({ match }) => match)
     })

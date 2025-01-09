@@ -70,7 +70,7 @@ const style = {
   activeItem: css`
     border-left: 5px solid dodgerblue;
     color: dodgerblue;
-    cursor: default;
+    pointer-events: none;
 
     @media ${MOBILE_VIEWPORT} {
       border: none;

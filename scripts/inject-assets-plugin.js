@@ -8,10 +8,10 @@ import pagesManifest from '../src/pages.js'
 const __dirname = import.meta.dirname
 
 const getPages = rawAssets => {
-  const pages = Object.entries(pagesManifest).map(([chunk, { path, title, data, preconnect, preloadOnHover }]) => {
+  const pages = Object.entries(pagesManifest).map(([chunk, { path, title, data, preconnect }]) => {
     const scripts = rawAssets.map(({ name }) => name).filter(name => new RegExp(`[/.]${chunk}\\.(.+)\\.js$`).test(name))
 
-    return { path, scripts, title, data, preconnect, preloadOnHover }
+    return { path, scripts, title, data, preconnect }
   })
 
   return pages

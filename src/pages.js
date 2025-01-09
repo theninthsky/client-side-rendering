@@ -9,8 +9,7 @@ export default {
     title: 'Lorem Ipsum',
     description:
       "Demonstrated here is a large amount of static data that is pre-generated and fetched in parallel with all of the page's assets.",
-    data: [{ url: '/generated/lorem-ipsum.json' }],
-    preloadOnHover: true
+    data: [{ url: '/generated/lorem-ipsum.json', static: true }]
   },
   pokemon: {
     path: '/pokemon',
@@ -41,23 +40,24 @@ export default {
               }
             }
           `
-        })
+        }),
+        preconnect: ['https://raw.githubusercontent.com']
       }
-    ],
-    preconnect: ['https://raw.githubusercontent.com']
+    ]
   },
   'pokemon-info': {
     path: '/pokemon/:name',
     description: "Demonstrated here is dynamic path data that is fetched in parallel with all of the page's assets.",
     data: [
       {
-        url: ({ name }) => `https://pokeapi.co/api/v2/pokemon/${name}`
+        url: ({ name }) => `https://pokeapi.co/api/v2/pokemon/${name}`,
+        preconnect: ['https://raw.githubusercontent.com']
       },
       {
         url: ({ name }) => `https://pokeapi.co/api/v2/pokemon-species/${name}`
       }
     ],
-    preconnect: ['https://raw.githubusercontent.com'],
+
     menuItem: false
   },
   comparison: {

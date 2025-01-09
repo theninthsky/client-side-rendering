@@ -6,6 +6,7 @@ import { Drawer } from '@mui/material'
 
 import pages from 'pages'
 import { MOBILE_VIEWPORT, DESKTOP_VIEWPORT } from 'styles/constants'
+import { getDataPreloadHandlers } from 'utils/data-preload'
 import useStore, { THEME_LIGHT, THEME_DARK } from 'hooks/useStore'
 import NavigationLink from 'components/common/NavigationLink'
 import MenuIcon from 'images/menu.svg'
@@ -13,11 +14,6 @@ import SunIcon from 'images/sun.svg'
 import MoonIcon from 'images/moon.svg'
 
 const NAVIGATION_HEIGHT = 55
-
-const preloadPageData = (pathname: string, matchingPage: any) => {
-  // @ts-ignore
-  if (pathname !== window.location.pathname) preloadData(matchingPage)
-}
 
 const Navigation = () => {
   const { theme, setTheme } = useStore(useShallow(({ theme, setTheme }) => ({ theme, setTheme })))
@@ -46,19 +42,18 @@ const Navigation = () => {
     () =>
       Object.values(pages)
         .filter(({ menuItem = true }) => menuItem)
-        .map(({ path }) => {
-          // @ts-ignore
-          const matchingPage = getMatchingPage(path)
-          const { title, preloadOnHover } = matchingPage
+        .map(({ path, title }) => {
+          const { onClick: preloadDynamicData, ...staticDataPreloadHandlers } = getDataPreloadHandlers(path) || {}
 
           return (
             <NavigationLink
               key={path}
               to={path}
-              onMouseEnter={preloadOnHover ? () => preloadPageData(path, matchingPage) : undefined}
-              onMouseDown={() => preloadPageData(path, matchingPage)}
-              onTouchStart={() => preloadPageData(path, matchingPage)}
-              onClick={() => setDrawerOpen(false)}
+              onClick={() => {
+                preloadDynamicData?.()
+                setDrawerOpen(false)
+              }}
+              {...staticDataPreloadHandlers}
             >
               {title}
             </NavigationLink>

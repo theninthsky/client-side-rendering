@@ -19,19 +19,24 @@ window.fetch = async (input, options) => {
   return response
 }
 
-const getMatchingPage = pathname => {
+const getPathname = () => {
+  let { pathname } = window.location
+
   if (pathname !== '/') pathname = pathname.replace(/\/$/, '')
 
+  return pathname
+}
+
+const getPage = (pathname = getPathname()) => {
   const potentiallyMatchingPages = pages
     .map(page => ({ ...isMatch(pathname, page.path), ...page }))
     .filter(({ match }) => match)
-  const matchingPage = potentiallyMatchingPages.find(({ exact }) => exact) || potentiallyMatchingPages[0]
 
-  return matchingPage
+  return potentiallyMatchingPages.find(({ exactMatch }) => exactMatch) || potentiallyMatchingPages[0]
 }
 
 const isMatch = (pathname, path) => {
-  if (pathname === path) return { exact: true, match: true }
+  if (pathname === path) return { exactMatch: true, match: true }
   if (!path.includes(':')) return { match: false }
 
   const pathnameParts = pathname.split('/')
@@ -39,12 +44,12 @@ const isMatch = (pathname, path) => {
   const match = pathnameParts.every((part, ind) => part === pathParts[ind] || pathParts[ind]?.startsWith(':'))
 
   return {
-    exact: match && pathnameParts.length === pathParts.length,
-    match
+    match,
+    exactMatch: match && pathnameParts.length === pathParts.length
   }
 }
 
-const preloadScripts = ({ scripts }) => {
+const preloadScripts = scripts => {
   scripts.forEach(script => {
     document.head.appendChild(
       Object.assign(document.createElement('link'), { rel: 'preload', href: '/' + script, as: 'script' })
@@ -52,18 +57,18 @@ const preloadScripts = ({ scripts }) => {
   })
 }
 
-const preloadData = ({ path, data, preconnect }) => {
-  data?.forEach(({ url, ...request }) => {
+const preloadData = ({ pathname = getPathname(), path, data }) => {
+  data.forEach(({ url, preconnect, ...request }) => {
     if (url.startsWith('func:')) url = eval(url.replace('func:', ''))
 
     const constructedURL = typeof url === 'string' ? url : url(getDynamicProperties(pathname, path))
 
     fetch(constructedURL, { ...request, preload: true })
-  })
 
-  // https://issues.chromium.org/issues/380896837
-  preconnect?.forEach(url => {
-    document.head.appendChild(Object.assign(document.createElement('link'), { rel: 'preconnect', href: url }))
+    // https://issues.chromium.org/issues/380896837
+    preconnect?.forEach(url => {
+      document.head.appendChild(Object.assign(document.createElement('link'), { rel: 'preconnect', href: url }))
+    })
   })
 }
 
@@ -79,11 +84,13 @@ const getDynamicProperties = (pathname, path) => {
   return dynamicProperties
 }
 
-const matchingPage = getMatchingPage(window.location.pathname)
+const currentPage = getPage()
 
-if (matchingPage) {
-  preloadScripts(matchingPage)
-  preloadData(matchingPage)
+if (currentPage) {
+  const { path, title, scripts, data } = currentPage
 
-  if (matchingPage.title) document.title = matchingPage.title
+  preloadScripts(scripts)
+
+  if (data) preloadData({ path, data })
+  if (title) document.title = title
 }

@@ -5,7 +5,7 @@ import { css } from '@emotion/css'
 import { Skeleton } from '@mui/material'
 
 import pages from 'pages'
-import preconnect from 'utils/preconnect'
+import { getDataPreloadHandlers } from 'utils/data-preload'
 import Title from 'components/common/Title'
 import Info from 'components/common/Info'
 import Link from 'components/common/Link'
@@ -19,13 +19,10 @@ $(`#${_.isDate(moment().toDate())}`)
 const {
   title,
   description,
-  data: [pokemonData],
-  preconnect: [imagesHost]
+  data: [pokemonData]
 } = pages.pokemon
 
 const disableLazyRender = /prerender|googlebot/i.test(navigator.userAgent)
-
-preconnect(imagesHost)
 
 const formatPokemons = rawPokemons =>
   rawPokemons.map(({ id, name, extra: [{ types, sprites }] }) => ({
@@ -60,7 +57,13 @@ const Pokemon: FC<{}> = () => {
         {pokemons ? (
           <LazyRender uuid="pokemon" items={pokemons} batch={disableLazyRender ? Infinity : 50}>
             {({ id, name, types, artwork }) => (
-              <Link key={name} className={style.pokemon} to={`/pokemon/${name}`} state={{ id, name, types, artwork }}>
+              <Link
+                key={name}
+                className={style.pokemon}
+                to={`/pokemon/${name}`}
+                state={{ id, name, types, artwork }}
+                {...getDataPreloadHandlers(`/pokemon/${name}`)}
+              >
                 <img className={style.pokemonImage} src={artwork} alt={name} loading="lazy" />
 
                 <span>{_.startCase(toLower(name))}</span>
