@@ -69,7 +69,7 @@ class InjectAssetsPlugin {
       const asyncScripts = assets.filter(asset => !initialScripts.includes(asset))
       const documentEtag = createHash('sha256').update(html).digest('hex').slice(0, 16)
 
-      html = html.replace(/,"scripts":\s*\[(.*?)\]/g, () => '').replace('preloadScripts(matchingPage)', () => '')
+      html = html.replace(/,"scripts":\s*\[(.*?)\]/g, () => '').replace('preloadScripts(scripts)', () => '')
 
       worker = worker
         .replace('INJECT_INITIAL_SCRIPTS_STRING_HERE', () => JSON.stringify(initialScriptsString))
