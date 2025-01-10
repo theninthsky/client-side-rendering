@@ -45,8 +45,13 @@ class InjectAssetsPlugin {
     if (!production) return
 
     compiler.hooks.afterEmit.tapAsync('InjectAssetsPlugin', (compilation, callback) => {
-      let html = readFileSync(join(__dirname, '..', 'build', 'index.html'), 'utf-8')
       let worker = readFileSync(join(__dirname, '..', 'build', '_worker.js'), 'utf-8')
+      let html = readFileSync(join(__dirname, '..', 'build', 'index.html'), 'utf-8')
+
+      html = html
+        .replace(/type=\"module\"/g, () => 'defer')
+        .replace(/,"scripts":\s*\[(.*?)\]/g, () => '')
+        .replace('preloadScripts(scripts)', () => '')
 
       const rawAssets = compilation.getAssets()
       const pages = getPages(rawAssets)
@@ -58,8 +63,6 @@ class InjectAssetsPlugin {
           parentPaths: pages.filter(({ scripts }) => scripts.includes(name)).map(({ path }) => path)
         }))
 
-      html = html.replace(/type=\"module\"/g, () => 'defer')
-
       const initialScriptsString = html.match(/<script\s+defer[^>]*>([\s\S]*?)(?=<\/head>)/)[0]
       const initialScriptsStrings = initialScriptsString.split('</script>')
       const initialScripts = assets
@@ -68,8 +71,6 @@ class InjectAssetsPlugin {
         .sort((a, b) => a.order - b.order)
       const asyncScripts = assets.filter(asset => !initialScripts.includes(asset))
       const documentEtag = createHash('sha256').update(html).digest('hex').slice(0, 16)
-
-      html = html.replace(/,"scripts":\s*\[(.*?)\]/g, () => '').replace('preloadScripts(scripts)', () => '')
 
       worker = worker
         .replace('INJECT_INITIAL_SCRIPTS_STRING_HERE', () => JSON.stringify(initialScriptsString))
