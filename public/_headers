@@ -6,3 +6,6 @@
 
 /scripts/*
     Cache-Control: public, max-age=31536000, immutable
+
+/content/*
+    Cache-Control: public, max-age=300

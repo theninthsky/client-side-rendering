@@ -1,7 +1,7 @@
 import process from 'node:process'
 import { mkdir, writeFile } from 'fs/promises'
 
-const PATH = 'public/generated'
+const PATH = 'public/content'
 const LOG_LABEL = 'Fetched all static assets in'
 
 console.time(LOG_LABEL)

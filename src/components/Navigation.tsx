@@ -43,7 +43,7 @@ const Navigation = () => {
       Object.values(pages)
         .filter(({ menuItem = true }) => menuItem)
         .map(({ path, title }) => {
-          const { onClick: preloadDynamicData, ...staticDataPreloadHandlers } = getDataPreloadHandlers(path) || {}
+          const { onClick: preloadDynamicData, ...staticDataPreloadHandlers } = getDataPreloadHandlers(path)
 
           return (
             <NavigationLink

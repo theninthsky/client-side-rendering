@@ -1,6 +1,11 @@
-declare function getPage(path: string): Page
+declare function getPage(path: string): Page | undefined
 
 declare function preloadData(page: Page): void
+
+export enum DataType {
+  Static = 'static',
+  Dynamic = 'dynamic'
+}
 
 type Page = {
   pathname: string
@@ -14,19 +19,41 @@ type Request = RequestInit & {
   preconnect?: string[]
 }
 
-export const getDataPreloadHandlers = (pathname: string) => {
-  const page = getPage(pathname)
-  const { data } = page
+type Events = {
+  [event: string]: DataType
+}
 
-  if (!data) return
+type EventHandlers = {
+  [event: string]: () => void
+}
+
+const defaultEvents: Events = {
+  onMouseEnter: DataType.Static,
+  onTouchStart: DataType.Static,
+  onMouseDown: DataType.Dynamic,
+  onClick: DataType.Dynamic
+}
+
+export const getDataPreloadHandlers = (pathname: string, events: Events = defaultEvents) => {
+  const handlers: EventHandlers = {}
+  const page = getPage(pathname)
+  const { data } = page || {}
+
+  if (!data) return handlers
 
   const staticData = data.filter(data => data.static)
   const dynamicData = data.filter(data => !data.static)
 
-  return {
-    onMouseEnter: () => preloadData({ ...page, pathname, data: staticData }),
-    onTouchStart: () => preloadData({ ...page, pathname, data: staticData }),
-    onMouseDown: () => preloadData({ ...page, pathname, data: dynamicData }),
-    onClick: () => preloadData({ ...page, pathname, data: dynamicData })
+  for (const event in events) {
+    const relevantData = events[event] === DataType.Static ? staticData : dynamicData
+
+    if (relevantData.length) {
+      handlers[event] = () => {
+        preloadData({ ...page, pathname, data: relevantData })
+        delete handlers[event]
+      }
+    }
   }
+
+  return handlers
 }

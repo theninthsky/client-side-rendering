@@ -8,8 +8,8 @@ export default {
     path: '/lorem-ipsum',
     title: 'Lorem Ipsum',
     description:
-      "Demonstrated here is a large amount of static data that is pre-generated and fetched in parallel with all of the page's assets.",
-    data: [{ url: '/generated/lorem-ipsum.json', static: true }]
+      "Demonstrated here is a large amount of static data that is fetched in parallel with all of the page's assets.",
+    data: [{ url: '/content/lorem-ipsum.json', static: true }]
   },
   pokemon: {
     path: '/pokemon',

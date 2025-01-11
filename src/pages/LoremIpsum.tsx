@@ -19,12 +19,7 @@ const {
 } = pages['lorem-ipsum']
 
 const LoremIpsum: FC<{}> = () => {
-  const { data: loremIpsum } = useFetch(loremIpsumData.url, {
-    credentials: 'include',
-    mode: 'no-cors',
-    uuid: 'loremIpsum',
-    immutable: true
-  })
+  const { data: loremIpsum } = useFetch(loremIpsumData.url)
 
   return (
     <div>

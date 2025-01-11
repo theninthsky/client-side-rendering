@@ -15,13 +15,13 @@ An in-depth comparison of all rendering methods can be found on this project's _
   - [Preloading Async Pages](#preloading-async-pages)
   - [Splitting Async Vendors](#splitting-async-vendors)
   - [Preloading Data](#preloading-data)
+  - [Preloading Next Pages Data](#preloading-other-pages-data)
   - [Precaching](#precaching)
   - [Adaptive Source Inlining](#adaptive-source-inlining)
   - [Leveraging the 304 Status Code](#leveraging-the-304-status-code)
   - [Navigation Preload](#navigation-preload)
   - [Tweaking Further](#tweaking-further)
     - [Transitioning Async Pages](#transitioning-async-pages)
-    - [Preloading Other Pages Data](#preloading-other-pages-data)
     - [Revalidating Active Apps](#revalidating-active-apps)
   - [Summary](#summary)
   - [Deploying](#deploying)
@@ -550,6 +550,76 @@ Now we can see that the data is being fetched right away:
 ![Network Data Preload](images/network-data-preload.png)
 
 The above script will even preload dynamic routes data (such as _[pokemon/:name](https://client-side-rendering.pages.dev/pokemon/pikachu)_).
+
+## Preloading Next Pages Data
+
+We can conveniently preload page data by hovering over links or clicking them, before they are fully rendered:
+
+_[src/utils/data-preload.ts](src/utils/data-preload.ts)_
+
+```ts
+declare function getPage(path: string): Page | undefined
+
+declare function preloadData(page: Page): void
+
+export enum DataType {
+  Static = 'static',
+  Dynamic = 'dynamic'
+}
+
+type Page = {
+  pathname: string
+  title?: string
+  data?: Request[]
+}
+
+type Request = RequestInit & {
+  url: string
+  static?: boolean
+  preconnect?: string[]
+}
+
+type Events = {
+  [event: string]: DataType
+}
+
+type EventHandlers = {
+  [event: string]: () => void
+}
+
+const defaultEvents: Events = {
+  onMouseEnter: DataType.Static,
+  onTouchStart: DataType.Static,
+  onMouseDown: DataType.Dynamic,
+  onClick: DataType.Dynamic
+}
+
+export const getDataPreloadHandlers = (pathname: string, events: Events = defaultEvents) => {
+  const handlers: EventHandlers = {}
+  const page = getPage(pathname)
+  const { data } = page || {}
+
+  if (!data) return handlers
+
+  const staticData = data.filter(data => data.static)
+  const dynamicData = data.filter(data => !data.static)
+
+  for (const event in events) {
+    const relevantData = events[event] === DataType.Static ? staticData : dynamicData
+
+    if (relevantData.length) {
+      handlers[event] = () => {
+        preloadData({ ...page, pathname, data: relevantData })
+        delete handlers[event]
+      }
+    }
+  }
+
+  return handlers
+}
+```
+
+By default, `getDataPreloadHandlers` returns event listeners that preload static data when a link is hovered (on desktop) or touched (on mobile), and preload database-dependent data when a link is pressed (on desktop) or fully clicked (on mobile).
 
 ## Precaching
 
@@ -1314,51 +1384,6 @@ export default NavigationLink
 ```
 
 Now async pages will feel like they were never split from the main app.
-
-### Preloading Other Pages Data
-
-We can easily preload other pages data when hovering over links or clicking them:
-
-_[src/utils/data-preload.ts](src/utils/data-preload.ts)_
-
-```ts
-declare function getPage(path: string): Page
-
-declare function preloadData(page: Page): void
-
-type Page = {
-  pathname: string
-  title?: string
-  data?: Request[]
-}
-
-type Request = RequestInit & {
-  url: string
-  static?: boolean
-  preconnect?: string[]
-}
-
-export const getDataPreloadHandlers = (pathname: string) => {
-  const page = getPage(pathname)
-  const { data } = page
-
-  if (!data) return
-
-  const staticData = data.filter(data => data.static)
-  const dynamicData = data.filter(data => !data.static)
-
-  return {
-    onMouseEnter: () => preloadData({ ...page, pathname, data: staticData }),
-    onTouchStart: () => preloadData({ ...page, pathname, data: staticData }),
-    onMouseDown: () => preloadData({ ...page, pathname, data: dynamicData }),
-    onClick: () => preloadData({ ...page, pathname, data: dynamicData })
-  }
-}
-```
-
-The code above preloads static data when a link is hovered over (on desktop) or touched (on mobile).
-<br>
-It also preloads dynamic, database-dependent data when a link is pressed down (on desktop) or fully clicked (on mobile).
 
 ### Revalidating Active Apps
 
