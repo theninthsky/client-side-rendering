@@ -15,7 +15,7 @@ An in-depth comparison of all rendering methods can be found on this project's _
   - [Preloading Async Pages](#preloading-async-pages)
   - [Splitting Async Vendors](#splitting-async-vendors)
   - [Preloading Data](#preloading-data)
-  - [Preloading Next Pages Data](#preloading-other-pages-data)
+  - [Preloading Next Pages Data](#preloading-next-pages-data)
   - [Precaching](#precaching)
   - [Adaptive Source Inlining](#adaptive-source-inlining)
   - [Leveraging the 304 Status Code](#leveraging-the-304-status-code)
@@ -447,11 +447,11 @@ _[scripts/inject-assets-plugin.js](scripts/inject-assets-plugin.js)_
 ```diff
 const getPages = rawAssets => {
 -  const pages = Object.entries(pagesManifest).map(([chunk, { path, title }]) => {
-+  const pages = Object.entries(pagesManifest).map(([chunk, { path, title, data, preconnect }]) => {
++  const pages = Object.entries(pagesManifest).map(([chunk, { path, title, data }]) => {
   const scripts = rawAssets.filter(name => new RegExp(`[/.]${chunk}\\.(.+)\\.js$`).test(name))
 
 -   return { path, title, script }
-+   return { path, title, scripts, data, preconnect }
++   return { path, title, scripts, data }
   })
 
   return pages
@@ -512,7 +512,6 @@ const preloadData = ({ pathname = getPathname(), path, data }) => {
 
     fetch(constructedURL, { ...request, preload: true })
 
-    // https://issues.chromium.org/issues/380896837
     preconnect?.forEach(url => {
       document.head.appendChild(Object.assign(document.createElement('link'), { rel: 'preconnect', href: url }))
     })
