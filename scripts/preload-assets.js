@@ -16,6 +16,8 @@ window.fetch = async (input, options) => {
 
   if (options?.preload) preloadResponses[requestID] = response
 
+  response.catch(() => delete preloadResponses[requestID])
+
   return response
 }
 
