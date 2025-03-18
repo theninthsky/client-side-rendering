@@ -1,8 +1,10 @@
 <h1 align="center">Client-side Rendering</h1>
 
-This project is a case study of CSR, it explores the potential of client-side rendered apps compared to server-side rendering.
+This project serves as a case study on CSR, examining the potential of client-side rendered apps in comparison to server-side rendering.
 
-An in-depth comparison of all rendering methods can be found on this project's _Comparison_ page: https://client-side-rendering.pages.dev/comparison
+For a detailed comparison of all rendering methods, visit the project's _Comparison_ page: https://client-side-rendering.pages.dev/comparison
+
+The findings of this project resulted in the creation of [Adina](https://adinajs.com).
 
 ## Table of Contents
 
