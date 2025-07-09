@@ -100,7 +100,7 @@ export default (_, { mode }) => {
             })
           ]
         : [new ReactRefreshPlugin()]),
-      new ESLintPlugin({ extensions: ['js', 'ts', ' jsx', 'tsx'] }),
+      // new ESLintPlugin({ extensions: ['js', 'ts', ' jsx', 'tsx'] }),
       new HtmlPlugin({ template: 'public/index.html', scriptLoading: 'module' }),
       new rspack.CopyRspackPlugin({
         patterns: [

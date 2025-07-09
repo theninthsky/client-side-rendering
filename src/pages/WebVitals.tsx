@@ -1,6 +1,6 @@
 import { useState, useEffect, FC } from 'react'
 import { Meta } from 'frontend-essentials'
-import { onCLS, onFCP, onFID, onINP, onLCP, onTTFB } from 'web-vitals'
+import { onCLS, onFCP, onINP, onLCP, onTTFB } from 'web-vitals'
 import { css } from '@emotion/css'
 
 import pages from 'pages'
@@ -29,7 +29,6 @@ const WebVitals: FC<{}> = () => {
   useEffect(() => {
     onCLS(addMetric)
     onFCP(addMetric)
-    onFID(addMetric)
     onINP(addMetric)
     onLCP(addMetric)
     onTTFB(addMetric)
