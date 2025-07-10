@@ -1,4 +1,4 @@
-import { lazy, Suspense, FC } from 'react'
+import { lazy, FC } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 
 import pages from 'pages'
@@ -28,13 +28,11 @@ const App: FC<{}> = () => {
       <ScrollToTop />
 
       <Layout>
-        <Suspense>
-          <Routes>
-            {routes}
+        <Routes>
+          {routes}
 
-            <Route path="/*" element={<Navigate replace to="/" />} />
-          </Routes>
-        </Suspense>
+          <Route path="/*" element={<Navigate replace to="/" />} />
+        </Routes>
       </Layout>
     </>
   )
